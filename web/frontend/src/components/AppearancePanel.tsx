@@ -40,7 +40,7 @@ function OptionButton<T extends string>({ value, current, onChange, label }: Opt
         "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-150",
         isActive
           ? "bg-primary/20 text-primary-400 border border-primary/30"
-          : "bg-dark-800 text-dark-200 border border-dark-400/20 hover:border-dark-400/40 hover:text-dark-50"
+          : "bg-[var(--glass-bg)] text-dark-200 border border-[var(--glass-border)] hover:border-[var(--glass-border)]/40 hover:text-dark-50"
       )}
     >
       {label}
@@ -108,7 +108,7 @@ export function AppearancePanel() {
 
       <PopoverContent align="end" className="w-80 p-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-dark-400/20">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)]">
           <h4 className="text-sm font-semibold text-white">{t('appearance.title')}</h4>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -142,12 +142,12 @@ export function AppearancePanel() {
                             "flex flex-col items-center gap-1.5 py-2 px-1 text-[10px] font-medium rounded-md transition-all duration-150",
                             isActive
                               ? "ring-2 ring-primary/50 bg-primary/10"
-                              : "hover:bg-dark-800/50"
+                              : "hover:bg-[var(--glass-bg)]"
                           )}
                         >
                           {/* Color swatch */}
                           <div
-                            className="w-7 h-7 rounded-full border-2 border-dark-400/30"
+                            className="w-7 h-7 rounded-full border-2 border-[var(--glass-border)]"
                             style={{
                               background: `linear-gradient(135deg, ${preset.colors[0]} 0%, ${preset.colors[1]} 100%)`,
                             }}
@@ -167,7 +167,7 @@ export function AppearancePanel() {
               </div>
             </div>
 
-            <Separator className="bg-dark-400/20" />
+            <Separator className="bg-[var(--glass-border)]" />
 
             {/* Color Mode */}
             <div className="flex items-center justify-between">
@@ -176,7 +176,7 @@ export function AppearancePanel() {
                 onClick={toggleColorMode}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150",
-                  "bg-dark-800 border border-dark-400/20 hover:border-dark-400/40"
+                  "bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-[var(--glass-border)]/40"
                 )}
               >
                 {colorMode === 'dark' ? (
@@ -193,7 +193,7 @@ export function AppearancePanel() {
               </button>
             </div>
 
-            <Separator className="bg-dark-400/20" />
+            <Separator className="bg-[var(--glass-border)]" />
 
             {/* UI Density */}
             <div className="space-y-2">
@@ -211,7 +211,7 @@ export function AppearancePanel() {
               </div>
             </div>
 
-            <Separator className="bg-dark-400/20" />
+            <Separator className="bg-[var(--glass-border)]" />
 
             {/* Border Radius */}
             <div className="space-y-2">
@@ -225,7 +225,7 @@ export function AppearancePanel() {
                       "flex-1 flex flex-col items-center gap-1.5 py-2 text-xs font-medium rounded-md transition-all duration-150",
                       opt.value === borderRadius
                         ? "bg-primary/20 text-primary-400 border border-primary/30"
-                        : "bg-dark-800 text-dark-200 border border-dark-400/20 hover:border-dark-400/40 hover:text-dark-50"
+                        : "bg-[var(--glass-bg)] text-dark-200 border border-[var(--glass-border)] hover:border-[var(--glass-border)]/40 hover:text-dark-50"
                     )}
                   >
                     <div className={cn("w-6 h-4 border-2 border-current", opt.preview)} />
@@ -235,7 +235,7 @@ export function AppearancePanel() {
               </div>
             </div>
 
-            <Separator className="bg-dark-400/20" />
+            <Separator className="bg-[var(--glass-border)]" />
 
             {/* Font Size */}
             <div className="space-y-2">
@@ -253,7 +253,7 @@ export function AppearancePanel() {
               </div>
             </div>
 
-            <Separator className="bg-dark-400/20" />
+            <Separator className="bg-[var(--glass-border)]" />
 
             {/* Animations */}
             <div className="flex items-center justify-between">

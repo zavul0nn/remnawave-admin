@@ -318,7 +318,7 @@ function HostEditModal({
               id="edit-is-hidden"
               checked={form.is_hidden}
               onChange={(e) => setForm({ ...form, is_hidden: e.target.checked })}
-              className="w-4 h-4 rounded border-dark-400/30 bg-dark-800 text-primary-500 focus:ring-primary-500/50"
+              className="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary-500 focus:ring-primary-500/50"
             />
             <Label htmlFor="edit-is-hidden" className="cursor-pointer">{t('hosts.editHost.hiddenHost')}</Label>
           </div>
@@ -533,7 +533,7 @@ function HostCreateModal({
               id="create-is-hidden"
               checked={form.is_hidden}
               onChange={(e) => setForm({ ...form, is_hidden: e.target.checked })}
-              className="w-4 h-4 rounded border-dark-400/30 bg-dark-800 text-primary-500 focus:ring-primary-500/50"
+              className="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary-500 focus:ring-primary-500/50"
             />
             <Label htmlFor="create-is-hidden" className="cursor-pointer">{t('hosts.editHost.hiddenHost')}</Label>
           </div>
@@ -693,7 +693,7 @@ function HostCard({
 
         {/* Details */}
         <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="bg-dark-800/50 rounded-lg p-2">
+          <div className="bg-[var(--glass-bg)] rounded-lg p-2">
             <span className="text-dark-200 text-xs">{t('hosts.security.label')}</span>
             <p className={cn('font-medium', getSecurityColor(host))}>
               {(host.security_layer || host.security) === 'reality' && <ShieldCheck className="w-3.5 h-3.5 inline mr-1" />}
@@ -701,43 +701,43 @@ function HostCard({
               {getSecurityLabel(host)}
             </p>
           </div>
-          <div className="bg-dark-800/50 rounded-lg p-2">
+          <div className="bg-[var(--glass-bg)] rounded-lg p-2">
             <span className="text-dark-200 text-xs">SNI</span>
             <p className="font-medium text-white truncate">{host.sni || '-'}</p>
           </div>
           {host.inbound && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">Inbound</span>
               <p className="font-medium text-white truncate">{host.inbound.tag}</p>
               <p className="text-[10px] text-dark-300">{host.inbound.type}</p>
             </div>
           )}
           {host.nodes && host.nodes.length > 0 && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">{t('hosts.detail.nodes')} ({host.nodes.length})</span>
               <p className="font-medium text-white truncate text-xs">{host.nodes.map(n => n.name).join(', ')}</p>
             </div>
           )}
           {host.host && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">Host</span>
               <p className="font-medium text-white truncate">{host.host}</p>
             </div>
           )}
           {host.path && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">Path</span>
               <p className="font-medium text-white truncate font-mono text-xs">{host.path}</p>
             </div>
           )}
           {host.alpn && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">ALPN</span>
               <p className="font-medium text-white truncate">{host.alpn}</p>
             </div>
           )}
           {host.fingerprint && (
-            <div className="bg-dark-800/50 rounded-lg p-2">
+            <div className="bg-[var(--glass-bg)] rounded-lg p-2">
               <span className="text-dark-200 text-xs">Fingerprint</span>
               <p className="font-medium text-white truncate">{host.fingerprint}</p>
             </div>

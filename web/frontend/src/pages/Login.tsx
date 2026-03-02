@@ -112,7 +112,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
     <div className="space-y-2 animate-fade-in">
       {/* Strength bar */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-dark-600/50 overflow-hidden">
+        <div className="flex-1 h-1.5 rounded-full bg-[var(--glass-bg)] overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500 ease-out"
             style={{
@@ -401,7 +401,7 @@ export default function Login() {
           <CardContent className="px-8 pb-8 pt-4">
             {/* Separator */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex-1 h-px bg-dark-400/20" />
+              <div className="flex-1 h-px bg-[var(--glass-border)]" />
               <span className="text-xs text-dark-300 font-medium uppercase tracking-wider">
                 {needsSetup
                   ? t('login.createAdmin')
@@ -409,7 +409,7 @@ export default function Login() {
                     ? t('login.passwordLogin')
                     : t('login.authorization')}
               </span>
-              <div className="flex-1 h-px bg-dark-400/20" />
+              <div className="flex-1 h-px bg-[var(--glass-border)]" />
             </div>
 
             {/* Error */}
@@ -674,7 +674,7 @@ export default function Login() {
             )}
 
             {/* Footer */}
-            <div className="mt-8 pt-5 border-t border-dark-400/10">
+            <div className="mt-8 pt-5 border-t border-[var(--glass-border)]">
               <p className="text-center text-[11px] text-dark-300/80 leading-relaxed">
                 {needsSetup
                   ? t('login.passwordRequirements')
@@ -683,7 +683,7 @@ export default function Login() {
             </div>
 
             {/* Donation */}
-            <div className="mt-4 pt-4 border-t border-dark-400/10">
+            <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
               <div className="flex items-center justify-center gap-1.5 mb-2">
                 <Heart className="w-3 h-3 text-pink-400" />
                 <span className="text-[11px] font-medium text-dark-200">
@@ -694,15 +694,15 @@ export default function Login() {
                 {t('login.donationNote')}
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-dark-700/40 border border-dark-400/10">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[var(--glass-bg)]/40 border border-[var(--glass-border)]">
                   <span className="text-[10px] font-medium text-dark-200 shrink-0">TON</span>
                   <span className="text-[9px] text-dark-300 truncate font-mono flex-1">UQDDe-jyFTbQsPHqyojdFeO1_m7uPF-q1w0g_MfbSOd3l1sC</span>
                 </div>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-dark-700/40 border border-dark-400/10">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[var(--glass-bg)]/40 border border-[var(--glass-border)]">
                   <span className="text-[10px] font-medium text-dark-200 shrink-0">USDT</span>
                   <span className="text-[9px] text-dark-300 truncate font-mono flex-1">TGyHJj2PsYSUwkBbWdc7BFfsAxsE6SGGJP</span>
                 </div>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-dark-700/40 border border-dark-400/10">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[var(--glass-bg)]/40 border border-[var(--glass-border)]">
                   <span className="text-[10px] font-medium text-dark-200 shrink-0">BTC</span>
                   <span className="text-[9px] text-dark-300 truncate font-mono flex-1">1J6Zz7XcrpFkchwFmuU5WTFYTxziBdSwRz</span>
                 </div>

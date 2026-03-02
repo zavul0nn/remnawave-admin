@@ -424,7 +424,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
         </DialogHeader>
 
         {/* Step indicator */}
-        <div className="flex items-center gap-1 pb-2 border-b border-dark-700/50 mb-1">
+        <div className="flex items-center gap-1 pb-2 border-b border-[var(--glass-border)]/50 mb-1">
           {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center">
               <button
@@ -435,7 +435,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     ? 'bg-accent-teal text-white'
                     : s < step
                       ? 'bg-accent-teal/20 text-accent-teal cursor-pointer hover:bg-accent-teal/30'
-                      : 'bg-dark-700 text-dark-400'
+                      : 'bg-[var(--glass-bg)] text-dark-400'
                 }`}
               >
                 {s < step ? <Check className="w-3.5 h-3.5" /> : s}
@@ -443,7 +443,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
               {s < 4 && (
                 <div
                   className={`w-8 h-0.5 mx-1 ${
-                    s < step ? 'bg-accent-teal/40' : 'bg-dark-700'
+                    s < step ? 'bg-accent-teal/40' : 'bg-[var(--glass-bg)]'
                   }`}
                 />
               )}
@@ -476,7 +476,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         triggerType === tt.value
                           ? 'border-accent-teal bg-accent-teal/10 shadow-sm shadow-accent-teal/10'
-                          : 'border-dark-600 bg-dark-800 hover:border-dark-500 hover:bg-dark-750'
+                          : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] hover:bg-[var(--glass-bg-hover)]'
                       }`}
                     >
                       <Icon className={`w-4 h-4 mb-1.5 ${triggerType === tt.value ? 'text-accent-teal' : 'text-dark-300'}`} />
@@ -510,7 +510,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                         className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                           eventType === e.value
                             ? 'border-accent-teal bg-accent-teal/10'
-                            : 'border-dark-600 bg-dark-800 hover:border-dark-500'
+                            : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)]'
                         }`}
                       >
                         <div className="flex-1">
@@ -525,7 +525,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                   </div>
                 </div>
                 {eventType === 'violation.detected' && (
-                  <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+                  <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                     <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.minScore')}</Label>
                     <p className="text-xs text-dark-400">
                       {t('automations.constructor.minScoreHint')}
@@ -534,14 +534,14 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       type="number"
                       value={minScore}
                       onChange={(e) => setMinScore(e.target.value)}
-                      className="bg-dark-900 border-dark-500 text-white w-32"
+                      className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-32"
                       placeholder={t('automations.constructor.minScorePlaceholder')}
                     />
                     <p className="text-[11px] text-dark-500 italic">{t('automations.constructor.optionalField')}</p>
                   </div>
                 )}
                 {eventType === 'node.went_offline' && (
-                  <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+                  <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                     <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.minOffline')}</Label>
                     <p className="text-xs text-dark-400">
                       {t('automations.constructor.minOfflineHint')}
@@ -550,7 +550,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       type="number"
                       value={offlineMinutes}
                       onChange={(e) => setOfflineMinutes(e.target.value)}
-                      className="bg-dark-900 border-dark-500 text-white w-32"
+                      className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-32"
                       placeholder={t('automations.constructor.minOfflinePlaceholder')}
                     />
                     {offlineMinutes && (
@@ -577,7 +577,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                 </div>
 
                 {/* Sub-mode toggle */}
-                <div className="flex gap-1 p-1 rounded-lg bg-dark-800 border-2 border-dark-600">
+                <div className="flex gap-1 p-1 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
                   <button
                     onClick={() => setScheduleMode('cron')}
                     className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all ${
@@ -634,7 +634,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                         className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                           thresholdMetric === m.value
                             ? 'border-accent-teal bg-accent-teal/10'
-                            : 'border-dark-600 bg-dark-800 hover:border-dark-500'
+                            : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)]'
                         }`}
                       >
                         <div className="flex-1">
@@ -651,10 +651,10 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
                 {/* Node selector for user_node_traffic_gb metric */}
                 {thresholdMetric === 'user_node_traffic_gb' && (
-                  <div className="p-3 rounded-lg bg-dark-800 border-2 border-accent-teal/30 space-y-2">
+                  <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-accent-teal/30 space-y-2">
                     <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.selectNode')}</Label>
                     <Select value={thresholdNodeUuid} onValueChange={setThresholdNodeUuid}>
-                      <SelectTrigger className="bg-dark-900 border-dark-500 text-white">
+                      <SelectTrigger className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                         <SelectValue placeholder={t('automations.constructor.allNodes')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -672,7 +672,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                   </div>
                 )}
 
-                <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-3">
+                <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-3">
                   <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.triggerCondition')}</Label>
                   <p className="text-xs text-dark-400">
                     {t('automations.constructor.metricConditionHint', { metric: selectedMetric?.label || thresholdMetric })}
@@ -681,7 +681,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     <div>
                       <Label className="text-[11px] text-dark-400">{t('automations.constructor.comparison')}</Label>
                       <Select value={thresholdOperator} onValueChange={setThresholdOperator}>
-                        <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                        <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -697,7 +697,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                         type="number"
                         value={thresholdValue}
                         onChange={(e) => setThresholdValue(e.target.value)}
-                        className="mt-1 bg-dark-900 border-dark-500 text-white"
+                        className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                         placeholder="90"
                       />
                     </div>
@@ -719,13 +719,13 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
             )}
 
             {/* Category */}
-            <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+            <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
               <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.categoryLabel')}</Label>
               <p className="text-xs text-dark-400">
                 {t('automations.constructor.categoryHint')}{!editRule && ' ' + t('automations.constructor.categoryAutoHint')}
               </p>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="bg-dark-900 border-dark-500 text-white">
+                <SelectTrigger className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -754,7 +754,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
             </div>
 
             {conditions.map((cond, idx) => (
-              <div key={idx} className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div key={idx} className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-dark-300 font-medium">{t('automations.constructor.conditionN', { n: idx + 1 })}</span>
                   <Button
@@ -773,7 +773,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       value={cond.field || '_custom'}
                       onValueChange={(v) => updateCondition(idx, 'field', v === '_custom' ? '' : v)}
                     >
-                      <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                      <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                         <SelectValue placeholder={t('automations.constructor.selectField')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -788,7 +788,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       <Input
                         value={cond.field}
                         onChange={(e) => updateCondition(idx, 'field', e.target.value)}
-                        className="mt-1.5 bg-dark-900 border-dark-500 text-white"
+                        className="mt-1.5 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                         placeholder={t('automations.constructor.fieldName')}
                       />
                     )}
@@ -799,7 +799,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       value={cond.operator}
                       onValueChange={(v) => updateCondition(idx, 'operator', v)}
                     >
-                      <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                      <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -814,7 +814,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     <Input
                       value={cond.value}
                       onChange={(e) => updateCondition(idx, 'value', e.target.value)}
-                      className="mt-1 bg-dark-900 border-dark-500 text-white"
+                      className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                       placeholder="80"
                     />
                   </div>
@@ -826,13 +826,13 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
               variant="outline"
               size="sm"
               onClick={addCondition}
-              className="text-xs border-dark-600 hover:border-dark-500"
+              className="text-xs border-[var(--glass-border)] hover:border-[var(--glass-border)]"
             >
               <Plus className="w-3.5 h-3.5 mr-1" /> {t('automations.constructor.addCondition')}
             </Button>
 
             {conditions.length === 0 && (
-              <div className="text-center py-6 rounded-lg border border-dashed border-dark-600 bg-dark-800/30">
+              <div className="text-center py-6 rounded-lg border border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)]/30">
                 <Shield className="w-8 h-8 text-dark-500 mx-auto mb-2" />
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.noConditions')}
@@ -861,13 +861,13 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     className={`flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                       actionType === a.value
                         ? 'border-accent-teal bg-accent-teal/10'
-                        : 'border-dark-600 bg-dark-800 hover:border-dark-500'
+                        : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)]'
                     }`}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-white">{a.label}</p>
-                        <Badge variant="outline" className="text-[9px] text-dark-400 border-dark-600">{a.category}</Badge>
+                        <Badge variant="outline" className="text-[9px] text-dark-400 border-[var(--glass-border)]">{a.category}</Badge>
                       </div>
                       <p className="text-xs text-dark-400 mt-0.5">{a.description}</p>
                     </div>
@@ -881,7 +881,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Notify config */}
             {actionType === 'notify' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-3">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-3">
                 <div>
                   <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.notifyConfig')}</Label>
                   <p className="text-xs text-dark-400 mt-0.5">
@@ -896,7 +896,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all ${
                         notifyChannel === 'telegram'
                           ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/40 shadow-sm'
-                          : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+                          : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                       }`}
                     >
                       Telegram
@@ -906,7 +906,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                       className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all ${
                         notifyChannel === 'webhook'
                           ? 'bg-orange-500/20 text-orange-400 border-2 border-orange-500/40 shadow-sm'
-                          : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+                          : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                       }`}
                     >
                       Webhook
@@ -920,10 +920,10 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                   <Input
                     value={notifyMessage}
                     onChange={(e) => setNotifyMessage(e.target.value)}
-                    className="mt-1 bg-dark-900 border-dark-500 text-white"
+                    className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                     placeholder={t('automations.constructor.messagePlaceholder')}
                   />
-                  <div className="mt-1.5 p-2 rounded-md bg-dark-900/50 border border-dark-600">
+                  <div className="mt-1.5 p-2 rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)]">
                     <p className="text-[11px] text-dark-400">
                       {t('automations.constructor.availableVars')}{' '}
                       <code className="text-accent-teal">{'{user}'}</code>,{' '}
@@ -941,7 +941,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     <Input
                       value={webhookUrl}
                       onChange={(e) => setWebhookUrl(e.target.value)}
-                      className="mt-1 bg-dark-900 border-dark-500 text-white"
+                      className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                       placeholder="https://example.com/webhook"
                     />
                     <p className="text-[11px] text-dark-500 mt-1">
@@ -954,7 +954,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Block user config */}
             {actionType === 'block_user' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.blockReason')}</Label>
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.blockReasonHint')}
@@ -962,7 +962,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                 <Input
                   value={blockReason}
                   onChange={(e) => setBlockReason(e.target.value)}
-                  className="bg-dark-900 border-dark-500 text-white"
+                  className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                   placeholder={t('automations.constructor.blockReasonPlaceholder')}
                 />
                 {triggerType === 'event' || triggerType === 'threshold' ? (
@@ -991,7 +991,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Disable user warning */}
             {actionType === 'disable_user' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.disableUserTitle')}</Label>
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.disableUserHint')}
@@ -1016,7 +1016,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Cleanup config */}
             {actionType === 'cleanup_expired' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.cleanupTitle')}</Label>
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.cleanupHint')}
@@ -1027,7 +1027,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     type="number"
                     value={cleanupDays}
                     onChange={(e) => setCleanupDays(e.target.value)}
-                    className="bg-dark-900 border-dark-500 text-white w-20"
+                    className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-20"
                     placeholder="30"
                   />
                   <span className="text-xs text-dark-300">{t('automations.constructor.days')}</span>
@@ -1037,7 +1037,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Restart node config with target selector */}
             {actionType === 'restart_node' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-3">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-3">
                 <div>
                   <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.restartNodeTitle')}</Label>
                   <p className="text-xs text-dark-400 mt-0.5">
@@ -1055,7 +1055,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                   </Label>
 
                   {/* Mode toggle */}
-                  <div className="flex gap-1 p-1 rounded-lg bg-dark-900 border border-dark-600">
+                  <div className="flex gap-1 p-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)]">
                     <button
                       onClick={() => setTargetNodeUuid('')}
                       className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all ${
@@ -1091,7 +1091,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                           value={targetNodeUuid === '_select' ? '' : targetNodeUuid}
                           onValueChange={setTargetNodeUuid}
                         >
-                          <SelectTrigger className="bg-dark-900 border-dark-500 text-white">
+                          <SelectTrigger className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                             <SelectValue placeholder={t('automations.constructor.selectNode')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -1131,7 +1131,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Reset traffic info */}
             {actionType === 'reset_traffic' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.resetTrafficTitle')}</Label>
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.resetTrafficHint')}
@@ -1156,7 +1156,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
             {/* Force sync info */}
             {actionType === 'force_sync' && (
-              <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-2">
+              <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-2">
                 <Label className="text-xs font-medium text-dark-300">{t('automations.constructor.forceSyncTitle')}</Label>
                 <p className="text-xs text-dark-400">
                   {t('automations.constructor.forceSyncHint')}
@@ -1169,7 +1169,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
         {/* Step 4: Name & Review */}
         {step === 4 && (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-dark-800 border-2 border-dark-600 space-y-3">
+            <div className="p-4 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] space-y-3">
               <div>
                 <Label className="text-sm font-medium text-white">
                   {t('automations.constructor.ruleNameLabel')} <span className="text-red-400">*</span>
@@ -1180,7 +1180,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-2 bg-dark-900 border-dark-500 text-white"
+                  className="mt-2 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                   placeholder={t('automations.constructor.ruleNamePlaceholder')}
                 />
               </div>
@@ -1192,7 +1192,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                 <Input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 bg-dark-900 border-dark-500 text-white"
+                  className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white"
                   placeholder={t('automations.constructor.descriptionPlaceholder')}
                 />
                 <p className="text-[11px] text-dark-500 mt-0.5 italic">{t('automations.constructor.optionalField')}</p>
@@ -1200,7 +1200,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
             </div>
 
             {/* Summary */}
-            <div className="rounded-lg border-2 border-dark-600 bg-dark-800 p-4 space-y-4">
+            <div className="rounded-lg border-2 border-[var(--glass-border)] bg-[var(--glass-bg)] p-4 space-y-4">
               <p className="text-xs font-semibold text-dark-300 uppercase tracking-wider">{t('automations.constructor.summary')}</p>
 
               {/* Category & type badges */}
@@ -1208,13 +1208,13 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                 <Badge variant="outline" className={`text-[10px] ${categoryColor(category)}`}>
                   {categoryLabel(category)}
                 </Badge>
-                <Badge variant="outline" className="text-[10px] bg-dark-700/50 text-dark-300 border-dark-500">
+                <Badge variant="outline" className="text-[10px] bg-[var(--glass-bg)] text-dark-300 border-[var(--glass-border)]">
                   {triggerTypeLabel(triggerType)}
                 </Badge>
               </div>
 
               {/* Trigger description */}
-              <div className="p-3 rounded-lg bg-dark-900 border border-dark-600 space-y-1.5">
+              <div className="p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] space-y-1.5">
                 <p className="text-[10px] text-dark-400 font-semibold uppercase tracking-wider">{t('automations.constructor.whenLabel')}</p>
                 <div className="flex items-center gap-2">
                   <Zap className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
@@ -1229,7 +1229,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
 
               {/* Conditions */}
               {conditions.filter((c) => c.field && c.value).length > 0 && (
-                <div className="p-3 rounded-lg bg-dark-900 border border-dark-600 space-y-1.5">
+                <div className="p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] space-y-1.5">
                   <p className="text-[10px] text-dark-400 font-semibold uppercase tracking-wider">{t('automations.constructor.conditionsAllLabel')}</p>
                   {conditions.filter((c) => c.field && c.value).map((c, i) => {
                     const fieldLabel = CONDITION_FIELDS.find((f) => f.value === c.field)?.label || c.field
@@ -1247,7 +1247,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
               )}
 
               {/* Action description */}
-              <div className="p-3 rounded-lg bg-dark-900 border border-dark-600 space-y-1.5">
+              <div className="p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] space-y-1.5">
                 <p className="text-[10px] text-dark-400 font-semibold uppercase tracking-wider">{t('automations.constructor.thenLabel')}</p>
                 <div className="flex items-center gap-2">
                   <ArrowRight className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
@@ -1287,10 +1287,10 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
         )}
 
         {/* Footer navigation */}
-        <DialogFooter className="flex justify-between sm:justify-between pt-4 border-t border-dark-700/50">
+        <DialogFooter className="flex justify-between sm:justify-between pt-4 border-t border-[var(--glass-border)]/50">
           <div>
             {step > 1 && (
-              <Button variant="outline" size="sm" onClick={() => setStep((s) => s - 1)} className="border-dark-600">
+              <Button variant="outline" size="sm" onClick={() => setStep((s) => s - 1)} className="border-[var(--glass-border)]">
                 <ChevronLeft className="w-4 h-4 mr-1" /> {t('automations.constructor.back')}
               </Button>
             )}

@@ -103,7 +103,7 @@ export default function Header({ onMenuToggle, onSearchClick }: HeaderProps) {
         >
           <Search className="w-4 h-4 flex-shrink-0" />
           <span className="flex-1 text-left">{t('header.searchPlaceholder')}</span>
-          <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-dark-400/30 bg-dark-700 px-1.5 font-mono text-[10px] font-medium text-dark-300">
+          <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-[var(--glass-border)] bg-[var(--glass-bg)] px-1.5 font-mono text-[10px] font-medium text-dark-300">
             <span className="text-xs">&#x2318;</span>K
           </kbd>
         </button>
@@ -178,7 +178,7 @@ export default function Header({ onMenuToggle, onSearchClick }: HeaderProps) {
                     {t('notifications.noNotifications')}
                   </div>
                 ) : (
-                  <div className="divide-y divide-dark-400/10">
+                  <div className="divide-y divide-[var(--glass-border)]">
                     {notifications.map((n: Notification) => (
                       <button
                         key={n.id}
@@ -189,7 +189,7 @@ export default function Header({ onMenuToggle, onSearchClick }: HeaderProps) {
                           }
                         }}
                         className={cn(
-                          'w-full text-left px-4 py-3 hover:bg-dark-600/50 transition-colors border-l-2',
+                          'w-full text-left px-4 py-3 hover:bg-[var(--glass-bg-hover)] transition-all border-l-2',
                           n.is_read ? 'border-l-transparent opacity-60' : SEVERITY_STYLES[n.severity] || 'border-l-cyan-500',
                         )}
                       >

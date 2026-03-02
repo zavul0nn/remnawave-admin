@@ -75,7 +75,7 @@ export default function Notifications() {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab} className="w-full min-w-0">
-        <TabsList className="bg-dark-700/50 p-1 w-full flex overflow-x-auto no-scrollbar">
+        <TabsList className="bg-[var(--glass-bg)] p-1 w-full flex overflow-x-auto no-scrollbar">
           <TabsTrigger value="notifications" className="gap-1.5 sm:gap-2 flex-1 min-w-0 px-2 sm:px-3">
             <Bell className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline truncate">{t('notifications.tabs.notifications')}</span>
@@ -229,7 +229,7 @@ function NotificationsTab() {
                 <div
                   key={n.id}
                   className={cn(
-                    'flex items-start gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-l-2 hover:bg-dark-600/30 transition-colors',
+                    'flex items-start gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-l-2 hover:bg-[var(--glass-bg-hover)]/30 transition-colors',
                     n.is_read ? 'border-l-transparent opacity-60' : `border-l-2 ${n.severity === 'critical' ? 'border-l-red-500' : n.severity === 'warning' ? 'border-l-yellow-500' : 'border-l-cyan-500'}`,
                   )}
                 >
@@ -597,7 +597,7 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
                       'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors text-left',
                       checked
                         ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
-                        : 'border-dark-400/20 bg-dark-800 text-dark-300 hover:border-dark-400/40',
+                        : 'border-[var(--glass-border)] bg-[var(--glass-bg)] text-dark-300 hover:border-[var(--glass-border)]/40',
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
@@ -622,7 +622,7 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
             </button>
 
             {showTemplates && (
-              <div className="mt-3 space-y-3 p-3 rounded-lg border border-dark-400/20 bg-dark-800/50">
+              <div className="mt-3 space-y-3 p-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)]">
                 <div>
                   <Label className="text-xs">{t('notifications.alerts.titleTemplate')}</Label>
                   <Input
@@ -639,12 +639,12 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
                     onChange={(e) => setForm({ ...form, body_template: e.target.value })}
                     placeholder="{metric}: {value} ({operator} {threshold})"
                     rows={3}
-                    className="mt-1 w-full rounded-md border border-dark-400/30 bg-dark-900 px-3 py-2 text-xs font-mono text-dark-100 placeholder:text-dark-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                    className="mt-1 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-xs font-mono text-dark-100 placeholder:text-dark-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
                   />
                 </div>
 
                 {/* Live preview */}
-                <div className="rounded-md border border-dark-400/15 bg-dark-900/60 p-2.5">
+                <div className="rounded-md border border-[var(--glass-border)]/15 bg-[var(--glass-bg)]/60 p-2.5">
                   <p className="text-[10px] text-dark-500 mb-1">{t('notifications.alerts.templatePreview')}</p>
                   <p className="text-xs font-medium text-dark-100">
                     {form.title_template
@@ -684,7 +684,7 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
                       <span
                         key={key}
                         title={hint}
-                        className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono bg-dark-700/60 text-cyan-400/80 border border-dark-400/15 cursor-help"
+                        className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--glass-bg)]/60 text-cyan-400/80 border border-[var(--glass-border)]/15 cursor-help"
                       >
                         {key}
                       </span>
@@ -919,7 +919,7 @@ function ChannelsTab() {
               return (
                 <Card key={ch.id}>
                   <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-dark-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--glass-bg-hover)] flex items-center justify-center flex-shrink-0">
                       <Icon className="w-5 h-5 text-cyan-400" />
                     </div>
                     <div className="flex-1 min-w-0">

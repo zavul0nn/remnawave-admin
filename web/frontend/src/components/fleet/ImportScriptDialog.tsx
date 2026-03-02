@@ -263,7 +263,7 @@ export default function ImportScriptDialog({ open, onClose }: ImportScriptDialog
             {preview && (
               <div>
                 <Label>{t('fleet.scripts.preview')}</Label>
-                <pre className="mt-1.5 p-3 bg-dark-800 border border-dark-400/20 rounded-md text-xs font-mono text-dark-100 max-h-[200px] overflow-auto whitespace-pre-wrap">
+                <pre className="mt-1.5 p-3 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md text-xs font-mono text-dark-100 max-h-[200px] overflow-auto whitespace-pre-wrap">
                   {preview.slice(0, 5000)}
                   {preview.length > 5000 && '\n... (truncated)'}
                 </pre>
@@ -298,7 +298,7 @@ export default function ImportScriptDialog({ open, onClose }: ImportScriptDialog
                 <select
                   value={urlForm.category}
                   onChange={(e) => setUrlForm({ ...urlForm, category: e.target.value })}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-dark-50 mt-1.5"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-dark-50 mt-1.5"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -380,11 +380,11 @@ export default function ImportScriptDialog({ open, onClose }: ImportScriptDialog
                   </Button>
                 </div>
 
-                <div className="border border-dark-400/20 rounded-md max-h-[250px] overflow-y-auto divide-y divide-dark-400/10">
+                <div className="border border-[var(--glass-border)] rounded-md max-h-[250px] overflow-y-auto divide-y divide-dark-400/10">
                   {repoFiles.map((file) => (
                     <label
                       key={file.path}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-dark-700/30 cursor-pointer"
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-[var(--glass-bg)] cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedFiles.has(file.path)}
@@ -407,7 +407,7 @@ export default function ImportScriptDialog({ open, onClose }: ImportScriptDialog
                     <select
                       value={bulkCategory}
                       onChange={(e) => setBulkCategory(e.target.value)}
-                      className="flex h-9 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-1 text-sm text-dark-50 mt-1"
+                      className="flex h-9 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-1 text-sm text-dark-50 mt-1"
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>

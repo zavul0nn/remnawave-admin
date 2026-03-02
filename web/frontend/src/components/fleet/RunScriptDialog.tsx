@@ -216,7 +216,7 @@ export default function RunScriptDialog({ open, onOpenChange, script }: RunScrip
           {scriptDetail?.script_content && (
             <div>
               <label className="text-xs text-dark-200 mb-1.5 block">{t('fleet.scripts.scriptContent')}</label>
-              <pre className="bg-dark-900 border border-dark-700 rounded-md p-3 text-xs font-mono text-dark-100 max-h-[150px] overflow-auto whitespace-pre-wrap">
+              <pre className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md p-3 text-xs font-mono text-dark-100 max-h-[150px] overflow-auto whitespace-pre-wrap">
                 {scriptDetail.script_content}
               </pre>
             </div>
@@ -270,7 +270,7 @@ export default function RunScriptDialog({ open, onOpenChange, script }: RunScrip
                     </span>
                   )}
                 </div>
-                <pre className="bg-dark-900 border border-dark-700 rounded-md p-3 text-xs font-mono text-dark-100 max-h-[300px] overflow-auto whitespace-pre-wrap">
+                <pre className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md p-3 text-xs font-mono text-dark-100 max-h-[300px] overflow-auto whitespace-pre-wrap">
                   {execStatus?.output || (isRunning ? t('fleet.scripts.waitingOutput') : '')}
                 </pre>
               </div>

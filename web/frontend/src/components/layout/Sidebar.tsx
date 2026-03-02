@@ -275,8 +275,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                               className={cn(
                                 "sidebar-nav-item group flex items-center justify-center px-0 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                 isActive
-                                  ? "text-white bg-primary/15"
-                                  : "text-dark-200 hover:text-white"
+                                  ? "text-white bg-[var(--glass-bg-hover)] border border-[var(--glass-border-hover)] shadow-[0_0_10px_-4px_rgba(var(--glow-rgb),0.25)]"
+                                  : "text-dark-200 hover:text-white hover:bg-[var(--glass-bg)]"
                               )}
                             >
                               <item.icon
@@ -305,8 +305,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                     className={cn(
                       "sidebar-nav-item group flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                       groupActive
-                        ? "text-white bg-dark-700/50"
-                        : "text-dark-200 hover:text-white"
+                        ? "text-white bg-[var(--glass-bg-hover)] border border-[var(--glass-border)]"
+                        : "text-dark-200 hover:text-white hover:bg-[var(--glass-bg)]"
                     )}
                   >
                     <entry.icon
@@ -331,7 +331,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                       isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                     )}
                   >
-                    <div className="sidebar-group-items ml-3 pl-3 border-l border-dark-500/30 space-y-0.5">
+                    <div className="sidebar-group-items ml-3 pl-3 border-l border-[var(--glass-border)] space-y-0.5">
                       {visibleItems.map((item) => {
                         const isActive = location.pathname === item.href
                         return (
@@ -343,8 +343,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                                 className={cn(
                                   "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                                   isActive
-                                    ? "text-white bg-primary/15 border-l-[3px] border-l-primary border-r-[3px] border-r-primary/50"
-                                    : "text-dark-200 hover:text-white hover:translate-x-1"
+                                    ? "text-white bg-[var(--glass-bg-hover)] border border-[var(--glass-border-hover)] shadow-[0_0_10px_-4px_rgba(var(--glow-rgb),0.2)]"
+                                    : "text-dark-200 hover:text-white hover:bg-[var(--glass-bg)] hover:translate-x-0.5"
                                 )}
                               >
                                 <item.icon
@@ -379,8 +379,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                     className={cn(
                       "sidebar-nav-item group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                       isActive
-                        ? "text-white bg-primary/15 border-l-[3px] border-l-primary border-r-[3px] border-r-primary/50"
-                        : "text-dark-200 hover:text-white hover:translate-x-1",
+                        ? "text-white bg-[var(--glass-bg-hover)] border border-[var(--glass-border-hover)] shadow-[0_0_12px_-4px_rgba(var(--glow-rgb),0.25)]"
+                        : "text-dark-200 hover:text-white hover:bg-[var(--glass-bg)] hover:translate-x-0.5",
                       collapsed && "justify-center px-0"
                     )}
                   >
@@ -473,7 +473,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               href="https://github.com/case211/remnawave-admin"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-white transition-colors rounded-md hover:bg-dark-600/30"
+              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-white transition-colors rounded-md hover:bg-[var(--glass-bg)]"
             >
               <Github className="w-3.5 h-3.5 shrink-0" />
               <span>GitHub</span>
@@ -482,7 +482,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               href="https://t.me/remnawave_admin"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-white transition-colors rounded-md hover:bg-dark-600/30"
+              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-white transition-colors rounded-md hover:bg-[var(--glass-bg)]"
             >
               <MessageCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{t('sidebar.telegramChat')}</span>
@@ -491,7 +491,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               href="https://github.com/case211/remnawave-admin#-поддержка"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-primary-400 transition-colors rounded-md hover:bg-dark-600/30"
+              className="flex items-center gap-2 px-2 py-1.5 text-xs text-dark-300 hover:text-primary-400 transition-colors rounded-md hover:bg-[var(--glass-bg)]"
             >
               <Heart className="w-3.5 h-3.5 shrink-0" />
               <span>{t('sidebar.support')}</span>
@@ -507,7 +507,7 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center bg-primary/20 flex-shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--glass-bg-hover)] border border-[var(--glass-border)] shadow-[0_0_10px_-4px_rgba(var(--glow-rgb),0.2)] flex-shrink-0"
               >
                 <span className="text-sm font-medium text-primary-400">
                   {user?.username?.charAt(0).toUpperCase() || 'A'}

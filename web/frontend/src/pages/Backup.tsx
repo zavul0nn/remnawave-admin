@@ -180,7 +180,7 @@ function BackupsTab() {
       </div>
 
       {/* Files list */}
-      <Card className="border-dark-600 bg-dark-800/50">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
             <HardDrive className="w-4 h-4" />
@@ -205,7 +205,7 @@ function BackupsTab() {
               {files.map((file) => (
                 <div
                   key={file.filename}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-700/50 hover:bg-dark-700 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] transition-colors"
                 >
                   {file.filename.endsWith('.sql.gz') ? (
                     <Database className="w-5 h-5 text-primary-400 flex-shrink-0" />
@@ -349,7 +349,7 @@ function ImportTab() {
   return (
     <div className="space-y-6">
       {/* Config import */}
-      <Card className="border-dark-600 bg-dark-800/50">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-primary-400" />
@@ -364,7 +364,7 @@ function ImportTab() {
               {configFiles.map((file) => (
                 <div
                   key={file.filename}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-700/50"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--glass-bg)]"
                 >
                   <FileJson className="w-5 h-5 text-primary-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -401,7 +401,7 @@ function ImportTab() {
       </Card>
 
       {/* User import */}
-      <Card className="border-dark-600 bg-dark-800/50">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
             <Users className="w-4 h-4 text-primary-400" />
@@ -420,7 +420,7 @@ function ImportTab() {
               {userFiles.map((file) => (
                 <div
                   key={file.filename}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-700/50"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--glass-bg)]"
                 >
                   <FileJson className="w-5 h-5 text-primary-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -459,7 +459,7 @@ function HistoryTab() {
   })
 
   return (
-    <Card className="border-dark-600 bg-dark-800/50">
+    <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
           <Clock className="w-4 h-4" />
@@ -484,7 +484,7 @@ function HistoryTab() {
             {log.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg bg-dark-700/50"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--glass-bg)]"
               >
                 <BackupTypeIcon type={entry.backup_type} />
                 <div className="flex-1 min-w-0">

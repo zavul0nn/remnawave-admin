@@ -76,7 +76,7 @@ function QuotaBar({ used, limit, label }: { used: number; limit: number | null; 
           </span>
         </div>
       )}
-      <div className="h-1.5 bg-dark-600 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[var(--glass-bg-hover)] rounded-full overflow-hidden">
         {!isUnlimited && percent > 0 && (
           <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${percent}%` }} />
         )}
@@ -147,13 +147,13 @@ function PermissionMatrix({
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th className="text-left py-2 px-3 text-dark-200 font-medium border-b border-dark-400/20 sticky left-0 bg-dark-800 z-10 w-[130px]">
+              <th className="text-left py-2 px-3 text-dark-200 font-medium border-b border-[var(--glass-border)] sticky left-0 bg-[var(--glass-bg)] z-10 w-[130px]">
                 {t('admins.resource')}
               </th>
               {allActions.map((action) => (
                 <th
                   key={action}
-                  className="text-center py-2 px-1 text-dark-200 font-medium border-b border-dark-400/20 cursor-pointer hover:text-white transition-colors"
+                  className="text-center py-2 px-1 text-dark-200 font-medium border-b border-[var(--glass-border)] cursor-pointer hover:text-white transition-colors"
                   onClick={() => toggleAllAction(action)}
                 >
                   <span className="text-[11px]">{t(`admins.actions.${action}`, { defaultValue: action })}</span>
@@ -163,9 +163,9 @@ function PermissionMatrix({
           </thead>
           <tbody>
             {Object.entries(resources).map(([resource, actions]) => (
-              <tr key={resource} className="border-b border-dark-400/10 hover:bg-dark-700/30">
+              <tr key={resource} className="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)]">
                 <td
-                  className="py-1.5 px-3 text-dark-50 font-medium cursor-pointer hover:text-primary-400 transition-colors sticky left-0 bg-dark-800 z-10 text-xs"
+                  className="py-1.5 px-3 text-dark-50 font-medium cursor-pointer hover:text-primary-400 transition-colors sticky left-0 bg-[var(--glass-bg)] z-10 text-xs"
                   onClick={() => toggleAllResource(resource)}
                 >
                   {t(`admins.resources.${resource}`, { defaultValue: resource })}
@@ -184,7 +184,7 @@ function PermissionMatrix({
                             "w-5 h-5 rounded border transition-all mx-auto flex items-center justify-center",
                             checked
                               ? "bg-primary-500/20 border-primary-500 text-primary-400"
-                              : "border-dark-400/30 hover:border-dark-300/50",
+                              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]/50",
                             disabled && "opacity-50 cursor-not-allowed"
                           )}
                         >
@@ -206,7 +206,7 @@ function PermissionMatrix({
           const resourcePerms = actions.filter((a) => isChecked(resource, a))
           const allChecked = actions.every((a) => isChecked(resource, a))
           return (
-            <div key={resource} className="rounded-lg border border-dark-400/20 bg-dark-800/50 p-3">
+            <div key={resource} className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3">
               <div className="flex items-center justify-between mb-2">
                 <button
                   type="button"
@@ -237,7 +237,7 @@ function PermissionMatrix({
                         "inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border transition-all",
                         checked
                           ? "bg-primary-500/15 border-primary-500/40 text-primary-400"
-                          : "bg-dark-700/50 border-dark-400/20 text-dark-300 hover:border-dark-300/40 hover:text-dark-100",
+                          : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-dark-300 hover:border-[var(--glass-border-hover)]/40 hover:text-dark-100",
                         disabled && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -390,7 +390,7 @@ function AdminFormDialog({
             <select
               value={form.role_id}
               onChange={(e) => setForm({ ...form, role_id: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-dark-50 mt-1.5"
+              className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-dark-50 mt-1.5"
             >
               <option value="">{t('admins.selectRole')}</option>
               {roles.map((r) => (
@@ -410,7 +410,7 @@ function AdminFormDialog({
             />
           </div>
 
-          <div className="pt-2 border-t border-dark-400/20">
+          <div className="pt-2 border-t border-[var(--glass-border)]">
             <p className="text-sm font-medium text-dark-100 mb-3">{t('admins.limitsHint')}</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -548,7 +548,7 @@ function RoleFormDialog({
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 pt-4 border-t border-dark-400/20">
+        <DialogFooter className="shrink-0 pt-4 border-t border-[var(--glass-border)]">
           <Button variant="secondary" onClick={onClose} disabled={isPending}>{t('common.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isPending || !displayName || (!editingRole && !name)}>
             {isPending ? t('common.saving') : editingRole ? t('common.save') : t('common.create')}
@@ -835,7 +835,7 @@ function RolesTab({ resources }: { resources: AvailableResources }) {
           <Card className="col-span-full"><CardContent className="p-8 text-center text-muted-foreground">{t('admins.noRoles')}</CardContent></Card>
         ) : (
           roles.map((role) => (
-            <Card key={role.id} className={cn("border-l-[3px] transition-all hover:border-dark-300/50", roleColorMap[role.name] || 'border-l-purple-500')}>
+            <Card key={role.id} className={cn("border-l-[3px] transition-all hover:border-[var(--glass-border-hover)]/50", roleColorMap[role.name] || 'border-l-purple-500')}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -860,15 +860,15 @@ function RolesTab({ resources }: { resources: AvailableResources }) {
                 </div>
                 <div className="flex flex-wrap gap-1 mb-4">
                   {role.permissions?.slice(0, 8).map((p) => (
-                    <span key={`${p.resource}:${p.action}`} className="text-[10px] px-1.5 py-0.5 rounded bg-dark-600/50 text-dark-200">
+                    <span key={`${p.resource}:${p.action}`} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-dark-200">
                       {p.resource}:{p.action}
                     </span>
                   ))}
                   {(role.permissions?.length || 0) > 8 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-dark-600/50 text-dark-300">+{(role.permissions?.length || 0) - 8}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--glass-bg)] text-dark-300">+{(role.permissions?.length || 0) - 8}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-dark-400/20">
+                <div className="flex items-center gap-2 pt-3 border-t border-[var(--glass-border)]">
                   <PermissionGate resource="roles" action="edit">
                     <Button variant="secondary" size="sm" onClick={() => { setEditingRole(role); setFormError(''); setShowDialog(true) }}>
                       <Pencil className="w-3.5 h-3.5 mr-1.5" /> {t('common.edit')}

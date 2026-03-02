@@ -376,7 +376,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : !Array.isArray(tokens) || tokens.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('resources.tokens.empty')}</p>
@@ -387,7 +387,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               {(Array.isArray(tokens) ? tokens : []).map((token) => {
                 const isRevealed = revealedTokens.has(token.uuid)
                 return (
-                  <Card key={token.uuid} className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors">
+                  <Card key={token.uuid} className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-2">
@@ -398,7 +398,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
                             </Badge>
                           </div>
                           <div className="flex items-center gap-2">
-                            <code className="px-2 py-1 bg-dark-700 rounded text-xs font-mono text-dark-100 flex-1">
+                            <code className="px-2 py-1 bg-[var(--glass-bg)] rounded text-xs font-mono text-dark-100 flex-1">
                               {isRevealed ? token.token : maskToken(token.token)}
                             </code>
                             <Button
@@ -462,7 +462,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : !Array.isArray(templates) || templates.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Code className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('resources.templates.empty')}</p>
@@ -473,7 +473,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               {(Array.isArray(templates) ? templates : []).map((template) => (
                 <Card
                   key={template.uuid}
-                  className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors cursor-pointer"
+                  className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors cursor-pointer"
                   onClick={() => canUpdate && openEditTemplate(template)}
                 >
                   <CardContent className="p-4">
@@ -538,7 +538,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : !Array.isArray(snippets) || snippets.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Code className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('resources.snippets.empty')}</p>
@@ -549,7 +549,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               {(Array.isArray(snippets) ? snippets : []).map((snippet) => (
                 <Card
                   key={snippet.name}
-                  className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors cursor-pointer"
+                  className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors cursor-pointer"
                   onClick={() => canUpdate && openEditSnippet(snippet)}
                 >
                   <CardContent className="p-4">
@@ -561,7 +561,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
                             {formatDate(snippet.updatedAt)}
                           </Badge>
                         </div>
-                        <pre className="text-xs text-dark-300 bg-dark-700 p-2 rounded overflow-x-auto max-h-20">
+                        <pre className="text-xs text-dark-300 bg-[var(--glass-bg)] p-2 rounded overflow-x-auto max-h-20">
                           {JSON.stringify(snippet.snippet, null, 2).slice(0, 200)}
                           {JSON.stringify(snippet.snippet).length > 200 ? '...' : ''}
                         </pre>
@@ -603,7 +603,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : !Array.isArray(configProfiles) || configProfiles.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Settings className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('resources.profiles.empty')}</p>
@@ -614,7 +614,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
               {(Array.isArray(configProfiles) ? configProfiles : []).map((profile) => (
                 <Card
                   key={profile.uuid}
-                  className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors cursor-pointer"
+                  className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors cursor-pointer"
                   onClick={() => viewComputedConfig(profile)}
                 >
                   <CardContent className="p-4">
@@ -784,7 +784,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
                 id="editTemplateJson"
                 value={editTemplateForm.templateJson}
                 onChange={(e) => setEditTemplateForm({ ...editTemplateForm, templateJson: e.target.value })}
-                className="mt-1 w-full h-64 px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="mt-1 w-full h-64 px-3 py-2 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="{}"
               />
             </div>
@@ -837,7 +837,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
                 id="snippetJson"
                 value={snippetFormData.snippet}
                 onChange={(e) => setSnippetFormData({ ...snippetFormData, snippet: e.target.value })}
-                className="mt-1 w-full h-64 px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="mt-1 w-full h-64 px-3 py-2 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="{}"
               />
             </div>
@@ -879,7 +879,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
                 id="editSnippetJson"
                 value={editSnippetForm.snippet}
                 onChange={(e) => setEditSnippetForm({ ...editSnippetForm, snippet: e.target.value })}
-                className="mt-1 w-full h-64 px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="mt-1 w-full h-64 px-3 py-2 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md text-sm font-mono text-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="{}"
               />
             </div>
@@ -918,7 +918,7 @@ export default function Resources({ embedded }: { embedded?: boolean } = {}) {
             <DialogDescription>{t('resources.profiles.viewDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <pre className="w-full max-h-96 overflow-auto px-3 py-2 bg-dark-700 border border-dark-600 rounded-md text-xs font-mono text-dark-50">
+            <pre className="w-full max-h-96 overflow-auto px-3 py-2 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md text-xs font-mono text-dark-50">
               {JSON.stringify(computedConfig, null, 2)}
             </pre>
           </div>

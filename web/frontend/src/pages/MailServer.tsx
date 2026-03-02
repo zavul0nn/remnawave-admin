@@ -70,7 +70,7 @@ export default function MailServer() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="bg-dark-700/50 border border-dark-400/20 overflow-x-auto no-scrollbar">
+        <TabsList className="bg-[var(--glass-bg)] border border-[var(--glass-border)] overflow-x-auto no-scrollbar">
           <TabsTrigger value="domains" className="gap-1.5">
             <Globe className="w-4 h-4" />
             <span className="hidden sm:inline">{t('mailServer.tabs.domains')}</span>
@@ -178,7 +178,7 @@ function DomainsTab({ canCreate, canEdit, canDelete }: { canCreate: boolean; can
 
       {/* Domain cards */}
       {!domains?.length ? (
-        <Card className="bg-dark-700/50 border-dark-400/20">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="py-12 text-center">
             <Globe className="w-12 h-12 mx-auto text-dark-300 mb-3" />
             <p className="text-muted-foreground">{t('mailServer.noDomains')}</p>
@@ -293,13 +293,13 @@ function DomainCard({
   })
 
   return (
-    <Card className="bg-dark-700/50 border-dark-400/20">
+    <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-10 h-10 rounded-lg flex items-center justify-center",
-              domain.is_active ? "bg-green-500/20" : "bg-dark-600"
+              domain.is_active ? "bg-green-500/20" : "bg-[var(--glass-bg-hover)]"
             )}>
               <Globe className={cn("w-5 h-5", domain.is_active ? "text-green-400" : "text-dark-300")} />
             </div>
@@ -335,7 +335,7 @@ function DomainCard({
         </div>
 
         {/* Sender name */}
-        <div className="flex items-center gap-3 mt-4 p-3 rounded-lg bg-dark-600/30 border border-dark-400/10">
+        <div className="flex items-center gap-3 mt-4 p-3 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
           <div className="flex-1 min-w-0">
             <span className="text-xs text-muted-foreground">{t('mailServer.senderName')}:</span>
             {editingFromName ? (
@@ -375,7 +375,7 @@ function DomainCard({
                 "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm",
                 ok
                   ? "bg-green-500/10 border-green-500/30 text-green-400"
-                  : "bg-dark-600/50 border-dark-400/20 text-dark-200"
+                  : "bg-[var(--glass-bg)] border-[var(--glass-border)] text-dark-200"
               )}>
                 {ok ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                 {rec.toUpperCase()}
@@ -420,7 +420,7 @@ function DnsRecordsDialog({ domainId, onClose }: { domainId: number; onClose: ()
                   "p-4 rounded-lg border",
                   rec.is_configured
                     ? "bg-green-500/5 border-green-500/30"
-                    : "bg-dark-600/50 border-dark-400/20"
+                    : "bg-[var(--glass-bg)] border-[var(--glass-border)]"
                 )}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -526,7 +526,7 @@ function QueueTab({ canEdit }: { canEdit: boolean; canDelete: boolean }) {
             { label: t('mailServer.failed'), value: stats.failed, color: 'text-red-400' },
             { label: t('mailServer.total'), value: stats.total, color: 'text-white' },
           ].map((s) => (
-            <Card key={s.label} className="bg-dark-700/50 border-dark-400/20">
+            <Card key={s.label} className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="p-3 text-center">
                 <div className={cn("text-2xl font-bold", s.color)}>{s.value}</div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -558,7 +558,7 @@ function QueueTab({ canEdit }: { canEdit: boolean; canDelete: boolean }) {
       ) : isError ? (
         <QueryError onRetry={refetch} />
       ) : !queue?.length ? (
-        <Card className="bg-dark-700/50 border-dark-400/20">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="py-12 text-center">
             <ListOrdered className="w-12 h-12 mx-auto text-dark-300 mb-3" />
             <p className="text-muted-foreground">{t('mailServer.noQueueItems')}</p>
@@ -567,7 +567,7 @@ function QueueTab({ canEdit }: { canEdit: boolean; canDelete: boolean }) {
       ) : (
         <div className="space-y-2">
           {queue.map((item) => (
-            <Card key={item.id} className="bg-dark-700/50 border-dark-400/20">
+            <Card key={item.id} className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -678,7 +678,7 @@ function InboxTab({ canEdit, canDelete }: { canEdit: boolean; canDelete: boolean
         {/* Message list */}
         <div className="space-y-1">
           {!inbox?.length ? (
-            <Card className="bg-dark-700/50 border-dark-400/20">
+            <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="py-12 text-center">
                 <Inbox className="w-12 h-12 mx-auto text-dark-300 mb-3" />
                 <p className="text-muted-foreground">{t('mailServer.noMessages')}</p>
@@ -693,7 +693,7 @@ function InboxTab({ canEdit, canDelete }: { canEdit: boolean; canDelete: boolean
                   "p-3 rounded-lg border cursor-pointer transition-colors",
                   item.id === selectedId
                     ? "bg-primary/10 border-primary/30"
-                    : "bg-dark-700/50 border-dark-400/20 hover:border-dark-300/30",
+                    : "bg-[var(--glass-bg)] border-[var(--glass-border)] hover:border-[var(--glass-border-hover)]/30",
                   !item.is_read && "border-l-2 border-l-primary"
                 )}
               >
@@ -721,7 +721,7 @@ function InboxTab({ canEdit, canDelete }: { canEdit: boolean; canDelete: boolean
 
         {/* Detail panel */}
         {detail ? (
-          <Card className="bg-dark-700/50 border-dark-400/20">
+          <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base text-white truncate">{detail.subject || t('mailServer.noSubject')}</CardTitle>
@@ -746,7 +746,7 @@ function InboxTab({ canEdit, canDelete }: { canEdit: boolean; canDelete: boolean
                   <p><span className="text-muted-foreground">IP:</span> <span className="text-dark-100">{detail.remote_ip}</span></p>
                 )}
               </div>
-              <div className="border-t border-dark-400/20 pt-3">
+              <div className="border-t border-[var(--glass-border)] pt-3">
                 {detail.body_html ? (
                   <iframe
                     sandbox=""
@@ -761,7 +761,7 @@ function InboxTab({ canEdit, canDelete }: { canEdit: boolean; canDelete: boolean
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-dark-700/50 border-dark-400/20 hidden lg:block">
+          <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)] hidden lg:block">
             <CardContent className="py-20 text-center">
               <Mail className="w-12 h-12 mx-auto text-dark-300 mb-3" />
               <p className="text-muted-foreground">{t('mailServer.selectMessage')}</p>
@@ -833,7 +833,7 @@ function ComposeTab() {
   })
 
   return (
-    <Card className="bg-dark-700/50 border-dark-400/20">
+    <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
       <CardHeader>
         <CardTitle className="text-white">{t('mailServer.compose')}</CardTitle>
       </CardHeader>
@@ -1027,7 +1027,7 @@ function CredentialsTab({ canCreate, canEdit, canDelete }: { canCreate: boolean;
       </div>
 
       {/* Connection info banner */}
-      <Card className="bg-dark-700/30 border-dark-400/10">
+      <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
         <CardContent className="p-3">
           <p className="text-xs text-muted-foreground mb-1.5">{t('mailServer.credentials.connectionInfo')}</p>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
@@ -1039,7 +1039,7 @@ function CredentialsTab({ canCreate, canEdit, canDelete }: { canCreate: boolean;
 
       {/* Credentials list */}
       {!credentials?.length ? (
-        <Card className="bg-dark-700/50 border-dark-400/20">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="py-12 text-center">
             <KeyRound className="w-12 h-12 mx-auto text-dark-300 mb-3" />
             <p className="text-muted-foreground">{t('mailServer.credentials.noCredentials')}</p>
@@ -1048,13 +1048,13 @@ function CredentialsTab({ canCreate, canEdit, canDelete }: { canCreate: boolean;
       ) : (
         <div className="space-y-2">
           {credentials.map((cred) => (
-            <Card key={cred.id} className="bg-dark-700/50 border-dark-400/20">
+            <Card key={cred.id} className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={cn(
                       "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-                      cred.is_active ? "bg-green-500/20" : "bg-dark-600"
+                      cred.is_active ? "bg-green-500/20" : "bg-[var(--glass-bg-hover)]"
                     )}>
                       <KeyRound className={cn("w-4 h-4", cred.is_active ? "text-green-400" : "text-dark-300")} />
                     </div>

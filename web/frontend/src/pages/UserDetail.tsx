@@ -235,7 +235,7 @@ function CollapsibleSection({
       <button
         onClick={toggle}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between p-4 hover:bg-dark-700/30 transition-colors rounded-t-lg"
+        className="w-full flex items-center justify-between p-4 hover:bg-[var(--glass-bg)] transition-colors rounded-t-lg"
       >
         <div className="flex items-center gap-2">
           {isOpen ? (
@@ -369,7 +369,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
                   className={cn(
                     'h-6 px-2 text-[11px]',
                     nodePeriod === p.key
-                      ? 'bg-dark-600 text-white'
+                      ? 'bg-[var(--glass-bg-hover)] text-white'
                       : 'text-dark-300 hover:text-dark-100'
                   )}
                 >
@@ -381,7 +381,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
             {/* Node list */}
             <div className="space-y-2 relative">
               {showLoadingOverlay && (
-                <div className="absolute inset-0 bg-dark-800/50 rounded-lg flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-[var(--glass-bg)] rounded-lg flex items-center justify-center z-10">
                   <RefreshCw className="h-5 w-5 text-primary-500 animate-spin" />
                 </div>
               )}
@@ -390,7 +390,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
                   {trafficStats.nodes_traffic.map((node) => (
                     <div
                       key={node.node_uuid}
-                      className="flex items-center justify-between p-2.5 bg-dark-700/40 rounded-lg border border-dark-600/20"
+                      className="flex items-center justify-between p-2.5 bg-[var(--glass-bg)]/40 rounded-lg border border-[var(--glass-border)]/20"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0 mr-3">
                         <Server className="h-3.5 w-3.5 text-dark-300 flex-shrink-0" />
@@ -400,7 +400,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
                     </div>
                   ))}
                   {/* Total */}
-                  <div className="flex items-center justify-between p-2.5 bg-dark-600/30 rounded-lg border border-primary-500/20">
+                  <div className="flex items-center justify-between p-2.5 bg-[var(--glass-bg-hover)]/30 rounded-lg border border-primary-500/20">
                     <span className="text-sm text-primary-400 font-medium">{t('userDetail.traffic.total')}</span>
                     <span className="text-sm text-white font-bold">
                       {formatBytes(trafficStats.nodes_traffic.reduce((sum, n) => sum + n.total_bytes, 0))}
@@ -418,7 +418,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
           /* Traffic bar and stats */
           <div className="space-y-4 relative">
             {showLoadingOverlay && (
-              <div className="absolute inset-0 bg-dark-800/50 rounded-lg flex items-center justify-center z-10">
+              <div className="absolute inset-0 bg-[var(--glass-bg)] rounded-lg flex items-center justify-center z-10">
                 <RefreshCw className="h-5 w-5 text-primary-500 animate-spin" />
               </div>
             )}
@@ -447,7 +447,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
                   </div>
                   {period === 'current' ? (
                     <>
-                      <div className="w-full bg-dark-600 rounded-full h-2.5">
+                      <div className="w-full bg-[var(--glass-bg-hover)] rounded-full h-2.5">
                         <div
                           className={cn(
                             'h-2.5 rounded-full transition-all',
@@ -476,17 +476,17 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
             {/* Summary cards */}
             <Separator />
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-dark-700/50 rounded-lg p-3 text-center">
+              <div className="bg-[var(--glass-bg)] rounded-lg p-3 text-center">
                 <p className="text-base font-bold text-white">{formatBytes(user.used_traffic_bytes)}</p>
                 <p className="text-[11px] text-dark-200">{t('userDetail.traffic.currentPeriod')}</p>
               </div>
-              <div className="bg-dark-700/50 rounded-lg p-3 text-center">
+              <div className="bg-[var(--glass-bg)] rounded-lg p-3 text-center">
                 <p className="text-base font-bold text-white">
                   {user.traffic_limit_bytes ? formatBytes(user.traffic_limit_bytes) : '\u221E'}
                 </p>
                 <p className="text-[11px] text-dark-200">{t('userDetail.traffic.limit')}</p>
               </div>
-              <div className="bg-dark-700/50 rounded-lg p-3 text-center">
+              <div className="bg-[var(--glass-bg)] rounded-lg p-3 text-center">
                 <p className="text-base font-bold text-white">
                   {formatBytes(user.lifetime_used_traffic_bytes || user.used_traffic_bytes)}
                 </p>
@@ -504,7 +504,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
                     {trafficStats.nodes_traffic.map((node) => (
                       <div
                         key={node.node_uuid}
-                        className="flex items-center justify-between px-2.5 py-1.5 bg-dark-700/30 rounded text-xs"
+                        className="flex items-center justify-between px-2.5 py-1.5 bg-[var(--glass-bg)] rounded text-xs"
                       >
                         <span className="text-dark-100 truncate flex-1 mr-2">{node.node_name}</span>
                         <span className="text-white font-medium">{formatBytes(node.total_bytes)}</span>
@@ -549,7 +549,7 @@ function PaginatedDeviceList({
           return (
             <div
               key={device.hwid || globalIdx}
-              className="bg-dark-700/40 rounded-lg p-3 border border-dark-600/20 hover:border-dark-500/30 transition-colors"
+              className="bg-[var(--glass-bg)]/40 rounded-lg p-3 border border-[var(--glass-border)]/20 hover:border-[var(--glass-border)] transition-colors"
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
@@ -708,7 +708,7 @@ function UserHistory({ uuid }: { uuid: string }) {
             </div>
           ) : (
             <div className="relative pl-6 space-y-4">
-              <div className="absolute left-[9px] top-2 bottom-2 w-px bg-dark-600" />
+              <div className="absolute left-[9px] top-2 bottom-2 w-px bg-[var(--glass-bg-hover)]" />
               {items.map((item) => {
                 const dot = item.action?.indexOf('.') ?? -1
                 const action = dot > 0 ? item.action.slice(dot + 1) : item.action
@@ -717,7 +717,7 @@ function UserHistory({ uuid }: { uuid: string }) {
                     <div className="absolute -left-6 top-1 w-[7px] h-[7px] rounded-full bg-primary-400 ring-2 ring-dark-800" />
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <span className="text-sm font-medium text-white">{item.admin_username}</span>
-                      <Badge variant="outline" className="text-xs bg-dark-700 border-dark-600">
+                      <Badge variant="outline" className="text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]">
                         {action}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
@@ -823,7 +823,7 @@ function IpHistoryCard({ userUuid }: { userUuid: string }) {
             {visible.map((item) => (
               <div
                 key={item.ip}
-                className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_1fr_auto_auto] gap-2 items-center px-2 py-1.5 rounded-md hover:bg-dark-600/30 transition-colors group"
+                className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_1fr_auto_auto] gap-2 items-center px-2 py-1.5 rounded-md hover:bg-[var(--glass-bg-hover)]/30 transition-colors group"
               >
                 <div className="flex flex-col min-w-0">
                   <button
@@ -1533,7 +1533,7 @@ export default function UserDetail() {
                             is_unlimited: e.target.checked,
                             traffic_limit_gb: e.target.checked ? '' : editForm.traffic_limit_gb,
                           })}
-                          className="w-4 h-4 rounded border-dark-400/30 bg-dark-800 text-primary-500 focus:ring-primary-500/50"
+                          className="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary-500 focus:ring-primary-500/50"
                         />
                         <span className="text-sm text-dark-100">{t('userDetail.trafficUnlimited')}</span>
                       </label>
@@ -1643,10 +1643,10 @@ export default function UserDetail() {
                                 <label
                                   key={sq.uuid}
                                   className={cn(
-                                    'flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 hover:bg-dark-600/50 transition-colors',
+                                    'flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 hover:bg-[var(--glass-bg-hover)] transition-colors',
                                     editForm.active_internal_squads.includes(sq.uuid)
                                       ? 'bg-primary/10 border border-primary/30'
-                                      : 'bg-dark-700/30 border border-dark-400/15'
+                                      : 'bg-[var(--glass-bg)] border border-[var(--glass-border)]/15'
                                   )}
                                 >
                                   <Checkbox
@@ -1807,19 +1807,19 @@ export default function UserDetail() {
                         <p className="text-sm text-dark-200 mb-2">{t('userDetail.protocols')}</p>
                         <div className="grid grid-cols-1 gap-2">
                           {user.vless_uuid && (
-                            <div className="bg-dark-700/40 rounded-lg p-2.5">
+                            <div className="bg-[var(--glass-bg)]/40 rounded-lg p-2.5">
                               <p className="text-xs text-dark-300 mb-0.5">VLESS UUID</p>
                               <p className="text-xs font-mono text-white break-all">{user.vless_uuid}</p>
                             </div>
                           )}
                           {user.trojan_password && (
-                            <div className="bg-dark-700/40 rounded-lg p-2.5">
+                            <div className="bg-[var(--glass-bg)]/40 rounded-lg p-2.5">
                               <p className="text-xs text-dark-300 mb-0.5">Trojan Password</p>
                               <p className="text-xs font-mono text-white break-all">{user.trojan_password}</p>
                             </div>
                           )}
                           {user.ss_password && (
-                            <div className="bg-dark-700/40 rounded-lg p-2.5">
+                            <div className="bg-[var(--glass-bg)]/40 rounded-lg p-2.5">
                               <p className="text-xs text-dark-300 mb-0.5">Shadowsocks Password</p>
                               <p className="text-xs font-mono text-white break-all">{user.ss_password}</p>
                             </div>
@@ -1898,7 +1898,7 @@ export default function UserDetail() {
                   return (
                     <div
                       key={v.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-dark-700 rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--glass-bg)] rounded-lg"
                     >
                       <div className="flex items-center gap-3 flex-wrap">
                         <Badge variant={sevBadge.variant}>
@@ -2009,7 +2009,7 @@ export default function UserDetail() {
                   </div>
                 )}
                 {canEdit && (
-                  <div className="pt-3 border-t border-dark-400/20 grid grid-cols-2 gap-2">
+                  <div className="pt-3 border-t border-[var(--glass-border)] grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -2059,7 +2059,7 @@ export default function UserDetail() {
                       {user.trust_score ?? 100}
                     </Badge>
                   </div>
-                  <div className="w-full bg-dark-600 rounded-full h-2">
+                  <div className="w-full bg-[var(--glass-bg-hover)] rounded-full h-2">
                     <div
                       className={cn(
                         'h-2 rounded-full transition-all',
@@ -2072,14 +2072,14 @@ export default function UserDetail() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-dark-600 rounded-lg p-3 text-center">
+                  <div className="bg-[var(--glass-bg-hover)] rounded-lg p-3 text-center">
                     <div className="flex justify-center mb-1">
                       <AlertTriangle className="h-4 w-4 text-dark-300" />
                     </div>
                     <p className="text-xl md:text-2xl font-bold text-white">{user.violation_count_30d}</p>
                     <p className="text-xs text-dark-200">{t('userDetail.antiAbuse.violations30d')}</p>
                   </div>
-                  <div className="bg-dark-600 rounded-lg p-3 text-center">
+                  <div className="bg-[var(--glass-bg-hover)] rounded-lg p-3 text-center">
                     <div className="flex justify-center mb-1">
                       <Users className="h-4 w-4 text-dark-300" />
                     </div>
@@ -2087,7 +2087,7 @@ export default function UserDetail() {
                     <p className="text-xs text-dark-200">{t('userDetail.antiAbuse.connections')}</p>
                   </div>
                 </div>
-                <div className="bg-dark-600 rounded-lg p-3 text-center">
+                <div className="bg-[var(--glass-bg-hover)] rounded-lg p-3 text-center">
                   <div className="flex justify-center mb-1">
                     <Globe className="h-4 w-4 text-dark-300" />
                   </div>
@@ -2242,8 +2242,8 @@ export default function UserDetail() {
                     exclusionMode === mode
                       ? mode === 'full' ? 'bg-primary/20 text-primary-400 border-primary/30'
                         : mode === 'partial' ? 'bg-primary/20 text-primary-400 border-primary/30'
-                        : 'bg-dark-600 text-white border-dark-400/30'
-                      : 'bg-dark-700/50 text-dark-200 border-dark-400/20 hover:text-white hover:border-dark-400/40'
+                        : 'bg-[var(--glass-bg-hover)] text-white border-[var(--glass-border)]'
+                      : 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)] hover:text-white hover:border-[var(--glass-border)]/40'
                   )}
                 >
                   {t(`violations.exclusions.mode_${mode}`)}
@@ -2259,7 +2259,7 @@ export default function UserDetail() {
                       'flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer transition-all border',
                       selectedExclusions.has(key)
                         ? 'bg-primary/10 border-primary/30 text-primary-400'
-                        : 'bg-dark-700/30 border-dark-400/15 text-dark-200 hover:border-dark-400/30'
+                        : 'bg-[var(--glass-bg)] border-[var(--glass-border)]/15 text-dark-200 hover:border-[var(--glass-border)]'
                     )}
                   >
                     <input
@@ -2272,7 +2272,7 @@ export default function UserDetail() {
                           return next
                         })
                       }}
-                      className="rounded border-dark-400/30 bg-dark-800 text-primary-500 focus:ring-primary-500/40"
+                      className="rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary-500 focus:ring-primary-500/40"
                     />
                     <span className="text-sm">{t(`violations.analyzers.${key}`)}</span>
                   </label>

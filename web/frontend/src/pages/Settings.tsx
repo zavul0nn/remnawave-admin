@@ -184,7 +184,7 @@ function SyncStatusBlock({
     <Card className="p-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-dark-700/30 transition-colors"
+        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-[var(--glass-bg)] transition-colors"
       >
         <div className="flex items-center gap-3">
           {isOpen ? (
@@ -236,7 +236,7 @@ function SyncStatusBlock({
               const entityKey = SYNCABLE_ENTITIES[item.key]
               const isSyncing = syncingEntity === item.key || syncingEntity === 'all'
               return (
-                <div key={item.key} className="bg-dark-800/50 rounded-lg p-3">
+                <div key={item.key} className="bg-[var(--glass-bg)] rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-white">
                       {t(`settings.sync.entities.${item.key}`, { defaultValue: item.key })}
@@ -413,7 +413,7 @@ function SettingsPasswordStrengthBar({ password }: { password: string }) {
   return (
     <div className="space-y-2 mt-2">
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-dark-600/50 overflow-hidden">
+        <div className="flex-1 h-1.5 rounded-full bg-[var(--glass-bg)] overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500 ease-out"
             style={{
@@ -479,7 +479,7 @@ function SettingsPasswordInput({
         placeholder={placeholder || '••••••••'}
         autoComplete={autoComplete}
         disabled={disabled}
-        className="w-full text-sm pl-10 pr-10 bg-dark-900 border-2 border-dark-600 text-white focus:border-accent-teal"
+        className="w-full text-sm pl-10 pr-10 bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] text-white focus:border-accent-teal"
       />
       <button
         type="button"
@@ -563,7 +563,7 @@ function ChangePasswordBlock() {
     <Card className="p-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.06s' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-dark-700/30 transition-colors"
+        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-[var(--glass-bg)] transition-colors"
       >
         <div className="flex items-center gap-3">
           {isOpen ? (
@@ -582,7 +582,7 @@ function ChangePasswordBlock() {
       </button>
 
       {isOpen && (
-        <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-dark-700/50 animate-fade-in-down space-y-4">
+        <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-[var(--glass-border)]/50 animate-fade-in-down space-y-4">
           {isGenerated && (
             <div className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2.5">
               {t('settings.password.generatedWarning')}
@@ -620,7 +620,7 @@ function ChangePasswordBlock() {
             />
           </div>
 
-          <Separator className="bg-dark-700/50" />
+          <Separator className="bg-[var(--glass-bg)]" />
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -746,7 +746,7 @@ function IpWhitelistBlock() {
     <Card className="p-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.08s' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-dark-700/30 transition-colors"
+        className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-[var(--glass-bg)] transition-colors"
       >
         <div className="flex items-center gap-3">
           {isOpen ? (
@@ -768,7 +768,7 @@ function IpWhitelistBlock() {
         <Lock className="w-4 h-4 text-dark-300" />
       </button>
       {isOpen && (
-        <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-dark-700/50 animate-fade-in-down space-y-3">
+        <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-[var(--glass-border)]/50 animate-fade-in-down space-y-3">
           <p className="text-xs text-dark-200">
             {t('settings.ipWhitelist.description')}
           </p>
@@ -793,7 +793,7 @@ function IpWhitelistBlock() {
               {ips.map((ip) => (
                 <div
                   key={ip}
-                  className="flex items-center justify-between bg-dark-800/50 rounded px-3 py-1.5 group"
+                  className="flex items-center justify-between bg-[var(--glass-bg)] rounded px-3 py-1.5 group"
                 >
                   <code className="text-sm text-white font-mono">{ip}</code>
                   <Button
@@ -1159,7 +1159,7 @@ export default function Settings() {
                 key={sq.uuid}
                 className={cn(
                   'flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-colors',
-                  selectedUuids.includes(sq.uuid) ? 'bg-primary/10' : 'hover:bg-dark-700/40'
+                  selectedUuids.includes(sq.uuid) ? 'bg-primary/10' : 'hover:bg-[var(--glass-bg-hover)]/40'
                 )}
               >
                 <Checkbox
@@ -1246,7 +1246,7 @@ export default function Settings() {
             <div className="text-xs font-medium text-dark-300 uppercase tracking-wider mb-1 px-1">
               {t(`settings.subcategories.${sub}`, { defaultValue: sub })}
             </div>
-            <div className="bg-dark-800/30 rounded-lg px-3 divide-y divide-dark-700/30">
+            <div className="bg-[var(--glass-bg)]/30 rounded-lg px-3 divide-y divide-dark-700/30">
               {subItems.map((item) => renderConfigItem(item))}
             </div>
           </div>
@@ -1376,7 +1376,7 @@ export default function Settings() {
               <Card key={category} className="p-0 overflow-hidden animate-fade-in-up" style={{ animationDelay: `${0.05 * catIdx}s` }}>
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-dark-700/30 transition-colors"
+                  className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-[var(--glass-bg)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     {isOpen ? (
@@ -1400,7 +1400,7 @@ export default function Settings() {
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-dark-700/50 animate-fade-in-down">
+                  <div className="px-4 md:px-5 pb-4 md:pb-5 border-t border-[var(--glass-border)]/50 animate-fade-in-down">
                     {renderCategoryItems(items)}
                   </div>
                 )}

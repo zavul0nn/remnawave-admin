@@ -333,7 +333,7 @@ export default function AuditLog() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-dark-800 border-dark-700">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/20">
@@ -346,7 +346,7 @@ export default function AuditLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-dark-800 border-dark-700">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/20">
@@ -359,7 +359,7 @@ export default function AuditLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-dark-800 border-dark-700">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/20">
@@ -372,7 +372,7 @@ export default function AuditLog() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-dark-800 border-dark-700">
+        <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/20">
@@ -390,7 +390,7 @@ export default function AuditLog() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-dark-800 border-dark-700">
+      <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -400,11 +400,11 @@ export default function AuditLog() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-9 bg-dark-900 border-dark-600"
+                className="pl-9 bg-[var(--glass-bg)] border-[var(--glass-border)]"
               />
             </div>
             <Select value={resourceFilter} onValueChange={(v) => { setResourceFilter(v); setPage(1) }}>
-              <SelectTrigger className="w-[160px] bg-dark-900 border-dark-600">
+              <SelectTrigger className="w-[160px] bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder={t('audit.resource')} />
               </SelectTrigger>
@@ -418,7 +418,7 @@ export default function AuditLog() {
               </SelectContent>
             </Select>
             <Select value={actionFilter} onValueChange={(v) => { setActionFilter(v); setPage(1) }}>
-              <SelectTrigger className="w-[180px] bg-dark-900 border-dark-600">
+              <SelectTrigger className="w-[180px] bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <Activity className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder={t('audit.action')} />
               </SelectTrigger>
@@ -432,7 +432,7 @@ export default function AuditLog() {
               </SelectContent>
             </Select>
             <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v); setPage(1) }}>
-              <SelectTrigger className="w-[160px] bg-dark-900 border-dark-600">
+              <SelectTrigger className="w-[160px] bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
@@ -447,7 +447,7 @@ export default function AuditLog() {
             <Button
               variant="outline"
               onClick={handleSearch}
-              className="border-dark-600"
+              className="border-[var(--glass-border)]"
             >
               <Search className="w-4 h-4 mr-2" />
               {t('common.search')}
@@ -457,7 +457,7 @@ export default function AuditLog() {
       </Card>
 
       {/* Table */}
-      <Card className="bg-dark-800 border-dark-700">
+      <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">
@@ -476,7 +476,7 @@ export default function AuditLog() {
               <div className="hidden md:block overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-dark-700 hover:bg-transparent">
+                    <TableRow className="border-[var(--glass-border)] hover:bg-transparent">
                       <TableHead className="text-dark-200 w-[160px]">{t('audit.table.date')}</TableHead>
                       <TableHead className="text-dark-200 w-[120px]">{t('audit.table.admin')}</TableHead>
                       <TableHead className="text-dark-200">{t('audit.table.action')}</TableHead>
@@ -505,7 +505,7 @@ export default function AuditLog() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between p-4 border-t border-dark-700">
+              <div className="flex items-center justify-between p-4 border-t border-[var(--glass-border)]">
                 <p className="text-sm text-muted-foreground">
                   {t('audit.totalEntries', { count: total })}
                 </p>
@@ -515,7 +515,7 @@ export default function AuditLog() {
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
-                    className="border-dark-600"
+                    className="border-[var(--glass-border)]"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -527,7 +527,7 @@ export default function AuditLog() {
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="border-dark-600"
+                    className="border-[var(--glass-border)]"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -566,7 +566,7 @@ function AuditRow({
   return (
     <>
       <TableRow
-        className={`border-dark-700 ${hasDetails ? 'cursor-pointer hover:bg-dark-700/50' : ''}`}
+        className={`border-[var(--glass-border)] ${hasDetails ? 'cursor-pointer hover:bg-[var(--glass-bg)]' : ''}`}
         onClick={hasDetails ? onToggle : undefined}
       >
         {/* Date */}
@@ -654,7 +654,7 @@ function AuditRow({
 
       {/* Expanded details row */}
       {expanded && hasDetails && (
-        <TableRow className="border-dark-700 bg-dark-900/50">
+        <TableRow className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
           <TableCell colSpan={5} className="py-3 px-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-2">
               {visibleDetails.map(([key, value]) => (
@@ -665,7 +665,7 @@ function AuditRow({
               ))}
             </div>
             {item.resource_id && (
-              <div className="mt-3 pt-2 border-t border-dark-700">
+              <div className="mt-3 pt-2 border-t border-[var(--glass-border)]">
                 <span className="text-xs text-dark-400">{t('audit.resourceId')}: </span>
                 <span className="text-xs text-dark-200 font-mono">{item.resource_id}</span>
               </div>
@@ -693,7 +693,7 @@ function MobileAuditCard({ item }: { item: AuditLogEntry }) {
 
   return (
     <div
-      className="p-3 rounded-lg bg-dark-900 border border-dark-700 space-y-2"
+      className="p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] space-y-2"
       onClick={visibleDetails.length > 0 ? () => setExpanded(!expanded) : undefined}
     >
       {/* Header: admin + time */}
@@ -748,7 +748,7 @@ function MobileAuditCard({ item }: { item: AuditLogEntry }) {
       )}
 
       {/* Footer: IP + resource ID */}
-      <div className="flex items-center justify-between pt-1 border-t border-dark-700/50">
+      <div className="flex items-center justify-between pt-1 border-t border-[var(--glass-border)]/50">
         {item.ip_address && (
           <span className="text-xs text-muted-foreground font-mono">
             {item.ip_address}

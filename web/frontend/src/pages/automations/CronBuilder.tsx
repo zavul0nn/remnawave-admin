@@ -134,7 +134,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
   return (
     <div className="space-y-3">
       {/* Mode tabs */}
-      <div className="flex gap-1 p-1 rounded-lg bg-dark-800 border-2 border-dark-600">
+      <div className="flex gap-1 p-1 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
         {[
           { key: 'preset' as const, label: t('automations.cronBuilder.presets') },
           { key: 'visual' as const, label: t('automations.cronBuilder.configure') },
@@ -164,7 +164,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
               className={`p-2.5 rounded-lg border-2 text-left transition-all ${
                 value === preset.cron
                   ? 'border-accent-teal bg-accent-teal/10'
-                  : 'border-dark-600 bg-dark-800 hover:border-dark-500'
+                  : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)]'
               }`}
             >
               <p className="text-xs font-medium text-white">{preset.label}</p>
@@ -180,7 +180,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
           <div>
             <Label className="text-xs font-medium text-dark-300">{t('automations.cronBuilder.frequency')}</Label>
             <Select value={frequency} onValueChange={(v) => setFrequency(v as VisualFrequency)}>
-              <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+              <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -206,7 +206,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                       everyNMinutes === n
                         ? 'bg-accent-teal/20 text-accent-teal border-2 border-accent-teal/30'
-                        : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+                        : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                     }`}
                   >
                     {n}
@@ -224,7 +224,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                 value={minute.toString()}
                 onValueChange={(v) => setMinute(parseInt(v))}
               >
-                <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white w-28">
+                <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-28">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -245,7 +245,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                   value={hour.toString()}
                   onValueChange={(v) => setHour(parseInt(v))}
                 >
-                  <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                  <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -261,7 +261,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                   value={minute.toString()}
                   onValueChange={(v) => setMinute(parseInt(v))}
                 >
-                  <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                  <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,7 +287,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                       className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                         dayOfWeek === d.value
                           ? 'bg-accent-teal/20 text-accent-teal border-2 border-accent-teal/30'
-                          : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+                          : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                       }`}
                     >
                       {d.short}
@@ -302,7 +302,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                     value={hour.toString()}
                     onValueChange={(v) => setHour(parseInt(v))}
                   >
-                    <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                    <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -318,7 +318,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                     value={minute.toString()}
                     onValueChange={(v) => setMinute(parseInt(v))}
                   >
-                    <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                    <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -341,7 +341,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                   value={dayOfMonth.toString()}
                   onValueChange={(v) => setDayOfMonth(parseInt(v))}
                 >
-                  <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white w-28">
+                  <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-28">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -358,7 +358,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                     value={hour.toString()}
                     onValueChange={(v) => setHour(parseInt(v))}
                   >
-                    <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                    <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -374,7 +374,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                     value={minute.toString()}
                     onValueChange={(v) => setMinute(parseInt(v))}
                   >
-                    <SelectTrigger className="mt-1 bg-dark-900 border-dark-500 text-white">
+                    <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -401,7 +401,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                 setCustomCron(e.target.value)
                 onChange(e.target.value)
               }}
-              className="mt-1 bg-dark-900 border-dark-500 text-white font-mono"
+              className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white font-mono"
               placeholder="* * * * *"
             />
           </div>
@@ -412,7 +412,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
             <span>{t('automations.cronBuilder.cronFieldMonth')}</span>
             <span>{t('automations.cronBuilder.cronFieldDow')}</span>
           </div>
-          <div className="p-2 rounded-md bg-dark-800 border border-dark-600">
+          <div className="p-2 rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)]">
             <div className="flex items-start gap-1.5">
               <HelpCircle className="w-3 h-3 text-dark-400 flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-dark-400">
@@ -425,11 +425,11 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
 
       {/* Human-readable preview */}
       {(value || (mode === 'visual' && visualCron) || (mode === 'custom' && customCron)) && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-dark-900 border-2 border-dark-600">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
           <Clock className="w-3.5 h-3.5 text-accent-teal flex-shrink-0" />
           <span className="text-xs text-dark-200 font-medium">{preview || t('automations.cron.scheduleNotSet')}</span>
           {mode !== 'custom' && (
-            <Badge variant="outline" className="text-[9px] ml-auto text-dark-400 border-dark-500 font-mono">
+            <Badge variant="outline" className="text-[9px] ml-auto text-dark-400 border-[var(--glass-border)] font-mono">
               {mode === 'visual' ? visualCron : value}
             </Badge>
           )}

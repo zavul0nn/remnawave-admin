@@ -289,7 +289,7 @@ const MobileUserCard = memo(function MobileUserCard({
   const { formatDateShort } = useFormatters()
   return (
     <Card
-      className="cursor-pointer active:bg-dark-700/50"
+      className="cursor-pointer active:bg-[var(--glass-bg)]"
       onClick={onNavigate}
     >
       <CardContent className="p-4">
@@ -536,7 +536,7 @@ function CreateUserModal({
             </div>
           </div>
 
-          <Separator className="bg-dark-400/15" />
+          <Separator className="bg-[var(--glass-border)]" />
 
           {/* Section: Traffic */}
           <div className="space-y-3">
@@ -625,7 +625,7 @@ function CreateUserModal({
           {/* Section: Squads */}
           {(externalSquads.length > 0 || internalSquads.length > 0) && (
             <>
-              <Separator className="bg-dark-400/15" />
+              <Separator className="bg-[var(--glass-border)]" />
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-dark-300 uppercase tracking-wider">
                   <UsersIcon className="w-3.5 h-3.5" />
@@ -657,11 +657,11 @@ function CreateUserModal({
                 {internalSquads.length > 0 && (
                   <div>
                     <Label className="text-xs text-dark-200">{t('users.createModal.internalSquads')}</Label>
-                    <div className="mt-1.5 space-y-1 max-h-32 overflow-y-auto rounded-md border border-dark-400/20 p-2">
+                    <div className="mt-1.5 space-y-1 max-h-32 overflow-y-auto rounded-md border border-[var(--glass-border)] p-2">
                       {internalSquads.map((sq: Squad) => (
                         <label
                           key={sq.uuid}
-                          className="flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 hover:bg-dark-600/50 transition-colors"
+                          className="flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 hover:bg-[var(--glass-bg-hover)] transition-colors"
                         >
                           <Checkbox
                             checked={form.active_internal_squads.includes(sq.uuid)}
@@ -1070,7 +1070,7 @@ export default function Users() {
 
             {/* Expandable filter panel */}
             {showFilters && (
-              <div className="pt-3 border-t border-dark-400/20 space-y-3 animate-fade-in">
+              <div className="pt-3 border-t border-[var(--glass-border)] space-y-3 animate-fade-in">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div>
                     <Label className="text-[11px] uppercase tracking-wider text-dark-300">{t('users.filters.status')}</Label>
@@ -1283,7 +1283,7 @@ export default function Users() {
       {/* Bulk action toolbar */}
       {selectedUuids.size > 0 && canBulk && (
         <div className="sticky bottom-4 z-30 mx-auto max-w-3xl animate-fade-in-up">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dark-400/20 bg-dark-700/95 backdrop-blur-xl shadow-deep">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/95 backdrop-blur-xl shadow-deep">
             <span className="text-sm text-white font-medium">
               {t('users.bulkSelected', { count: selectedUuids.size })}
               {(() => {
@@ -1346,7 +1346,7 @@ export default function Users() {
           style={useVirtual && !isLoading ? { maxHeight: '70vh' } : undefined}
         >
           <table className="table">
-            <thead className={useVirtual ? 'sticky top-0 z-10 bg-dark-800' : undefined}>
+            <thead className={useVirtual ? 'sticky top-0 z-10 bg-[var(--glass-bg)]' : undefined}>
               <tr>
                 {canBulk && (
                   <th className="w-10 px-3">
@@ -1399,7 +1399,7 @@ export default function Users() {
                         key={user.uuid}
                         data-index={virtualRow.index}
                         ref={rowVirtualizer.measureElement}
-                        className="cursor-pointer hover:bg-dark-600/50"
+                        className="cursor-pointer hover:bg-[var(--glass-bg-hover)]"
                         onClick={() => navigate(`/users/${user.uuid}`)}
                       >
                         {canBulk && (
@@ -1457,7 +1457,7 @@ export default function Users() {
                 users.map((user) => (
                   <tr
                     key={user.uuid}
-                    className="cursor-pointer hover:bg-dark-600/50"
+                    className="cursor-pointer hover:bg-[var(--glass-bg-hover)]"
                     onClick={() => navigate(`/users/${user.uuid}`)}
                   >
                     {canBulk && (

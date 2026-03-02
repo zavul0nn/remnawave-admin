@@ -203,7 +203,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : reports.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('reports.empty')}</p>
@@ -214,7 +214,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
               {reports.map((report) => (
                 <Card
                   key={report.id}
-                  className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors cursor-pointer"
+                  className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors cursor-pointer"
                   onClick={() => setExpandedReport(expandedReport === report.id ? null : report.id)}
                 >
                   <CardContent className="p-4">
@@ -265,7 +265,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
 
                     {/* Expanded content */}
                     {expandedReport === report.id && (
-                      <div className="mt-4 pt-4 border-t border-dark-600 space-y-4">
+                      <div className="mt-4 pt-4 border-t border-[var(--glass-border)] space-y-4">
                         {/* Top violators */}
                         {report.top_violators && report.top_violators.length > 0 && (
                           <div>
@@ -359,7 +359,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
             </div>
           ) : asnStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Card className="border-dark-600 bg-dark-800">
+              <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
                 <CardContent className="p-3">
                   <p className="text-xs text-dark-400">{t('reports.asn.totalRecords')}</p>
                   <p className="text-xl font-bold text-white mt-1">{asnStats.total}</p>
@@ -370,7 +370,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 3)
                 .map(([type, count]) => (
-                  <Card key={type} className="border-dark-600 bg-dark-800">
+                  <Card key={type} className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
                     <CardContent className="p-3">
                       <p className="text-xs text-dark-400 capitalize">{type.replace('_', ' ')}</p>
                       <p className="text-xl font-bold text-white mt-1">{count}</p>
@@ -417,7 +417,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
           ) : (asnSearch.length >= 2 || asnTypeFilter) ? (
             <ASNTable records={asnTypeFilter ? asnTypeResults : asnSearchResults} t={t} />
           ) : (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Globe className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('reports.asn.searchHint')}</p>
@@ -543,7 +543,7 @@ function ReportScheduleTab() {
   return (
     <div className="space-y-4">
       {/* Global toggle */}
-      <Card className="border-dark-600 bg-dark-800">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardContent className="p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-white">{t('reports.schedule.globalEnabled')}</p>
@@ -560,7 +560,7 @@ function ReportScheduleTab() {
       {/* Schedule cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Daily */}
-        <Card className="border-dark-600 bg-dark-800">
+        <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -587,7 +587,7 @@ function ReportScheduleTab() {
         </Card>
 
         {/* Weekly */}
-        <Card className="border-dark-600 bg-dark-800">
+        <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -631,7 +631,7 @@ function ReportScheduleTab() {
         </Card>
 
         {/* Monthly */}
-        <Card className="border-dark-600 bg-dark-800">
+        <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -681,7 +681,7 @@ function ReportScheduleTab() {
 function ASNTable({ records, t }: { records: ASNRecord[]; t: (key: string, options?: Record<string, unknown>) => string }) {
   if (records.length === 0) {
     return (
-      <Card className="border-dark-600 bg-dark-800">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardContent className="p-8 text-center">
           <Network className="w-12 h-12 mx-auto mb-3 text-dark-400" />
           <p className="text-dark-200">{t('reports.asn.noResults')}</p>
@@ -691,11 +691,11 @@ function ASNTable({ records, t }: { records: ASNRecord[]; t: (key: string, optio
   }
 
   return (
-    <Card className="border-dark-600 bg-dark-800">
+    <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="border-b border-dark-600">
+            <thead className="border-b border-[var(--glass-border)]">
               <tr>
                 <th className="text-left text-xs font-medium text-dark-300 px-4 py-3">ASN</th>
                 <th className="text-left text-xs font-medium text-dark-300 px-4 py-3">{t('reports.asn.orgName')}</th>
@@ -705,7 +705,7 @@ function ASNTable({ records, t }: { records: ASNRecord[]; t: (key: string, optio
             </thead>
             <tbody className="divide-y divide-dark-600">
               {records.slice(0, 50).map((record) => (
-                <tr key={record.asn} className="hover:bg-dark-700/50 transition-colors">
+                <tr key={record.asn} className="hover:bg-[var(--glass-bg)] transition-colors">
                   <td className="px-4 py-3 text-sm font-mono text-white">AS{record.asn}</td>
                   <td className="px-4 py-3 text-sm text-dark-100">
                     <div>{record.org_name}</div>
@@ -729,7 +729,7 @@ function ASNTable({ records, t }: { records: ASNRecord[]; t: (key: string, optio
           </table>
         </div>
         {records.length > 50 && (
-          <div className="text-center text-xs text-dark-400 py-2 border-t border-dark-600">
+          <div className="text-center text-xs text-dark-400 py-2 border-t border-[var(--glass-border)]">
             {t('reports.asn.showingOf', { shown: 50, total: records.length })}
           </div>
         )}

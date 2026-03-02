@@ -314,118 +314,7 @@
     @apply border-gray-300/60;
   }
 
-  /* Glass card variant */
-  .card-glass {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    @apply rounded-lg p-4 animate-fade-in backdrop-blur-sm;
-  }
-
-  [data-mode="light"] .card-glass {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-  }
-
-  /* Button variants */
-  .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
-    transition: all 0.2s ease;
-  }
-
-  .btn-primary {
-    @apply btn text-white;
-    background-color: hsl(var(--primary));
-    box-shadow: 0 0 20px -5px rgba(var(--glow-rgb), 0.3);
-  }
-
-  .btn-primary:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 0 30px -5px rgba(var(--glow-rgb), 0.5);
-  }
-
-  .btn-secondary {
-    @apply btn bg-dark-600 text-dark-100 hover:bg-dark-500 border border-dark-400/20;
-  }
-
-  [data-mode="light"] .btn-secondary {
-    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200;
-  }
-
-  .btn-danger {
-    @apply btn bg-red-600/80 text-white hover:bg-red-500;
-  }
-
-  .btn-ghost {
-    @apply btn bg-transparent text-dark-100 hover:bg-dark-600;
-  }
-
-  [data-mode="light"] .btn-ghost {
-    @apply text-gray-600 hover:bg-gray-100;
-  }
-
-  /* Input - dark field with accent focus ring */
-  .input {
-    @apply w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2;
-    background: var(--surface-body);
-    border-color: hsl(var(--border));
-    color: var(--text-body);
-    transition: all 0.2s ease;
-  }
-
-  .input:focus {
-    --tw-ring-color: rgba(var(--glow-rgb), 0.5);
-    border-color: rgba(var(--glow-rgb), 0.5);
-  }
-
-  .input:hover {
-    border-color: hsl(var(--border));
-    filter: brightness(1.05);
-  }
-
-  /* Badge - gradient variants */
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border;
-  }
-
-  .badge-success {
-    background: linear-gradient(135deg, rgba(64, 192, 87, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
-    @apply badge border-green-500/30 text-green-400;
-  }
-
-  .badge-warning {
-    background: linear-gradient(135deg, rgba(250, 176, 5, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
-    @apply badge border-yellow-500/30 text-yellow-400;
-  }
-
-  .badge-danger {
-    background: linear-gradient(135deg, rgba(250, 82, 82, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
-    @apply badge border-red-500/30 text-red-400;
-  }
-
-  .badge-info {
-    background: linear-gradient(135deg, rgba(var(--glow-rgb), 0.15) 0%, rgba(var(--selection-rgb), 0.1) 100%);
-    @apply badge;
-    border-color: rgba(var(--glow-rgb), 0.3);
-    color: hsl(var(--primary));
-  }
-
-  .badge-gray {
-    background: linear-gradient(135deg, rgba(128, 128, 128, 0.15) 0%, rgba(107, 114, 128, 0.1) 100%);
-    @apply badge border-gray-500/30 text-gray-400;
-  }
-
-  [data-mode="light"] .badge-success {
-    @apply text-green-600 border-green-300/50;
-  }
-  [data-mode="light"] .badge-warning {
-    @apply text-yellow-600 border-yellow-300/50;
-  }
-  [data-mode="light"] .badge-danger {
-    @apply text-red-600 border-red-300/50;
-  }
-  [data-mode="light"] .badge-gray {
-    @apply text-gray-600 border-gray-300/50;
-  }
+  /* Legacy btn/badge/input/card-glass classes removed — use shadcn/ui components */
 
   /* Table */
   .table {
@@ -476,29 +365,7 @@
     @apply flex items-center gap-2 flex-shrink-0;
   }
 
-  /* Dropdown menu */
-  .dropdown-menu {
-    @apply absolute right-0 top-full mt-1 w-44 rounded-lg py-1 z-50 animate-scale-in;
-    background: var(--surface-dropdown);
-    border: 1px solid hsl(var(--border));
-    backdrop-filter: blur(12px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    transform-origin: top right;
-  }
-
-  [data-mode="light"] .dropdown-menu {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  }
-
-  .dropdown-item {
-    @apply w-full px-3 py-2 text-left text-sm flex items-center gap-2;
-    color: var(--text-body);
-    transition: all 0.15s ease;
-  }
-
-  .dropdown-item:hover {
-    background: var(--surface-hover);
-  }
+  /* Legacy dropdown classes removed — use shadcn/ui DropdownMenu */
 
   /* Shimmer skeleton */
   .skeleton {
@@ -544,16 +411,7 @@
     animation: login-gradient 15s ease infinite;
   }
 
-  .login-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.12;
-    pointer-events: none;
-    animation: login-orb-float 8s ease-in-out infinite;
-  }
-
-  .login-card-enter {
+.login-card-enter {
     animation: login-card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }

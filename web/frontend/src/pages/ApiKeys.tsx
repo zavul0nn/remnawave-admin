@@ -113,7 +113,7 @@ function ApiKeysTab() {
       </div>
 
       {/* Keys list */}
-      <Card className="border-dark-600 bg-dark-800/50">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
             <Key className="w-4 h-4" />
@@ -136,13 +136,13 @@ function ApiKeysTab() {
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-700/50 hover:bg-dark-700 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] transition-colors"
                 >
                   <Key className={`w-5 h-5 flex-shrink-0 ${key.is_active ? 'text-emerald-400' : 'text-dark-400'}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-white truncate">{key.name}</p>
-                      <code className="text-xs text-dark-300 bg-dark-600 px-1.5 py-0.5 rounded">
+                      <code className="text-xs text-dark-300 bg-[var(--glass-bg-hover)] px-1.5 py-0.5 rounded">
                         {key.key_prefix}...
                       </code>
                       {!key.is_active && (
@@ -206,7 +206,7 @@ function ApiKeysTab() {
                     className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                       newKeyScopes.includes(scope)
                         ? 'bg-primary/20 text-primary-400 border-primary/40'
-                        : 'bg-dark-700 text-dark-300 border-dark-500 hover:border-dark-400'
+                        : 'bg-[var(--glass-bg)] text-dark-300 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                     }`}
                   >
                     {scope}
@@ -241,7 +241,7 @@ function ApiKeysTab() {
               <p className="text-xs text-amber-300">{t('apiKeys.keyCreatedWarning')}</p>
             </div>
             <div className="relative">
-              <code className="block p-3 bg-dark-700 rounded-lg text-sm text-emerald-400 break-all pr-10">
+              <code className="block p-3 bg-[var(--glass-bg)] rounded-lg text-sm text-emerald-400 break-all pr-10">
                 {createdKey?.raw_key}
               </code>
               <Button
@@ -345,7 +345,7 @@ function WebhooksTab() {
         </Button>
       </PermissionGate>
 
-      <Card className="border-dark-600 bg-dark-800/50">
+      <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-dark-100 flex items-center gap-2">
             <Webhook className="w-4 h-4" />
@@ -368,7 +368,7 @@ function WebhooksTab() {
               {webhooks.map((wh) => (
                 <div
                   key={wh.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-700/50 hover:bg-dark-700 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] transition-colors"
                 >
                   <Webhook className={`w-5 h-5 flex-shrink-0 ${wh.is_active ? 'text-blue-400' : 'text-dark-400'}`} />
                   <div className="flex-1 min-w-0">
@@ -459,7 +459,7 @@ function WebhooksTab() {
                     className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                       form.events.includes(event)
                         ? 'bg-primary/20 text-primary-400 border-primary/40'
-                        : 'bg-dark-700 text-dark-300 border-dark-500 hover:border-dark-400'
+                        : 'bg-[var(--glass-bg)] text-dark-300 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
                     }`}
                   >
                     {event}

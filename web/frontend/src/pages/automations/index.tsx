@@ -167,7 +167,7 @@ export default function Automations() {
 
       {/* Tabs */}
       <Tabs defaultValue="rules" className="space-y-4">
-        <TabsList className="bg-dark-800/50 border border-dark-700">
+        <TabsList className="bg-[var(--glass-bg)] border border-[var(--glass-border)]">
           <TabsTrigger value="rules">{t('automations.tabs.rules')}</TabsTrigger>
           <TabsTrigger value="templates">{t('automations.tabs.templates')}</TabsTrigger>
           <TabsTrigger value="logs">{t('automations.tabs.logs')}</TabsTrigger>
@@ -181,7 +181,7 @@ export default function Automations() {
               value={categoryFilter}
               onValueChange={(v) => { setCategoryFilter(v === 'all' ? '' : v); setPage(1) }}
             >
-              <SelectTrigger className="w-40 h-8 text-xs bg-dark-800 border-dark-600">
+              <SelectTrigger className="w-40 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <SelectValue placeholder={t('automations.filters.category')} />
               </SelectTrigger>
               <SelectContent>
@@ -196,7 +196,7 @@ export default function Automations() {
               value={triggerFilter}
               onValueChange={(v) => { setTriggerFilter(v === 'all' ? '' : v); setPage(1) }}
             >
-              <SelectTrigger className="w-36 h-8 text-xs bg-dark-800 border-dark-600">
+              <SelectTrigger className="w-36 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <SelectValue placeholder={t('automations.filters.trigger')} />
               </SelectTrigger>
               <SelectContent>
@@ -211,7 +211,7 @@ export default function Automations() {
               value={enabledFilter}
               onValueChange={(v) => { setEnabledFilter(v === 'all' ? '' : v); setPage(1) }}
             >
-              <SelectTrigger className="w-32 h-8 text-xs bg-dark-800 border-dark-600">
+              <SelectTrigger className="w-32 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]">
                 <SelectValue placeholder={t('automations.filters.status')} />
               </SelectTrigger>
               <SelectContent>
@@ -226,7 +226,7 @@ export default function Automations() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-48 bg-dark-800" />
+                <Skeleton key={i} className="h-48 bg-[var(--glass-bg)]" />
               ))}
             </div>
           ) : !data?.items?.length ? (
@@ -345,7 +345,7 @@ function StatCard({
   isText?: boolean
 }) {
   return (
-    <div className="p-4 rounded-xl bg-dark-800/50 border-2 border-dark-600">
+    <div className="p-4 rounded-xl bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
       <div className="flex items-center gap-2 mb-2">
         <Icon className="w-4 h-4 text-dark-400" />
         <span className="text-xs text-dark-400">{label}</span>

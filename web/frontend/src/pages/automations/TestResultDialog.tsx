@@ -91,7 +91,7 @@ export function TestResultDialog({ open, onOpenChange, result }: TestResultDialo
                   return (
                     <div
                       key={i}
-                      className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-dark-800 border-2 border-dark-600"
+                      className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]"
                     >
                       <Icon className="w-4 h-4 text-dark-400 mt-0.5 flex-shrink-0" />
                       <span className="text-sm text-dark-200">{part.text}</span>
@@ -104,13 +104,13 @@ export function TestResultDialog({ open, onOpenChange, result }: TestResultDialo
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600">
+            <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
               <p className="text-xs text-dark-400">{t('automations.testResult.matchingTargets')}</p>
               <p className="text-lg font-semibold text-white mt-1">
                 {result.matching_targets.length}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-dark-800 border-2 border-dark-600">
+            <div className="p-3 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
               <p className="text-xs text-dark-400">{t('automations.testResult.expectedActions')}</p>
               <p className="text-lg font-semibold text-white mt-1">
                 {result.estimated_actions}
@@ -128,9 +128,9 @@ export function TestResultDialog({ open, onOpenChange, result }: TestResultDialo
                 {result.matching_targets.map((target, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-800 border-2 border-dark-600 text-xs"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)] text-xs"
                   >
-                    <Badge variant="outline" className="text-[10px] border-dark-500">
+                    <Badge variant="outline" className="text-[10px] border-[var(--glass-border)]">
                       {(target as Record<string, unknown>).type as string || 'unknown'}
                     </Badge>
                     <span className="text-dark-200 truncate">

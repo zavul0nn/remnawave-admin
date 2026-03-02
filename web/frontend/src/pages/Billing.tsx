@@ -313,7 +313,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : providers.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Building2 className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('billing.providers.empty')}</p>
@@ -324,7 +324,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
               {providers.map((provider) => (
                 <Card
                   key={provider.uuid}
-                  className="border-dark-600 bg-dark-800 hover:border-dark-500 transition-colors"
+                  className="border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--glass-border)] transition-colors"
                 >
                   <CardContent className="p-4">
                     <div className="space-y-3">
@@ -413,7 +413,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -424,7 +424,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -444,18 +444,18 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : history.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <History className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('billing.history.empty')}</p>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b border-dark-600">
+                    <thead className="border-b border-[var(--glass-border)]">
                       <tr>
                         <th className="text-left text-xs font-medium text-dark-300 px-4 py-3">
                           {t('billing.history.provider')}
@@ -475,7 +475,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
                     </thead>
                     <tbody className="divide-y divide-dark-600">
                       {history.map((record) => (
-                        <tr key={record.uuid} className="hover:bg-dark-700/50 transition-colors">
+                        <tr key={record.uuid} className="hover:bg-[var(--glass-bg)] transition-colors">
                           <td className="px-4 py-3 text-sm text-white">{record.provider.name}</td>
                           <td className="px-4 py-3 text-sm text-white font-medium">
                             {formatCurrency(record.amount)}
@@ -523,7 +523,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
           {/* Stats Cards */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-dark-600 bg-dark-800">
+              <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -534,7 +534,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="border-dark-600 bg-dark-800">
+              <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -545,7 +545,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="border-dark-600 bg-dark-800">
+              <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -566,18 +566,18 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
               ))}
             </div>
           ) : billingNodes.length === 0 ? (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-8 text-center">
                 <Server className="w-12 h-12 mx-auto mb-3 text-dark-400" />
                 <p className="text-dark-200">{t('billing.nodes.empty')}</p>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-dark-600 bg-dark-800">
+            <Card className="border-[var(--glass-border)] bg-[var(--glass-bg)]">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b border-dark-600">
+                    <thead className="border-b border-[var(--glass-border)]">
                       <tr>
                         <th className="text-left text-xs font-medium text-dark-300 px-4 py-3">
                           {t('billing.nodes.node')}
@@ -597,7 +597,7 @@ export default function Billing({ embedded }: { embedded?: boolean } = {}) {
                     </thead>
                     <tbody className="divide-y divide-dark-600">
                       {billingNodes.map((node) => (
-                        <tr key={node.uuid} className="hover:bg-dark-700/50 transition-colors">
+                        <tr key={node.uuid} className="hover:bg-[var(--glass-bg)] transition-colors">
                           <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">{node.node.countryCode}</span>

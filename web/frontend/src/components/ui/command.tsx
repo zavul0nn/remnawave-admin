@@ -13,7 +13,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-dark-700 text-dark-50",
+      "flex h-full w-full flex-col overflow-hidden rounded-md bg-[var(--glass-bg)] text-dark-50",
       className
     )}
     {...props}
@@ -41,7 +41,7 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-dark-400/20 px-3" cmdk-input-wrapper="">
+  <div className="flex items-center border-b border-[var(--glass-border)] px-3" cmdk-input-wrapper="">
     <Search className="mr-2 h-4 w-4 shrink-0 text-dark-200" />
     <CommandPrimitive.Input
       ref={ref}
@@ -100,7 +100,7 @@ const CommandSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 h-px bg-dark-400/20", className)}
+    className={cn("-mx-1 h-px bg-[var(--glass-border)]", className)}
     {...props}
   />
 ))
@@ -113,7 +113,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-dark-600 data-[selected=true]:text-white data-[disabled=true]:opacity-50",
+      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-[var(--glass-bg-hover)] data-[selected=true]:text-white data-[disabled=true]:opacity-50",
       className
     )}
     {...props}

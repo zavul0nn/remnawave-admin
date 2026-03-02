@@ -73,7 +73,7 @@ function PeriodSwitcher({
   options: { value: string; label: string }[]
 }) {
   return (
-    <div className="flex items-center gap-1 bg-dark-600/50 rounded-lg p-0.5">
+    <div className="flex items-center gap-1 bg-[var(--glass-bg)] rounded-lg p-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -204,9 +204,9 @@ function GeoMapCard() {
         ) : (
           <div className="space-y-4">
             {/* Map — lazy-loaded with clustering */}
-            <div className="h-[400px] rounded-lg overflow-hidden border border-dark-500/50">
+            <div className="h-[400px] rounded-lg overflow-hidden border border-[var(--glass-border)]/50">
               <Suspense fallback={
-                <div className="h-full flex items-center justify-center bg-dark-700/50">
+                <div className="h-full flex items-center justify-center bg-[var(--glass-bg)]">
                   <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
                 </div>
               }>
@@ -229,7 +229,7 @@ function GeoMapCard() {
                   return (
                     <div
                       key={c.country_code}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-dark-600/30 border border-dark-500/30"
+                      className="flex items-center gap-2 p-2 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]"
                     >
                       <span className="text-lg leading-none">
                         {countryFlag(c.country_code)}
@@ -400,7 +400,7 @@ function CityUsersList({
           return (
             <div
               key={key}
-              className="rounded-lg border border-dark-500/30 overflow-hidden"
+              className="rounded-lg border border-[var(--glass-border)] overflow-hidden"
             >
               {/* City header row */}
               <button
@@ -408,9 +408,9 @@ function CityUsersList({
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
                   hasUsers
-                    ? 'hover:bg-dark-600/30 cursor-pointer'
+                    ? 'hover:bg-[var(--glass-bg-hover)]/30 cursor-pointer'
                     : 'cursor-default',
-                  isOpen && 'bg-dark-600/20',
+                  isOpen && 'bg-[var(--glass-bg-hover)]/20',
                 )}
               >
                 <MapPin className="w-3.5 h-3.5 text-primary-400 shrink-0" />
@@ -439,7 +439,7 @@ function CityUsersList({
 
               {/* Expanded user rows */}
               {isOpen && hasUsers && (
-                <div className="border-t border-dark-500/30">
+                <div className="border-t border-[var(--glass-border)]">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -452,7 +452,7 @@ function CityUsersList({
                       {users.map((user: GeoCityUser) => (
                         <TableRow
                           key={user.uuid}
-                          className="cursor-pointer hover:bg-dark-600/30"
+                          className="cursor-pointer hover:bg-[var(--glass-bg-hover)]/30"
                           onClick={() => navigate(`/users/${user.uuid}`)}
                         >
                           <TableCell>
@@ -590,7 +590,7 @@ function TopUsersCard() {
                 {items.map((user: TopUser, idx: number) => (
                   <TableRow
                     key={user.uuid}
-                    className="cursor-pointer hover:bg-dark-600/30"
+                    className="cursor-pointer hover:bg-[var(--glass-bg-hover)]/30"
                     onClick={() => navigate(`/users/${user.uuid}`)}
                   >
                     <TableCell className="font-mono text-muted-foreground text-xs">
@@ -656,7 +656,7 @@ const UsageBar = memo(function UsageBar({ percent }: { percent: number }) {
     percent >= 90 ? 'bg-red-500' : percent >= 70 ? 'bg-yellow-500' : 'bg-primary'
   return (
     <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-dark-600 rounded-full overflow-hidden">
+      <div className="w-16 h-1.5 bg-[var(--glass-bg-hover)] rounded-full overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-all', color)}
           style={{ width: `${Math.min(100, percent)}%` }}
@@ -743,7 +743,7 @@ function TrendsCard() {
       </CardHeader>
       <CardContent>
         {/* Growth summary */}
-        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-dark-600/30 border border-dark-500/30">
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
           <ArrowUpRight className={cn('w-5 h-5 shrink-0', growth >= 0 ? 'text-green-400' : 'text-red-400 rotate-90')} />
           <div>
             <p className="text-sm font-medium text-white">
@@ -942,7 +942,7 @@ function SharedHwidsCard() {
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors',
                       isOpen
                         ? 'bg-red-500/10 border border-red-500/20'
-                        : 'hover:bg-dark-600/40 border border-transparent'
+                        : 'hover:bg-[var(--glass-bg-hover)]/40 border border-transparent'
                     )}
                     onClick={() => setExpandedHwid(isOpen ? null : group.hwid)}
                   >
@@ -985,7 +985,7 @@ function SharedHwidsCard() {
                   </div>
 
                   {isOpen && (
-                    <div className="ml-8 mb-2 border border-dark-600 rounded-lg overflow-hidden">
+                    <div className="ml-8 mb-2 border border-[var(--glass-border)] rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -1000,7 +1000,7 @@ function SharedHwidsCard() {
                           {group.users.map((user) => (
                             <TableRow
                               key={user.uuid}
-                              className="cursor-pointer hover:bg-dark-600/30"
+                              className="cursor-pointer hover:bg-[var(--glass-bg-hover)]/30"
                               onClick={() => navigate(`/users/${user.uuid}`)}
                             >
                               <TableCell>
@@ -1025,7 +1025,7 @@ function SharedHwidsCard() {
                                 {user.expire_date ? (
                                   <Badge
                                     variant="secondary"
-                                    className={cn('text-xs', user.is_active ? 'bg-green-500/20 text-green-300' : 'bg-dark-600 text-dark-200')}
+                                    className={cn('text-xs', user.is_active ? 'bg-green-500/20 text-green-300' : 'bg-[var(--glass-bg-hover)] text-dark-200')}
                                   >
                                     {user.is_active
                                       ? t('analytics.sharedHwids.active', 'Активна')

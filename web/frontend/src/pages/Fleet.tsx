@@ -199,7 +199,7 @@ function NodeDetailPanel({
               </span>
             </div>
             {node.cpu_usage != null && (
-              <div className="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--glass-bg)] rounded-full overflow-hidden">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
@@ -220,7 +220,7 @@ function NodeDetailPanel({
               </span>
             </div>
             {node.memory_usage != null && (
-              <div className="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--glass-bg)] rounded-full overflow-hidden">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
@@ -239,7 +239,7 @@ function NodeDetailPanel({
               </span>
             </div>
             {node.disk_usage != null && (
-              <div className="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--glass-bg)] rounded-full overflow-hidden">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
@@ -704,7 +704,7 @@ export default function Fleet() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i}>
                   <CardContent className="p-4">
-                    <div className="h-[180px] bg-dark-700/30 rounded animate-pulse" />
+                    <div className="h-[180px] bg-[var(--glass-bg)] rounded animate-pulse" />
                   </CardContent>
                 </Card>
               ))}
@@ -745,7 +745,7 @@ export default function Fleet() {
         {/* ── Scripts Tab ──────────────────────────────────────────── */}
         {canScripts && (
           <TabsContent value="scripts" className="mt-4">
-            <Suspense fallback={<div className="h-40 bg-dark-700/30 rounded animate-pulse" />}>
+            <Suspense fallback={<div className="h-40 bg-[var(--glass-bg)] rounded animate-pulse" />}>
               <ScriptCatalog onRunScript={(script) => setRunScript(script)} />
             </Suspense>
           </TabsContent>
@@ -753,7 +753,7 @@ export default function Fleet() {
 
         {/* ── History Tab ──────────────────────────────────────────── */}
         <TabsContent value="history" className="mt-4">
-          <Suspense fallback={<div className="h-40 bg-dark-700/30 rounded animate-pulse" />}>
+          <Suspense fallback={<div className="h-40 bg-[var(--glass-bg)] rounded animate-pulse" />}>
             <CommandHistory />
           </Suspense>
         </TabsContent>

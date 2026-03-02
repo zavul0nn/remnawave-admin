@@ -50,7 +50,7 @@ export default function TerminalDialog({
         }
       >
         {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-dark-700 bg-dark-900">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg)]">
           <div className="flex items-center gap-2">
             <TerminalIcon className="w-4 h-4 text-accent-400" />
             <DialogHeader className="p-0 m-0 space-y-0">

@@ -91,7 +91,7 @@ export function LogsTimeline() {
           placeholder={t('automations.logsTab.ruleId')}
           value={ruleIdFilter}
           onChange={(e) => { setRuleIdFilter(e.target.value); setPage(1) }}
-          className="w-28 h-8 text-xs bg-dark-800 border-dark-700"
+          className="w-28 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
           type="number"
         />
 
@@ -99,7 +99,7 @@ export function LogsTimeline() {
           value={resultFilter}
           onValueChange={(v) => { setResultFilter(v === 'all' ? '' : v); setPage(1) }}
         >
-          <SelectTrigger className="w-32 h-8 text-xs bg-dark-800 border-dark-700">
+          <SelectTrigger className="w-32 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]">
             <SelectValue placeholder={t('automations.logsTab.resultPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -114,14 +114,14 @@ export function LogsTimeline() {
           type="date"
           value={dateFrom}
           onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
-          className="w-36 h-8 text-xs bg-dark-800 border-dark-700"
+          className="w-36 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
           placeholder={t('automations.logsTab.from')}
         />
         <Input
           type="date"
           value={dateTo}
           onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
-          className="w-36 h-8 text-xs bg-dark-800 border-dark-700"
+          className="w-36 h-8 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
           placeholder={t('automations.logsTab.to')}
         />
 
@@ -139,7 +139,7 @@ export function LogsTimeline() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 bg-dark-800" />
+            <Skeleton key={i} className="h-16 bg-[var(--glass-bg)]" />
           ))}
         </div>
       ) : !data?.items?.length ? (
@@ -155,7 +155,7 @@ export function LogsTimeline() {
             return (
               <div
                 key={entry.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-dark-800/50 border border-dark-700/50 hover:border-dark-600 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)]/50 hover:border-[var(--glass-border)] transition-colors"
               >
                 <Icon className={`w-4 h-4 flex-shrink-0 ${iconColor}`} />
 

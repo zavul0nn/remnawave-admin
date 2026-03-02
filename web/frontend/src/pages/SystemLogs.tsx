@@ -259,7 +259,7 @@ export default function SystemLogs() {
                 }}
                 className={cn(
                   'h-8 px-2 sm:px-3',
-                  isStreaming ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-dark-600',
+                  isStreaming ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-[var(--glass-border)]',
                 )}
               >
                 {isStreaming ? (
@@ -285,7 +285,7 @@ export default function SystemLogs() {
                 variant="outline"
                 size="sm"
                 onClick={() => setAutoScroll(!autoScroll)}
-                className={cn('border-dark-600 h-8 w-8 p-0', autoScroll && 'bg-dark-700')}
+                className={cn('border-[var(--glass-border)] h-8 w-8 p-0', autoScroll && 'bg-[var(--glass-bg)]')}
               >
                 <ArrowDown className="w-4 h-4" />
               </Button>
@@ -298,7 +298,7 @@ export default function SystemLogs() {
             variant="outline"
             size="sm"
             onClick={handleClear}
-            className="border-dark-600 h-8 px-2 sm:px-3"
+            className="border-[var(--glass-border)] h-8 px-2 sm:px-3"
           >
             <Trash2 className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">{t('logs.clear')}</span>
@@ -311,7 +311,7 @@ export default function SystemLogs() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 no-scrollbar">
-          <TabsList className="bg-dark-800 border border-dark-700 w-max sm:w-auto">
+          <TabsList className="bg-[var(--glass-bg)] border border-[var(--glass-border)] w-max sm:w-auto">
             {(Object.entries(TAB_CONFIG) as [LogTab, typeof TAB_CONFIG[LogTab]][]).map(([key, cfg]) => {
               const Icon = cfg.icon
               const fileInfo = logFiles?.find((f: LogFile) => f.key === key)
@@ -319,7 +319,7 @@ export default function SystemLogs() {
                 <TabsTrigger
                   key={key}
                   value={key}
-                  className="gap-1 sm:gap-1.5 px-2 sm:px-3 data-[state=active]:bg-dark-700"
+                  className="gap-1 sm:gap-1.5 px-2 sm:px-3 data-[state=active]:bg-[var(--glass-bg)]"
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="text-xs sm:text-sm whitespace-nowrap">{t(cfg.labelKey)}</span>
@@ -338,7 +338,7 @@ export default function SystemLogs() {
         {(Object.keys(TAB_CONFIG) as LogTab[]).map((tab) => (
           <TabsContent key={tab} value={tab} className="mt-4 space-y-3">
             {/* Filters toolbar */}
-            <Card className="bg-dark-800 border-dark-700">
+            <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="p-2 sm:p-3">
                 <div className="flex flex-col gap-2 sm:gap-3">
                   {/* Row 1: Search input + level filter */}
@@ -350,11 +350,11 @@ export default function SystemLogs() {
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        className="pl-9 bg-dark-900 border-dark-600 font-mono text-xs sm:text-sm h-9"
+                        className="pl-9 bg-[var(--glass-bg)] border-[var(--glass-border)] font-mono text-xs sm:text-sm h-9"
                       />
                     </div>
                     <Select value={levelFilter} onValueChange={(v) => { setLevelFilter(v); setStreamLines([]) }}>
-                      <SelectTrigger className="w-[110px] sm:w-[140px] bg-dark-900 border-dark-600 shrink-0 h-9">
+                      <SelectTrigger className="w-[110px] sm:w-[140px] bg-[var(--glass-bg)] border-[var(--glass-border)] shrink-0 h-9">
                         <SelectValue placeholder={t('logs.level')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -373,7 +373,7 @@ export default function SystemLogs() {
                       variant="outline"
                       size="sm"
                       onClick={handleSearch}
-                      className="border-dark-600 h-8"
+                      className="border-[var(--glass-border)] h-8"
                     >
                       <Search className="w-4 h-4 mr-1.5" />
                       {t('common.search')}
@@ -381,7 +381,7 @@ export default function SystemLogs() {
 
                     {/* Dynamic log level control */}
                     {canChangeLevel && currentLevel && (
-                      <div className="flex items-center gap-1.5 sm:gap-2 border-l border-dark-600 pl-2 sm:pl-3 ml-auto">
+                      <div className="flex items-center gap-1.5 sm:gap-2 border-l border-[var(--glass-border)] pl-2 sm:pl-3 ml-auto">
                         <Settings2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
                         <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                           {t('logs.logLevel')}:
@@ -390,7 +390,7 @@ export default function SystemLogs() {
                           value={currentLevel}
                           onValueChange={(v) => handleLevelChange(activeTab, v)}
                         >
-                          <SelectTrigger className="w-[90px] sm:w-[110px] h-7 sm:h-8 bg-dark-900 border-dark-600 text-xs">
+                          <SelectTrigger className="w-[90px] sm:w-[110px] h-7 sm:h-8 bg-[var(--glass-bg)] border-[var(--glass-border)] text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -416,9 +416,9 @@ export default function SystemLogs() {
             </Card>
 
             {/* Log viewer */}
-            <Card className="bg-dark-900 border-dark-700">
+            <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)]">
               <CardContent className="p-0">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-dark-700 bg-dark-800">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg)]">
                   <span className="text-xs text-muted-foreground font-mono">
                     {t(TAB_CONFIG[activeTab].labelKey)}
                     {activeFileInfo?.filename && (
@@ -465,7 +465,7 @@ export default function SystemLogs() {
                           {/* Desktop layout: single row */}
                           <div
                             className={cn(
-                              'hidden sm:flex items-start gap-2 px-2 py-0.5 rounded hover:bg-dark-800/50 transition-colors',
+                              'hidden sm:flex items-start gap-2 px-2 py-0.5 rounded hover:bg-[var(--glass-bg)] transition-colors',
                               isError && 'bg-red-500/5',
                               isWarning && 'bg-yellow-500/5',
                               hasExtra && 'cursor-pointer',
@@ -510,7 +510,7 @@ export default function SystemLogs() {
                           {/* Mobile layout: stacked — meta row + message row */}
                           <div
                             className={cn(
-                              'sm:hidden px-1.5 py-1 rounded hover:bg-dark-800/50 transition-colors',
+                              'sm:hidden px-1.5 py-1 rounded hover:bg-[var(--glass-bg)] transition-colors',
                               isError && 'bg-red-500/5',
                               isWarning && 'bg-yellow-500/5',
                               hasExtra && 'cursor-pointer',
@@ -557,7 +557,7 @@ export default function SystemLogs() {
 
                           {/* Expanded extra fields */}
                           {hasExtra && isExpanded && (
-                            <div className="ml-5 sm:ml-8 pl-2 sm:pl-4 py-1 border-l-2 border-dark-600 mb-1 space-y-0.5">
+                            <div className="ml-5 sm:ml-8 pl-2 sm:pl-4 py-1 border-l-2 border-[var(--glass-border)] mb-1 space-y-0.5">
                               {Object.entries(entry.extra!).map(([key, value]) => (
                                 <div key={key} className="flex gap-1.5 sm:gap-2 text-[10px] sm:text-[11px]">
                                   <span className="text-purple-400 shrink-0 font-medium">{key}:</span>

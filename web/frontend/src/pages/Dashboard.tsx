@@ -359,7 +359,7 @@ function PeriodSwitcher({
   options: { value: string; label: string }[]
 }) {
   return (
-    <div className="flex items-center gap-1 bg-dark-600/50 rounded-lg p-0.5">
+    <div className="flex items-center gap-1 bg-[var(--glass-bg)] rounded-lg p-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -743,7 +743,7 @@ function UpdateCheckerCard() {
               </Badge>
             </a>
           ) : (
-            <Badge className="bg-dark-600 text-dark-200 border-dark-500 border">
+            <Badge className="bg-[var(--glass-bg-hover)] text-dark-200 border-[var(--glass-border)] border">
               {t('dashboard.upToDate')}
             </Badge>
           )}
@@ -763,7 +763,7 @@ function UpdateCheckerCard() {
                     <button
                       type="button"
                       onClick={() => setExpandedRelease(isExpanded ? null : rel.tag)}
-                      className="w-full flex items-center gap-2 bg-dark-700 hover:bg-dark-600 rounded-lg px-3 py-2 text-left transition-colors"
+                      className="w-full flex items-center gap-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] rounded-lg px-3 py-2 text-left transition-colors"
                     >
                       <Tag className="w-3 h-3 text-primary-400 flex-shrink-0" />
                       <span className="text-sm font-medium text-white">v{rel.tag}</span>
@@ -779,7 +779,7 @@ function UpdateCheckerCard() {
                       )}
                     </button>
                     {isExpanded && (
-                      <div className="bg-dark-800 rounded-lg px-3 py-2 ml-5 space-y-2">
+                      <div className="bg-[var(--glass-bg)] rounded-lg px-3 py-2 ml-5 space-y-2">
                         {rel.changelog && (
                           <p className="text-xs text-dark-300 whitespace-pre-wrap break-words">
                             {rel.changelog}
@@ -807,37 +807,37 @@ function UpdateCheckerCard() {
 
         {/* Single changelog fallback (when no release history loaded yet) */}
         {updateInfo.update_available && updateInfo.changelog && releases.length === 0 && (
-          <div className="bg-dark-700 rounded-lg p-3 max-h-24 overflow-auto">
+          <div className="bg-[var(--glass-bg)] rounded-lg p-3 max-h-24 overflow-auto">
             <p className="text-xs text-dark-300 whitespace-pre-wrap line-clamp-4">
               {updateInfo.changelog.slice(0, 300)}
             </p>
           </div>
         )}
 
-        <Separator className="bg-dark-600" />
+        <Separator className="bg-[var(--glass-bg-hover)]" />
 
         {/* Dependencies */}
         <div className="grid grid-cols-2 gap-2 text-sm">
           {deps?.python && (
-            <div className="flex items-center justify-between bg-dark-700 rounded px-3 py-1.5">
+            <div className="flex items-center justify-between bg-[var(--glass-bg)] rounded px-3 py-1.5">
               <span className="text-dark-300">Python</span>
               <span className="text-white font-mono text-xs">{deps.python}</span>
             </div>
           )}
           {deps?.postgresql && (
-            <div className="flex items-center justify-between bg-dark-700 rounded px-3 py-1.5">
+            <div className="flex items-center justify-between bg-[var(--glass-bg)] rounded px-3 py-1.5">
               <span className="text-dark-300">PostgreSQL</span>
               <span className="text-white font-mono text-xs">{deps.postgresql}</span>
             </div>
           )}
           {deps?.fastapi && (
-            <div className="flex items-center justify-between bg-dark-700 rounded px-3 py-1.5">
+            <div className="flex items-center justify-between bg-[var(--glass-bg)] rounded px-3 py-1.5">
               <span className="text-dark-300">FastAPI</span>
               <span className="text-white font-mono text-xs">{deps.fastapi}</span>
             </div>
           )}
           {uniqueXray.length > 0 && (
-            <div className="flex items-center justify-between bg-dark-700 rounded px-3 py-1.5">
+            <div className="flex items-center justify-between bg-[var(--glass-bg)] rounded px-3 py-1.5">
               <span className="text-dark-300">Xray</span>
               <span className="text-white font-mono text-xs">{uniqueXray.join(', ')}</span>
             </div>
@@ -1376,7 +1376,7 @@ export default function Dashboard() {
                     <div key={item.name} className="flex items-center justify-between animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
                       <span className="text-sm text-dark-100">{item.name}</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-dark-600 rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-[var(--glass-bg-hover)] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{

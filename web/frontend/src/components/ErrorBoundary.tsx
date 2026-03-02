@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-dark-900">
+        <div className="flex items-center justify-center min-h-screen bg-[var(--glass-bg)]">
           <div className="max-w-md p-6 text-center space-y-4">
             <h1 className="text-xl font-semibold text-white">{i18n.t('errorBoundary.title')}</h1>
             <p className="text-sm text-dark-300">

@@ -9,14 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_-5px_rgba(var(--glow-rgb),0.35)] hover:shadow-[0_0_28px_-5px_rgba(var(--glow-rgb),0.45)] transition-shadow",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_-5px_rgba(var(--glow-rgb),0.35)] hover:shadow-[0_0_28px_-5px_rgba(var(--glow-rgb),0.45)] transition-all",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[0_0_16px_-5px_rgba(239,68,68,0.3)] hover:shadow-[0_0_24px_-5px_rgba(239,68,68,0.4)] transition-all",
         outline:
-          "border border-dark-400/20 bg-transparent hover:bg-dark-600 text-dark-100",
+          "border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm hover:bg-[var(--glass-bg-hover)] hover:border-[var(--glass-border-hover)] text-dark-100 hover:shadow-[0_0_12px_-4px_rgba(var(--glow-rgb),0.2)] transition-all",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-dark-400/20",
-        ghost: "hover:bg-dark-600 text-dark-100",
+          "bg-[var(--glass-bg)] backdrop-blur-sm text-secondary-foreground hover:bg-[var(--glass-bg-hover)] border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] hover:shadow-[0_0_12px_-4px_rgba(var(--glow-rgb),0.15)] transition-all",
+        ghost: "hover:bg-[var(--glass-bg)] text-dark-100 transition-all",
         link: "text-primary-400 underline-offset-4 hover:underline",
       },
       size: {

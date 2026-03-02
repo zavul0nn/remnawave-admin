@@ -61,7 +61,7 @@ function PasswordInput({ value, onChange, placeholder, autoComplete, disabled }:
         placeholder={placeholder}
         autoComplete={autoComplete}
         disabled={disabled}
-        className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 pr-10 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50"
+        className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 pr-10 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50"
       />
       <button
         type="button"
@@ -116,7 +116,7 @@ export function ForcePasswordChange() {
   const barColor = strength.score < 30 ? '#ef4444' : strength.score < 60 ? '#f59e0b' : strength.score < 80 ? '#22c55e' : '#10b981'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--glass-bg)] p-4">
       <Card className="w-full max-w-md">
         <CardContent className="p-6 space-y-5">
           <div className="text-center space-y-2">
@@ -148,7 +148,7 @@ export function ForcePasswordChange() {
             />
           </div>
 
-          <div className="border-t border-dark-700/50" />
+          <div className="border-t border-[var(--glass-border)]/50" />
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -174,7 +174,7 @@ export function ForcePasswordChange() {
               disabled={saving}
             />
             {newPassword && (
-              <div className="h-1.5 rounded-full bg-dark-700 overflow-hidden mt-1">
+              <div className="h-1.5 rounded-full bg-[var(--glass-bg)] overflow-hidden mt-1">
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${strength.score}%`, backgroundColor: barColor }}

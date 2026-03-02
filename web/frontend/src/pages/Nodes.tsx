@@ -417,7 +417,7 @@ function AgentTokenModal({
         ) : (
           <div className="space-y-4">
             {/* Token status */}
-            <div className="p-3 bg-dark-800/50 rounded-lg">
+            <div className="p-3 bg-[var(--glass-bg)] rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-dark-200">{t('nodes.agentToken.status')}</span>
                 {tokenStatus?.has_token ? (
@@ -445,7 +445,7 @@ function AgentTokenModal({
                   {t('nodes.agentToken.saveWarning')}
                 </div>
                 <div className="relative">
-                  <pre className="text-xs text-primary-300 font-mono bg-dark-900/50 p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{generatedToken}</pre>
+                  <pre className="text-xs text-primary-300 font-mono bg-[var(--glass-bg)] p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{generatedToken}</pre>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -462,7 +462,7 @@ function AgentTokenModal({
                   <div>
                     <p className="text-xs text-dark-300 mb-1.5">{t('nodes.agentToken.envHint')}:</p>
                     <div className="relative">
-                      <pre className="text-[11px] text-dark-200 font-mono bg-dark-900/50 p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{envConfig}</pre>
+                      <pre className="text-[11px] text-dark-200 font-mono bg-[var(--glass-bg)] p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{envConfig}</pre>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -484,10 +484,10 @@ function AgentTokenModal({
 
             {/* Install command */}
             {installCommand && (
-              <div className="p-3 bg-dark-900/50 border border-green-500/20 rounded-lg space-y-2">
+              <div className="p-3 bg-[var(--glass-bg)] border border-green-500/20 rounded-lg space-y-2">
                 <p className="text-xs text-dark-300">{t('nodes.agentToken.installHint')}</p>
                 <div className="relative">
-                  <pre className="text-[11px] text-green-300 font-mono bg-dark-950/50 p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{installCommand}</pre>
+                  <pre className="text-[11px] text-green-300 font-mono bg-[var(--glass-bg)] p-2.5 rounded overflow-x-auto whitespace-pre-wrap break-all">{installCommand}</pre>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -698,14 +698,14 @@ function NodeCard({
       <CardContent className="pt-4">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
-          <div className="text-center p-2 md:p-3 bg-dark-800/50 rounded-lg">
+          <div className="text-center p-2 md:p-3 bg-[var(--glass-bg)] rounded-lg">
             <div className="flex items-center justify-center gap-1 text-dark-200 mb-1">
               <Users className="w-3.5 h-3.5" />
               <span className="text-[10px] md:text-xs">{t('nodes.stats.online')}</span>
             </div>
             <p className="text-base md:text-lg font-semibold text-white">{node.users_online}</p>
           </div>
-          <div className="text-center p-2 md:p-3 bg-dark-800/50 rounded-lg">
+          <div className="text-center p-2 md:p-3 bg-[var(--glass-bg)] rounded-lg">
             <div className="flex items-center justify-center gap-1 text-dark-200 mb-1">
               <BarChart3 className="w-3.5 h-3.5" />
               <span className="text-[10px] md:text-xs">{t('nodes.stats.today')}</span>
@@ -714,7 +714,7 @@ function NodeCard({
               {formatBytes(node.traffic_today_bytes)}
             </p>
           </div>
-          <div className="text-center p-2 md:p-3 bg-dark-800/50 rounded-lg">
+          <div className="text-center p-2 md:p-3 bg-[var(--glass-bg)] rounded-lg">
             <div className="flex items-center justify-center gap-1 text-dark-200 mb-1">
               <BarChart3 className="w-3.5 h-3.5" />
               <span className="text-[10px] md:text-xs">{t('nodes.stats.total')}</span>
@@ -758,25 +758,25 @@ function NodeSkeleton() {
       <CardHeader className="pb-0">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-dark-700 rounded-lg" />
+            <div className="w-11 h-11 bg-[var(--glass-bg)] rounded-lg" />
             <div>
-              <div className="h-4 w-32 bg-dark-700 rounded mb-2" />
-              <div className="h-3 w-24 bg-dark-700 rounded" />
+              <div className="h-4 w-32 bg-[var(--glass-bg)] rounded mb-2" />
+              <div className="h-3 w-24 bg-[var(--glass-bg)] rounded" />
             </div>
           </div>
-          <div className="h-5 w-16 bg-dark-700 rounded" />
+          <div className="h-5 w-16 bg-[var(--glass-bg)] rounded" />
         </div>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="grid grid-cols-3 gap-4 mb-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-3 bg-dark-800/50 rounded-lg">
-              <div className="h-3 w-12 bg-dark-700 rounded mx-auto mb-2" />
-              <div className="h-5 w-8 bg-dark-700 rounded mx-auto" />
+            <div key={i} className="p-3 bg-[var(--glass-bg)] rounded-lg">
+              <div className="h-3 w-12 bg-[var(--glass-bg)] rounded mx-auto mb-2" />
+              <div className="h-5 w-8 bg-[var(--glass-bg)] rounded mx-auto" />
             </div>
           ))}
         </div>
-        <div className="h-3 w-20 bg-dark-700 rounded" />
+        <div className="h-3 w-20 bg-[var(--glass-bg)] rounded" />
       </CardContent>
     </Card>
   )

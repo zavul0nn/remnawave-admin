@@ -107,7 +107,7 @@ describe('categoryColor', () => {
   })
 
   it('returns default classes for unknown category', () => {
-    expect(categoryColor('foo')).toContain('bg-dark-700')
+    expect(categoryColor('foo')).toContain('bg-[var(--glass-bg)]')
   })
 })
 

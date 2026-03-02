@@ -135,7 +135,7 @@ export default function NodeCard({ node, isExpanded, onToggle, onTerminalConnect
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all duration-200 hover:border-dark-200/40 overflow-hidden',
+        'cursor-pointer transition-all duration-200 hover:border-[var(--glass-border)]/40 overflow-hidden',
         status === 'offline' && 'border-red-500/30',
         node.is_disabled && 'opacity-50',
         isExpanded && 'border-accent-500/40',

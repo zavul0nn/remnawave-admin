@@ -64,8 +64,8 @@ export function RuleCard({
   return (
     <Card className={`border-2 transition-all ${
       rule.is_enabled
-        ? 'bg-dark-800/50 border-dark-600 hover:border-dark-500'
-        : 'bg-dark-800/30 border-dark-700 opacity-70 hover:opacity-90'
+        ? 'bg-[var(--glass-bg)] border-[var(--glass-border)] hover:border-[var(--glass-border)]'
+        : 'bg-[var(--glass-bg)]/30 border-[var(--glass-border)] opacity-70 hover:opacity-90'
     }`}>
       <CardContent className="p-4">
         {/* Header: name + actions */}
@@ -74,7 +74,7 @@ export function RuleCard({
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium text-white truncate">{rule.name}</h3>
               {!rule.is_enabled && (
-                <Badge variant="outline" className="text-[9px] text-dark-400 border-dark-600 flex-shrink-0">
+                <Badge variant="outline" className="text-[9px] text-dark-400 border-[var(--glass-border)] flex-shrink-0">
                   {t('automations.ruleCard.off')}
                 </Badge>
               )}
@@ -132,18 +132,18 @@ export function RuleCard({
           >
             {categoryLabel(rule.category)}
           </Badge>
-          <Badge variant="outline" className="text-[10px] bg-dark-700/50 text-dark-300 border-dark-500">
+          <Badge variant="outline" className="text-[10px] bg-[var(--glass-bg)] text-dark-300 border-[var(--glass-border)]">
             {triggerTypeLabel(rule.trigger_type)}
           </Badge>
         </div>
 
         {/* Trigger -> Action */}
-        <div className="p-2.5 rounded-lg bg-dark-900 border border-dark-600 mb-3 space-y-1.5">
+        <div className="p-2.5 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] mb-3 space-y-1.5">
           <div className="flex items-center gap-2">
             <TriggerIcon className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
             <span className="text-xs text-dark-200 truncate">{describeTrigger(rule)}</span>
           </div>
-          <div className="w-full h-px bg-dark-700/50" />
+          <div className="w-full h-px bg-[var(--glass-bg)]" />
           <div className="flex items-center gap-2">
             <ArrowRight className="w-3.5 h-3.5 text-primary-400 flex-shrink-0" />
             <span className="text-xs text-primary-400 truncate">{describeAction(rule)}</span>
@@ -151,7 +151,7 @@ export function RuleCard({
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-between text-xs text-dark-400 pt-1 border-t border-dark-700/50">
+        <div className="flex items-center justify-between text-xs text-dark-400 pt-1 border-t border-[var(--glass-border)]/50">
           <div className="flex items-center gap-1">
             <Zap className="w-3 h-3" />
             <span>{rule.trigger_count} {t('automations.ruleCard.times')}</span>

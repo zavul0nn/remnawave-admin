@@ -187,7 +187,7 @@ export default function ScriptCatalog({ onRunScript }: ScriptCatalogProps) {
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
-                <div className="h-[80px] bg-dark-700/30 rounded animate-pulse" />
+                <div className="h-[80px] bg-[var(--glass-bg)] rounded animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -216,7 +216,7 @@ export default function ScriptCatalog({ onRunScript }: ScriptCatalogProps) {
                 {categoryScripts.map((script) => (
                   <Card
                     key={script.id}
-                    className="hover:border-dark-200/40 transition-colors"
+                    className="hover:border-[var(--glass-border)]/40 transition-colors"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">

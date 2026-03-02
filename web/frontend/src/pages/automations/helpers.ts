@@ -20,7 +20,7 @@ export function categoryLabel(cat: string): string {
 }
 
 export function categoryColor(cat: string): string {
-  return CATEGORY_COLORS[cat] || 'bg-dark-700/50 text-dark-200 border-dark-600'
+  return CATEGORY_COLORS[cat] || 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)]'
 }
 
 // ── Cron to human-readable ──────────────────────────────────
@@ -310,7 +310,7 @@ export function resultBadgeClass(result: string): string {
     case 'skipped':
       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
     default:
-      return 'bg-dark-700/50 text-dark-200 border-dark-600'
+      return 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)]'
   }
 }
 

@@ -156,7 +156,7 @@ function getSeverityConfig(severity: string) {
       labelKey: 'violations.severity.low',
       variant: 'secondary',
       iconClass: 'text-dark-200',
-      bg: 'bg-dark-600/50',
+      bg: 'bg-[var(--glass-bg)]',
     },
   }
   return config[severity] || config.low
@@ -243,7 +243,7 @@ function getConnectionTypeBadge(info: IPInfo, t: (key: string) => string): { lab
   if (info.is_mobile) return { label: t('violations.connectionTypes.mobileShort'), cls: 'text-blue-400 bg-blue-500/10 border-blue-500/30' }
   const typeLabelKey = getConnectionTypeLabelKey(info.connection_type)
   if (typeLabelKey && info.connection_type !== 'unknown') {
-    return { label: t(typeLabelKey), cls: 'text-dark-200 bg-dark-600/50 border-dark-400/30' }
+    return { label: t(typeLabelKey), cls: 'text-dark-200 bg-[var(--glass-bg)] border-[var(--glass-border)]' }
   }
   return null
 }
@@ -262,7 +262,7 @@ const ScoreBar = memo(function ScoreBar({ label, score, weight, icon }: { label:
           <span className="text-xs text-dark-400">×{weight}</span>
         )}
       </div>
-      <div className="flex-1 h-2 bg-dark-700 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[var(--glass-bg)] rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${barColor}`}
           style={{ width: `${Math.min(score, 100)}%` }}
@@ -320,7 +320,7 @@ const ViolationCard = memo(function ViolationCard({
   const isPending = !violation.action_taken
 
   return (
-    <Card className="hover:border-dark-400/40 transition-colors">
+    <Card className="hover:border-[var(--glass-border)]/40 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start gap-3 md:gap-4">
           {/* Severity icon */}
@@ -387,7 +387,7 @@ const ViolationCard = memo(function ViolationCard({
 
         {/* Actions for pending violations */}
         {canResolve && isPending && (
-          <div className="mt-4 pt-3 border-t border-dark-400/10 flex flex-wrap gap-2">
+          <div className="mt-4 pt-3 border-t border-[var(--glass-border)] flex flex-wrap gap-2">
             <Button variant="destructive" size="sm" onClick={onBlock} disabled={isResolving} aria-label={t('violations.actions.block')} className="gap-1">
               <Ban className="w-4 h-4" />
               <span className="hidden sm:inline">{t('violations.actions.block')}</span>
@@ -417,7 +417,7 @@ const ViolationCard = memo(function ViolationCard({
 
         {/* Resolved footer */}
         {!isPending && (
-          <div className="mt-4 pt-3 border-t border-dark-400/10 flex items-center justify-between text-xs text-dark-200">
+          <div className="mt-4 pt-3 border-t border-[var(--glass-border)] flex items-center justify-between text-xs text-dark-200">
             <span>{t('violations.actionLabel')}: {t(getActionConfig(violation.action_taken).labelKey)}</span>
             <button
               onClick={onViewDetail}
@@ -596,23 +596,23 @@ function ViolationDetailPanel({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-            <div className="text-center p-2 rounded-lg bg-dark-800/50">
+            <div className="text-center p-2 rounded-lg bg-[var(--glass-bg)]">
               <p className="text-xs text-dark-200">{t('violations.detail.recommendation')}</p>
               <p className={`text-sm font-medium ${getRecommendedActionClass(detail.recommended_action)}`}>
                 {t(getRecommendedActionLabelKey(detail.recommended_action))}
               </p>
             </div>
-            <div className="text-center p-2 rounded-lg bg-dark-800/50">
+            <div className="text-center p-2 rounded-lg bg-[var(--glass-bg)]">
               <p className="text-xs text-dark-200">{t('violations.confidence')}</p>
               <p className="text-sm font-medium text-white">
                 {Math.round(detail.confidence * 100)}%
               </p>
             </div>
-            <div className="text-center p-2 rounded-lg bg-dark-800/50">
+            <div className="text-center p-2 rounded-lg bg-[var(--glass-bg)]">
               <p className="text-xs text-dark-200">{t('violations.detail.countries')}</p>
               <p className="text-sm font-medium text-white">{detail.countries.length}</p>
             </div>
-            <div className="text-center p-2 rounded-lg bg-dark-800/50">
+            <div className="text-center p-2 rounded-lg bg-[var(--glass-bg)]">
               <p className="text-xs text-dark-200">{t('violations.detail.ipAddresses')}</p>
               <p className="text-sm font-medium text-white">{detail.ips.length}</p>
             </div>
@@ -664,7 +664,7 @@ function ViolationDetailPanel({
               icon={<Users className="w-4 h-4" />}
             />
           </div>
-          <div className="mt-4 pt-3 border-t border-dark-400/10 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-[var(--glass-border)] flex items-center justify-between">
             <span className="text-sm text-dark-200">{t('violations.detail.finalScore')}</span>
             <span className={`text-lg font-bold ${getScoreColor(detail.score)}`}>
               {Math.round(detail.score)} / 100
@@ -757,7 +757,7 @@ function ViolationDetailPanel({
                 return (
                   <div
                     key={i}
-                    className="flex items-center gap-2 bg-dark-800/80 rounded px-3 py-2"
+                    className="flex items-center gap-2 bg-[var(--glass-bg)]/80 rounded px-3 py-2"
                   >
                     <code className="text-xs text-dark-100 font-mono flex-shrink-0">{ip}</code>
                     {info ? (
@@ -805,12 +805,12 @@ function ViolationDetailPanel({
                 return (
                   <div
                     key={device.hwid || idx}
-                    className="bg-dark-800/80 rounded-lg p-3 border border-dark-600/20"
+                    className="bg-[var(--glass-bg)]/80 rounded-lg p-3 border border-[var(--glass-border)]/20"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-base">{pi.icon}</span>
                       <span className="text-sm font-medium text-white">{pi.label}</span>
-                      <span className="text-[10px] text-dark-400 bg-dark-700/50 px-1.5 py-0.5 rounded font-mono ml-auto">
+                      <span className="text-[10px] text-dark-400 bg-[var(--glass-bg)] px-1.5 py-0.5 rounded font-mono ml-auto">
                         #{idx + 1}
                       </span>
                     </div>
@@ -953,7 +953,7 @@ function TopViolatorsTab({ days, onViewUser, onViewViolations }: { days: number;
         return (
           <Card
             key={v.user_uuid}
-            className="animate-fade-in-up hover:border-dark-400/40 transition-colors"
+            className="animate-fade-in-up hover:border-[var(--glass-border)]/40 transition-colors"
             style={{ animationDelay: `${i * 0.05}s` }}
           >
             <CardContent className="p-4">
@@ -964,7 +964,7 @@ function TopViolatorsTab({ days, onViewUser, onViewViolations }: { days: number;
                   i === 0 ? 'bg-red-500/20 text-red-400' :
                   i === 1 ? 'bg-yellow-500/20 text-yellow-400' :
                   i === 2 ? 'bg-orange-500/20 text-orange-400' :
-                  'bg-dark-600/50 text-dark-200'
+                  'bg-[var(--glass-bg)] text-dark-200'
                 )}>
                   <span className="font-bold text-sm">#{i + 1}</span>
                 </div>
@@ -1016,7 +1016,7 @@ function TopViolatorsTab({ days, onViewUser, onViewViolations }: { days: number;
               )}
 
               {/* Actions taken + details button */}
-              <div className="mt-3 pt-3 border-t border-dark-400/10 flex items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-[var(--glass-border)] flex items-center justify-between">
                 <div className="flex flex-wrap gap-2">
                   {Array.isArray(v.actions) && v.actions.map((action, j) => (
                     <ActionBadge key={j} action={action} />
@@ -1116,7 +1116,7 @@ function WhitelistAddDialog({
                 value={userUuid}
                 onChange={(e) => setUserUuid(e.target.value)}
                 placeholder={t('violations.whitelist.userUuidPlaceholder')}
-                className="w-full rounded-md border border-dark-400/30 bg-dark-800 px-3 py-2 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                className="w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
               />
             </div>
           )}
@@ -1128,7 +1128,7 @@ function WhitelistAddDialog({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t('violations.whitelist.reasonPlaceholder')}
-              className="w-full rounded-md border border-dark-400/30 bg-dark-800 px-3 py-2 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/40 min-h-[80px] resize-none"
+              className="w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/40 min-h-[80px] resize-none"
             />
           </div>
           <div>
@@ -1149,7 +1149,7 @@ function WhitelistAddDialog({
                     'px-3 py-2 rounded-md text-sm font-medium transition-all border',
                     duration === opt.value
                       ? 'bg-primary-600/20 text-primary-400 border-primary-500/30'
-                      : 'bg-dark-700/50 text-dark-200 border-dark-400/20 hover:text-white hover:border-dark-400/40'
+                      : 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)] hover:text-white hover:border-[var(--glass-border)]/40'
                   )}
                 >
                   {opt.label}
@@ -1169,7 +1169,7 @@ function WhitelistAddDialog({
                   'px-3 py-2 rounded-md text-sm font-medium transition-all border',
                   exclusionMode === 'full'
                     ? 'bg-primary-600/20 text-primary-400 border-primary-500/30'
-                    : 'bg-dark-700/50 text-dark-200 border-dark-400/20 hover:text-white hover:border-dark-400/40'
+                    : 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)] hover:text-white hover:border-[var(--glass-border)]/40'
                 )}
               >
                 {t('violations.exclusions.fullWhitelist')}
@@ -1180,7 +1180,7 @@ function WhitelistAddDialog({
                   'px-3 py-2 rounded-md text-sm font-medium transition-all border',
                   exclusionMode === 'partial'
                     ? 'bg-primary/20 text-primary-400 border-primary/30'
-                    : 'bg-dark-700/50 text-dark-200 border-dark-400/20 hover:text-white hover:border-dark-400/40'
+                    : 'bg-[var(--glass-bg)] text-dark-200 border-[var(--glass-border)] hover:text-white hover:border-[var(--glass-border)]/40'
                 )}
               >
                 {t('violations.exclusions.partialExclusion')}
@@ -1195,14 +1195,14 @@ function WhitelistAddDialog({
                       'flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer transition-all border',
                       selectedAnalyzers.has(key)
                         ? 'bg-primary/10 border-primary/30 text-primary-400'
-                        : 'bg-dark-700/30 border-dark-400/15 text-dark-200 hover:border-dark-400/30'
+                        : 'bg-[var(--glass-bg)] border-[var(--glass-border)]/15 text-dark-200 hover:border-[var(--glass-border)]'
                     )}
                   >
                     <input
                       type="checkbox"
                       checked={selectedAnalyzers.has(key)}
                       onChange={() => toggleAnalyzer(key)}
-                      className="rounded border-dark-400/30 bg-dark-800 text-primary-500 focus:ring-primary-500/40"
+                      className="rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary-500 focus:ring-primary-500/40"
                     />
                     <span className="text-sm">{t(`violations.analyzers.${key}`)}</span>
                   </label>
@@ -1316,7 +1316,7 @@ function WhitelistTab() {
             <Card
               key={item.id}
               className={cn(
-                'hover:border-dark-400/40 transition-colors animate-fade-in-up',
+                'hover:border-[var(--glass-border)]/40 transition-colors animate-fade-in-up',
                 isExpired(item.expires_at) && 'opacity-60'
               )}
               style={{ animationDelay: `${i * 0.04}s` }}
@@ -1559,7 +1559,7 @@ function StatsOverview({ stats }: { stats: ViolationStats | undefined }) {
                 {countryEntries.map(([country, count]) => (
                   <div
                     key={country}
-                    className="flex items-center justify-between bg-dark-800/50 rounded-lg px-3 py-2"
+                    className="flex items-center justify-between bg-[var(--glass-bg)] rounded-lg px-3 py-2"
                   >
                     <span className="text-sm text-dark-100">{country || t('common.unknown')}</span>
                     <span className="text-sm font-medium text-primary-400">{count}</span>
@@ -1968,7 +1968,7 @@ export default function Violations() {
                 <select
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 >
                   <option value="">{t('common.all')}</option>
                   <option value="critical">{t('violations.severity.critical')}</option>
@@ -1982,7 +1982,7 @@ export default function Violations() {
                 <select
                   value={days}
                   onChange={(e) => setDays(Number(e.target.value))}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 >
                   <option value={1}>{t('violations.filters.today')}</option>
                   <option value={7}>{t('violations.filters.week')}</option>
@@ -2001,7 +2001,7 @@ export default function Violations() {
                   step={10}
                   value={minScore}
                   onChange={(e) => setMinScore(Number(e.target.value))}
-                  className="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                  className="w-full h-2 bg-[var(--glass-bg)] rounded-lg appearance-none cursor-pointer accent-primary-500"
                 />
               </div>
               <div className="flex items-end">
@@ -2022,7 +2022,7 @@ export default function Violations() {
               </div>
             </div>
             {/* Advanced filters */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-3 pt-3 border-t border-dark-400/10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-3 pt-3 border-t border-[var(--glass-border)]">
               <div>
                 <label className="block text-xs text-dark-200 mb-1">IP</label>
                 <input
@@ -2030,7 +2030,7 @@ export default function Violations() {
                   placeholder="192.168.1.1"
                   value={ipFilter}
                   onChange={(e) => setIpFilter(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 />
               </div>
               <div>
@@ -2040,7 +2040,7 @@ export default function Violations() {
                   placeholder="RU, US, DE..."
                   value={countryFilter}
                   onChange={(e) => setCountryFilter(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 />
               </div>
               <div>
@@ -2049,7 +2049,7 @@ export default function Violations() {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 />
               </div>
               <div>
@@ -2058,18 +2058,18 @@ export default function Violations() {
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 />
               </div>
             </div>
             {/* Sort & action filters */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-3 pt-3 border-t border-dark-400/10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mt-3 pt-3 border-t border-[var(--glass-border)]">
               <div>
                 <label className="block text-xs text-dark-200 mb-1">{t('violations.filters.sortBy')}</label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 >
                   <option value="detected_at">{t('violations.filters.sortByDate')}</option>
                   <option value="score">{t('violations.filters.sortByScore')}</option>
@@ -2081,7 +2081,7 @@ export default function Violations() {
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 >
                   <option value="desc">{t('violations.filters.orderDesc')}</option>
                   <option value="asc">{t('violations.filters.orderAsc')}</option>
@@ -2092,7 +2092,7 @@ export default function Violations() {
                 <select
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                 >
                   <option value="">{t('common.all')}</option>
                   <option value="no_action">{t('violations.recommendedActions.no_action')}</option>
@@ -2112,7 +2112,7 @@ export default function Violations() {
                     placeholder={t('violations.filters.usernamePlaceholder', 'Поиск...')}
                     value={usernameFilter}
                     onChange={(e) => setUsernameFilter(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-dark-400/20 bg-dark-800 pl-9 pr-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
+                    className="flex h-10 w-full rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] pl-9 pr-3 py-2 text-sm text-white ring-offset-background placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-dark-800"
                   />
                 </div>
               </div>
@@ -2135,7 +2135,7 @@ export default function Violations() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-dark-800/50 rounded-lg p-1 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+      <div className="flex gap-1 bg-[var(--glass-bg)] rounded-lg p-1 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
         {([
           { key: 'all' as Tab, label: t('violations.tabs.all'), count: stats?.total },
           { key: 'pending' as Tab, label: t('violations.tabs.pending'), count: undefined },
@@ -2150,7 +2150,7 @@ export default function Violations() {
               'flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md font-medium transition-all',
               tab === tabItem.key
                 ? 'bg-primary-600/20 text-primary-400 border border-primary-500/30'
-                : 'text-dark-200 hover:text-white hover:bg-dark-700/50'
+                : 'text-dark-200 hover:text-white hover:bg-[var(--glass-bg)]'
             )}
           >
             {tabItem.label}
@@ -2241,7 +2241,7 @@ export default function Violations() {
                 <select
                   value={perPage}
                   onChange={(e) => setParams({ perPage: e.target.value === '20' ? null : e.target.value, page: null })}
-                  className="h-8 rounded-md border border-dark-400/20 bg-dark-800 px-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50"
+                  className="h-8 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50"
                 >
                   <option value="20">20</option>
                   <option value="50">50</option>

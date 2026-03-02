@@ -62,7 +62,7 @@ export function TemplatesGallery({ canCreate }: TemplatesGalleryProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-48 bg-dark-800" />
+          <Skeleton key={i} className="h-48 bg-[var(--glass-bg)]" />
         ))}
       </div>
     )
@@ -106,11 +106,11 @@ function TemplateCard({
   const Icon = TEMPLATE_ICONS[template.id] || FileText
 
   return (
-    <Card className="bg-dark-800/50 border-dark-700 hover:border-dark-600 transition-colors">
+    <Card className="bg-[var(--glass-bg)] border-[var(--glass-border)] hover:border-[var(--glass-border)] transition-colors">
       <CardContent className="p-4">
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-dark-700/50">
+          <div className="p-2 rounded-lg bg-[var(--glass-bg)]">
             <Icon className="w-5 h-5 text-primary-400" />
           </div>
           <div className="min-w-0 flex-1">

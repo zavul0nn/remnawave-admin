@@ -33,7 +33,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [handleKeyDown])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-dark-800 relative">
+    <div className="flex h-screen overflow-hidden bg-[var(--glass-bg)] relative">
       {/* Mesh gradient background */}
       <div className="mesh-bg">
         <div className="mesh-layer mesh-layer--1" />

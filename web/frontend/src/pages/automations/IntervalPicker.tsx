@@ -52,7 +52,7 @@ export function IntervalPicker({ value, onChange }: IntervalPickerProps) {
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
               value === preset.value.toString() && !showCustom
                 ? 'bg-accent-teal/20 text-accent-teal border-2 border-accent-teal/30'
-                : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+                : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
             }`}
           >
             {preset.label}
@@ -63,7 +63,7 @@ export function IntervalPicker({ value, onChange }: IntervalPickerProps) {
           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             showCustom
               ? 'bg-accent-teal/20 text-accent-teal border-2 border-accent-teal/30'
-              : 'bg-dark-900 text-dark-300 border-2 border-dark-500 hover:border-dark-400'
+              : 'bg-[var(--glass-bg)] text-dark-300 border-2 border-[var(--glass-border)] hover:border-[var(--glass-border)]'
           }`}
         >
           {t('automations.intervalPicker.other')}
@@ -79,7 +79,7 @@ export function IntervalPicker({ value, onChange }: IntervalPickerProps) {
             min={1}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="mt-1 bg-dark-900 border-dark-500 text-white w-32"
+            className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white w-32"
             placeholder="45"
           />
         </div>
@@ -87,7 +87,7 @@ export function IntervalPicker({ value, onChange }: IntervalPickerProps) {
 
       {/* Preview */}
       {numValue > 0 && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-dark-900 border-2 border-dark-600">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[var(--glass-bg)] border-2 border-[var(--glass-border)]">
           <Timer className="w-3.5 h-3.5 text-accent-teal flex-shrink-0" />
           <span className="text-xs text-dark-200 font-medium">{humanInterval(numValue)}</span>
         </div>

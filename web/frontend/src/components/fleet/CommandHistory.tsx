@@ -103,7 +103,7 @@ export default function CommandHistory() {
       {isLoading ? (
         <Card>
           <CardContent className="p-4">
-            <div className="h-[200px] bg-dark-700/30 rounded animate-pulse" />
+            <div className="h-[200px] bg-[var(--glass-bg)] rounded animate-pulse" />
           </CardContent>
         </Card>
       ) : entries.length === 0 ? (
