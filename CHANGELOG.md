@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-03-03
+
+### Обзор
+
+Критическое исправление производительности: устранены deadlocks в PostgreSQL и оптимизирован batch processing коллектора подключений. При ~4000 онлайн-пользователях нагрузка на CPU снижена с 97% до 8%.
+
+---
+
+### Исправления
+
+#### Устранение deadlocks в коллекторе подключений
+- Заменена последовательная обработка подключений (per-connection loop) на batch upsert через `UNNEST` + `ON CONFLICT`
+- Количество DB-запросов на batch снижено с ~1500-3200 до ~5
+- Устранены `asyncpg.exceptions.DeadlockDetectedError` при конкурентных batch-запросах от нескольких нод
+
+#### Оптимизация резолва пользователей
+- Добавлен batch-резолв email → UUID и short_uuid → UUID (2 запроса вместо N)
+- Удалён N+1 post-processing для auto-close подключений (перенесён внутрь batch upsert)
+
+#### Индексы для user_connections
+- Partial UNIQUE index на `(user_uuid, ip_address) WHERE disconnected_at IS NULL`
+- Composite index на `(user_uuid, disconnected_at, connected_at DESC)`
+
+#### Прочие исправления
+- Включён `--ws-secret` в команду установки агента
+- Поддержка camelCase полей `isConnected`/`isDisabled` при фильтрации нод
+
+### Миграция
+
+При обновлении необходимо выполнить миграцию базы данных:
+```bash
+docker exec -it <container_name> alembic upgrade head
+```
+
+---
+
 ## [2.2.0] - 2026-02-15
 
 ### Обзор
