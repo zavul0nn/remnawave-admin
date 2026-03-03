@@ -35,23 +35,23 @@ class ConnectionManager:
         logger.info(f"WebSocket disconnected. Active: {len(self.active_connections)}")
 
     async def broadcast(self, message: Dict[str, Any]):
-        """Отправить сообщение всем подключённым клиентам."""
+        """Отправить сообщение всем подключённым клиентам (параллельно)."""
         if not self.active_connections:
             return
 
-        # Сериализуем один раз
         data = json.dumps(message, default=str)
 
-        # Отправляем всем
-        disconnected = set()
-        for connection in self.active_connections.copy():
+        async def _send_one(ws: WebSocket):
             try:
-                await asyncio.wait_for(connection.send_text(data), timeout=5.0)
-            except Exception as e:
-                logger.debug(f"Failed to send to client: {e}")
-                disconnected.add(connection)
+                await asyncio.wait_for(ws.send_text(data), timeout=3.0)
+                return None
+            except Exception:
+                return ws
 
-        # Удаляем отключённых
+        results = await asyncio.gather(
+            *(_send_one(c) for c in self.active_connections.copy()),
+        )
+        disconnected = {ws for ws in results if ws is not None}
         if disconnected:
             async with self._lock:
                 self.active_connections -= disconnected

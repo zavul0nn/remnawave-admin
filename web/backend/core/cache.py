@@ -13,9 +13,9 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 # TTL presets (seconds)
-CACHE_TTL_SHORT = 30       # overview, fleet, system components
-CACHE_TTL_MEDIUM = 60      # traffic, timeseries, deltas
-CACHE_TTL_LONG = 300       # geo, trends, top-users
+CACHE_TTL_SHORT = 60       # overview, fleet, system components (was 30)
+CACHE_TTL_MEDIUM = 120     # traffic, timeseries, deltas (was 60)
+CACHE_TTL_LONG = 600       # geo, trends, top-users (was 300)
 
 
 class _InMemoryCache:

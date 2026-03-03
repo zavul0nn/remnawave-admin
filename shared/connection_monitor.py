@@ -106,6 +106,7 @@ class ConnectionMonitor:
     ) -> Optional[ConnectionStats]:
         """
         Получить статистику подключений пользователя.
+        Использует единый SQL-запрос вместо 4 отдельных (optimized).
 
         Args:
             user_uuid: UUID пользователя
@@ -119,53 +120,33 @@ class ConnectionMonitor:
             return None
 
         try:
-            # Получаем активные подключения (только за последние 5 минут)
-            active_connections = await self.get_user_active_connections(user_uuid, limit=1000, max_age_minutes=5)
-            active_connections_count = len(active_connections)
-
-            # Подсчитываем уникальные IP в окне
-            unique_ips_in_window = await self.db.get_unique_ips_in_window(
-                user_uuid,
-                window_minutes
+            row = await self.db.get_user_connection_stats_combined(
+                user_uuid, window_minutes=window_minutes, max_age_minutes=5
             )
-
-            # Подсчитываем одновременные подключения
-            simultaneous_connections = await self.db.get_simultaneous_connections(user_uuid)
-
-            # Получаем историю за последние 24 часа
-            history_24h = await self.db.get_connection_history(user_uuid, days=1, limit=10000)
-            total_connections_last_24h = len(history_24h)
-
-            # Определяем время последнего подключения
-            last_connection_at = None
-            if active_connections:
-                last_connection_at = max(
-                    conn.connected_at for conn in active_connections
-                )
-            elif history_24h:
-                last_connection_at = max(
-                    datetime.fromisoformat(str(conn.get("connected_at")))
-                    if isinstance(conn.get("connected_at"), str)
-                    else conn.get("connected_at")
-                    for conn in history_24h
-                    if conn.get("connected_at")
+            if not row:
+                return ConnectionStats(
+                    user_uuid=user_uuid,
+                    active_connections_count=0,
+                    unique_ips_in_window=0,
+                    simultaneous_connections=0,
+                    total_connections_last_24h=0,
                 )
 
             stats = ConnectionStats(
                 user_uuid=user_uuid,
-                active_connections_count=active_connections_count,
-                unique_ips_in_window=unique_ips_in_window,
-                simultaneous_connections=simultaneous_connections,
-                total_connections_last_24h=total_connections_last_24h,
-                last_connection_at=last_connection_at
+                active_connections_count=row.get("active_count", 0) or 0,
+                unique_ips_in_window=row.get("unique_ips", 0) or 0,
+                simultaneous_connections=row.get("simultaneous", 0) or 0,
+                total_connections_last_24h=row.get("history_24h_count", 0) or 0,
+                last_connection_at=row.get("last_connection_at"),
             )
 
             logger.debug(
                 "Connection stats for user %s: active=%d, unique_ips=%d, simultaneous=%d",
                 user_uuid,
-                active_connections_count,
-                unique_ips_in_window,
-                simultaneous_connections
+                stats.active_connections_count,
+                stats.unique_ips_in_window,
+                stats.simultaneous_connections,
             )
 
             return stats

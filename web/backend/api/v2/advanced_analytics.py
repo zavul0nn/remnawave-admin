@@ -18,14 +18,16 @@ router = APIRouter()
 async def get_geo_connections(
     request: Request,
     period: str = Query("7d", description="Period: 24h, 7d, 30d"),
+    date_from: Optional[str] = Query(None, description="Custom start date (ISO 8601)"),
+    date_to: Optional[str] = Query(None, description="Custom end date (ISO 8601)"),
     admin: AdminUser = Depends(require_permission("analytics", "view")),
 ):
     """Get geographical distribution of user connections from violations/IP metadata."""
-    return await _compute_geo(period=period)
+    return await _compute_geo(period=period, date_from=date_from, date_to=date_to)
 
 
-@cached("analytics:geo", ttl=CACHE_TTL_LONG, key_args=("period",))
-async def _compute_geo(period: str = "7d"):
+@cached("analytics:geo", ttl=CACHE_TTL_LONG, key_args=("period", "date_from", "date_to"))
+async def _compute_geo(period: str = "7d", date_from: Optional[str] = None, date_to: Optional[str] = None):
     """Compute geo connections (cacheable)."""
     try:
         from shared.database import db_service
@@ -33,9 +35,12 @@ async def _compute_geo(period: str = "7d"):
             return {"countries": [], "cities": []}
 
         now = datetime.now(timezone.utc)
-        delta_map = {"24h": 1, "7d": 7, "30d": 30}
-        days = delta_map.get(period, 7)
-        since = now - timedelta(days=days)
+        if date_from:
+            since = datetime.fromisoformat(date_from.replace("Z", "+00:00"))
+        else:
+            delta_map = {"24h": 1, "7d": 7, "30d": 30}
+            days = delta_map.get(period, 7)
+            since = now - timedelta(days=days)
 
         async with db_service.acquire() as conn:
             # Get country distribution from ip_metadata table
@@ -94,9 +99,11 @@ async def _compute_geo(period: str = "7d"):
                         ON SPLIT_PART(uc.ip_address::text, '/', 1) = TRIM(im.ip_address)
                     JOIN users u ON uc.user_uuid = u.uuid
                     WHERE im.city IS NOT NULL AND im.country_name IS NOT NULL
+                          AND im.created_at >= $1
                     GROUP BY im.city, im.country_name, u.uuid, u.username, u.status
                     ORDER BY im.city, connections DESC
                     """,
+                    since,
                 )
                 for ur in user_city_rows:
                     key = (ur["city"], ur["country_name"])
@@ -189,7 +196,6 @@ async def _compute_top_users(limit: int = 20):
                     "username": r["username"],
                     "status": r["status"],
                     "used_traffic_bytes": used,
-                    "lifetime_used_traffic_bytes": used,
                     "traffic_limit_bytes": limit_bytes,
                     "usage_percent": usage_pct,
                     "online_at": r["online_at"],
@@ -208,14 +214,16 @@ async def get_trends(
     request: Request,
     metric: str = Query("users", description="Metric: users, traffic, violations"),
     period: str = Query("30d", description="Period: 7d, 30d, 90d"),
+    date_from: Optional[str] = Query(None, description="Custom start date (ISO 8601)"),
+    date_to: Optional[str] = Query(None, description="Custom end date (ISO 8601)"),
     admin: AdminUser = Depends(require_permission("analytics", "view")),
 ):
     """Get trend data — growth of users, traffic, violations over time."""
-    return await _compute_trends(metric=metric, period=period)
+    return await _compute_trends(metric=metric, period=period, date_from=date_from, date_to=date_to)
 
 
-@cached("analytics:trends", ttl=CACHE_TTL_LONG, key_args=("metric", "period"))
-async def _compute_trends(metric: str = "users", period: str = "30d"):
+@cached("analytics:trends", ttl=CACHE_TTL_LONG, key_args=("metric", "period", "date_from", "date_to"))
+async def _compute_trends(metric: str = "users", period: str = "30d", date_from: Optional[str] = None, date_to: Optional[str] = None):
     """Compute trends (cacheable)."""
     try:
         from shared.database import db_service
@@ -223,9 +231,12 @@ async def _compute_trends(metric: str = "users", period: str = "30d"):
             return {"series": [], "total_growth": 0}
 
         now = datetime.now(timezone.utc)
-        delta_map = {"7d": 7, "30d": 30, "90d": 90}
-        days = delta_map.get(period, 30)
-        since = now - timedelta(days=days)
+        if date_from:
+            since = datetime.fromisoformat(date_from.replace("Z", "+00:00"))
+        else:
+            delta_map = {"7d": 7, "30d": 30, "90d": 90}
+            days = delta_map.get(period, 30)
+            since = now - timedelta(days=days)
 
         async with db_service.acquire() as conn:
             if metric == "users":
@@ -323,3 +334,183 @@ async def _compute_shared_hwids(min_users: int = 2, limit: int = 50):
     except Exception as e:
         logger.error("get_shared_hwids failed: %s", e)
         return {"items": [], "total_shared_hwids": 0}
+
+
+@router.get("/providers")
+@limiter.limit(RATE_ANALYTICS)
+async def get_providers(
+    request: Request,
+    period: str = Query("7d", description="Period: 24h, 7d, 30d"),
+    admin: AdminUser = Depends(require_permission("analytics", "view")),
+):
+    """Get provider/ASN analytics from ip_metadata."""
+    return await _compute_providers(period=period)
+
+
+@cached("analytics:providers", ttl=CACHE_TTL_LONG, key_args=("period",))
+async def _compute_providers(period: str = "7d"):
+    """Compute provider analytics (cacheable)."""
+    try:
+        from shared.database import db_service
+        if not db_service.is_connected:
+            return {"connection_types": [], "top_asn": [], "flags": {}}
+
+        now = datetime.now(timezone.utc)
+        delta_map = {"24h": 1, "7d": 7, "30d": 30}
+        days = delta_map.get(period, 7)
+        since = now - timedelta(days=days)
+
+        async with db_service.acquire() as conn:
+            total = await conn.fetchval(
+                "SELECT COUNT(*) FROM ip_metadata WHERE created_at >= $1",
+                since,
+            ) or 1
+
+            # Connection types distribution
+            type_rows = await conn.fetch(
+                """
+                SELECT COALESCE(connection_type, 'unknown') as type,
+                       COUNT(*) as count
+                FROM ip_metadata
+                WHERE created_at >= $1
+                GROUP BY connection_type
+                ORDER BY count DESC
+                """,
+                since,
+            )
+            connection_types = [
+                {"type": r["type"], "count": r["count"],
+                 "percent": round(r["count"] / total * 100, 1)}
+                for r in type_rows
+            ]
+
+            # Top ASN organizations
+            asn_rows = await conn.fetch(
+                """
+                SELECT asn, asn_org, COUNT(*) as count
+                FROM ip_metadata
+                WHERE created_at >= $1 AND asn IS NOT NULL
+                GROUP BY asn, asn_org
+                ORDER BY count DESC
+                LIMIT 10
+                """,
+                since,
+            )
+            top_asn = [
+                {"asn": r["asn"], "org": r["asn_org"] or f"AS{r['asn']}",
+                 "count": r["count"],
+                 "percent": round(r["count"] / total * 100, 1)}
+                for r in asn_rows
+            ]
+
+            # Flags: VPN/Proxy/Tor/Hosting percentages
+            flag_row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) FILTER (WHERE is_vpn = true) as vpn,
+                    COUNT(*) FILTER (WHERE is_proxy = true) as proxy,
+                    COUNT(*) FILTER (WHERE is_tor = true) as tor,
+                    COUNT(*) FILTER (WHERE is_hosting = true) as hosting
+                FROM ip_metadata
+                WHERE created_at >= $1
+                """,
+                since,
+            )
+            flags = {
+                "vpn": {"count": flag_row["vpn"], "percent": round(flag_row["vpn"] / total * 100, 1)},
+                "proxy": {"count": flag_row["proxy"], "percent": round(flag_row["proxy"] / total * 100, 1)},
+                "tor": {"count": flag_row["tor"], "percent": round(flag_row["tor"] / total * 100, 1)},
+                "hosting": {"count": flag_row["hosting"], "percent": round(flag_row["hosting"] / total * 100, 1)},
+            }
+
+            return {"connection_types": connection_types, "top_asn": top_asn, "flags": flags, "total": total}
+
+    except Exception as e:
+        logger.error("get_providers failed: %s", e)
+        return {"connection_types": [], "top_asn": [], "flags": {}}
+
+
+@router.get("/retention")
+@limiter.limit(RATE_ANALYTICS)
+async def get_retention(
+    request: Request,
+    weeks: int = Query(12, ge=4, le=52, description="Number of weeks to analyze"),
+    admin: AdminUser = Depends(require_permission("analytics", "view")),
+):
+    """Get cohort retention analysis."""
+    return await _compute_retention(weeks=weeks)
+
+
+@cached("analytics:retention", ttl=CACHE_TTL_LONG, key_args=("weeks",))
+async def _compute_retention(weeks: int = 12):
+    """Compute retention cohorts (cacheable)."""
+    try:
+        from shared.database import db_service
+        if not db_service.is_connected:
+            return {"cohorts": [], "overall_retention": 0}
+
+        now = datetime.now(timezone.utc)
+        since = now - timedelta(weeks=weeks)
+
+        async with db_service.acquire() as conn:
+            # Get cohorts by registration week
+            rows = await conn.fetch(
+                """
+                WITH cohorts AS (
+                    SELECT
+                        DATE_TRUNC('week', created_at)::date as cohort_week,
+                        uuid,
+                        status,
+                        used_traffic_bytes,
+                        expire_date
+                    FROM users
+                    WHERE created_at >= $1
+                )
+                SELECT
+                    cohort_week,
+                    COUNT(*) as total_users,
+                    COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_users,
+                    COUNT(*) FILTER (WHERE used_traffic_bytes > 0) as with_traffic,
+                    COUNT(*) FILTER (WHERE expire_date IS NOT NULL AND expire_date > NOW()) as with_active_sub
+                FROM cohorts
+                GROUP BY cohort_week
+                ORDER BY cohort_week
+                """,
+                since,
+            )
+
+            cohorts = []
+            total_registered = 0
+            total_retained = 0
+
+            for r in rows:
+                total = r["total_users"]
+                active = r["active_users"]
+                retention_pct = round(active / total * 100, 1) if total > 0 else 0
+                traffic_pct = round(r["with_traffic"] / total * 100, 1) if total > 0 else 0
+                sub_pct = round(r["with_active_sub"] / total * 100, 1) if total > 0 else 0
+
+                total_registered += total
+                total_retained += active
+
+                cohorts.append({
+                    "week": str(r["cohort_week"]),
+                    "total_users": total,
+                    "active_users": active,
+                    "retention_percent": retention_pct,
+                    "with_traffic_percent": traffic_pct,
+                    "with_active_sub_percent": sub_pct,
+                })
+
+            overall = round(total_retained / total_registered * 100, 1) if total_registered > 0 else 0
+
+            return {
+                "cohorts": cohorts,
+                "overall_retention": overall,
+                "total_registered": total_registered,
+                "total_retained": total_retained,
+            }
+
+    except Exception as e:
+        logger.error("get_retention failed: %s", e)
+        return {"cohorts": [], "overall_retention": 0}

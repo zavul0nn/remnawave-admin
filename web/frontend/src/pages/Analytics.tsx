@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback, memo, lazy, Suspense, Fragment } from '
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useTabParam } from '@/lib/useTabParam'
+import { usePermissionStore } from '@/store/permissionStore'
 import {
   Globe,
   Users,
@@ -18,6 +20,13 @@ import {
   Fingerprint,
   Smartphone,
   Copy,
+  Server,
+  Cpu,
+  Activity,
+  Shield,
+  Network,
+  GitCompare,
+  CalendarDays,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -27,10 +36,15 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts'
 import { toast } from 'sonner'
 import { advancedAnalyticsApi } from '@/api/advancedAnalytics'
-import type { GeoCity, GeoCityUser, TopUser, SharedHwidGroup } from '@/api/advancedAnalytics'
+import type { GeoCity, GeoCityUser, TopUser, SharedHwidGroup, NodeFleetItem, RetentionCohort } from '@/api/advancedAnalytics'
+import { ExportDropdown } from '@/components/ExportDropdown'
+import { exportCSV, exportJSON, formatBytesForExport } from '@/lib/export'
 
 // Lazy-load the map component (leaflet + react-leaflet + clustering)
 const LazyGeoMap = lazy(() => import('@/components/LazyGeoMap'))
@@ -132,18 +146,67 @@ function TrendTooltip({ active, payload, label, metric }: TrendTooltipProps) {
   )
 }
 
+// ── Date Range Picker (F4) ──────────────────────────────────────
+
+function DateRangePicker({
+  dateFrom,
+  dateTo,
+  onChange,
+  onClear,
+}: {
+  dateFrom: string
+  dateTo: string
+  onChange: (from: string, to: string) => void
+  onClear: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex items-center gap-1.5">
+      <input
+        type="date"
+        value={dateFrom}
+        onChange={(e) => onChange(e.target.value, dateTo)}
+        className="h-7 px-1.5 text-xs rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-white focus:outline-none focus:ring-1 focus:ring-primary/50"
+      />
+      <span className="text-xs text-muted-foreground">–</span>
+      <input
+        type="date"
+        value={dateTo}
+        onChange={(e) => onChange(dateFrom, e.target.value)}
+        className="h-7 px-1.5 text-xs rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-white focus:outline-none focus:ring-1 focus:ring-primary/50"
+      />
+      {(dateFrom || dateTo) && (
+        <button
+          onClick={onClear}
+          className="text-xs text-muted-foreground hover:text-white px-1.5 py-0.5 rounded hover:bg-[var(--glass-bg-hover)]"
+          title={t('common.clear', { defaultValue: 'Clear' })}
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Geo Map Card ────────────────────────────────────────────────
 
 function GeoMapCard() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [geoPeriod, setGeoPeriod] = useState('7d')
+  const [geoDateFrom, setGeoDateFrom] = useState('')
+  const [geoDateTo, setGeoDateTo] = useState('')
   const chart = useChartTheme()
 
+  const hasCustomDates = Boolean(geoDateFrom)
+  const apiDateFrom = hasCustomDates ? new Date(geoDateFrom).toISOString() : undefined
+  const apiDateTo = hasCustomDates && geoDateTo ? new Date(geoDateTo + 'T23:59:59').toISOString() : undefined
+
   const { data: geoData, isLoading, isError, refetch } = useQuery({
-    queryKey: ['advanced-geo', geoPeriod],
-    queryFn: () => advancedAnalyticsApi.geo(geoPeriod),
+    queryKey: ['advanced-geo', geoPeriod, geoDateFrom, geoDateTo],
+    queryFn: () => advancedAnalyticsApi.geo(geoPeriod, apiDateFrom, apiDateTo),
     staleTime: 60_000,
+    refetchInterval: 60_000,
   })
 
   const cities = geoData?.cities || []
@@ -168,7 +231,7 @@ function GeoMapCard() {
   return (
     <Card className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary-400" />
             <CardTitle className="text-base">{t('analytics.geo.title')}</CardTitle>
@@ -177,15 +240,25 @@ function GeoMapCard() {
               side="right"
             />
           </div>
-          <PeriodSwitcher
-            value={geoPeriod}
-            onChange={setGeoPeriod}
-            options={[
-              { value: '24h', label: t('analytics.periods.24h') },
-              { value: '7d', label: t('analytics.periods.7d') },
-              { value: '30d', label: t('analytics.periods.30d') },
-            ]}
-          />
+          <div className="flex items-center gap-2">
+            {!hasCustomDates && (
+              <PeriodSwitcher
+                value={geoPeriod}
+                onChange={setGeoPeriod}
+                options={[
+                  { value: '24h', label: t('analytics.periods.24h') },
+                  { value: '7d', label: t('analytics.periods.7d') },
+                  { value: '30d', label: t('analytics.periods.30d') },
+                ]}
+              />
+            )}
+            <DateRangePicker
+              dateFrom={geoDateFrom}
+              dateTo={geoDateTo}
+              onChange={(from, to) => { setGeoDateFrom(from); setGeoDateTo(to) }}
+              onClear={() => { setGeoDateFrom(''); setGeoDateTo('') }}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -222,28 +295,7 @@ function GeoMapCard() {
 
             {/* Top countries */}
             {countries.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                {countries.slice(0, 10).map((c) => {
-                  const totalConns = countries.reduce((s, x) => s + x.count, 0)
-                  const pct = totalConns > 0 ? ((c.count / totalConns) * 100).toFixed(1) : '0'
-                  return (
-                    <div
-                      key={c.country_code}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]"
-                    >
-                      <span className="text-lg leading-none">
-                        {countryFlag(c.country_code)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-white truncate">{c.country}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {c.count.toLocaleString()} ({pct}%)
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <CountryGrid countries={countries} />
             )}
 
             {/* Users by city — collapsible list */}
@@ -508,6 +560,35 @@ function CityUsersList({
   )
 }
 
+// ── Country Grid (B3 fix — totalConns via useMemo) ──────────────
+
+function CountryGrid({ countries }: { countries: { country: string; country_code: string; count: number }[] }) {
+  const totalConns = useMemo(() => countries.reduce((s, x) => s + x.count, 0), [countries])
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      {countries.slice(0, 10).map((c) => {
+        const pct = totalConns > 0 ? ((c.count / totalConns) * 100).toFixed(1) : '0'
+        return (
+          <div
+            key={c.country_code}
+            className="flex items-center gap-2 p-2 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]"
+          >
+            <span className="text-lg leading-none">
+              {countryFlag(c.country_code)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-white truncate">{c.country}</p>
+              <p className="text-xs text-muted-foreground">
+                {c.count.toLocaleString()} ({pct}%)
+              </p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Convert 2-letter country code to flag emoji */
 function countryFlag(code: string): string {
   if (!code || code.length !== 2) return '\u{1F310}'
@@ -530,6 +611,7 @@ function TopUsersCard() {
     queryKey: ['advanced-top-users', limit],
     queryFn: () => advancedAnalyticsApi.topUsers(limit),
     staleTime: 30_000,
+    refetchInterval: 60_000,
   })
 
   const items = data?.items || []
@@ -546,15 +628,27 @@ function TopUsersCard() {
               side="right"
             />
           </div>
-          <PeriodSwitcher
-            value={String(limit)}
-            onChange={(v) => setLimit(Number(v))}
-            options={[
-              { value: '10', label: t('analytics.topUsers.top10') },
-              { value: '20', label: t('analytics.topUsers.top20') },
-              { value: '50', label: t('analytics.topUsers.top50') },
-            ]}
-          />
+          <div className="flex items-center gap-2">
+            <ExportDropdown
+              disabled={items.length === 0}
+              onExportCSV={() => exportCSV(items.map((u) => ({
+                username: u.username, status: u.status,
+                traffic: formatBytesForExport(u.used_traffic_bytes),
+                limit: formatBytesForExport(u.traffic_limit_bytes),
+                usage_percent: u.usage_percent ?? '',
+              })), 'top-users')}
+              onExportJSON={() => exportJSON(items, 'top-users')}
+            />
+            <PeriodSwitcher
+              value={String(limit)}
+              onChange={(v) => setLimit(Number(v))}
+              options={[
+                { value: '10', label: t('analytics.topUsers.top10') },
+                { value: '20', label: t('analytics.topUsers.top20') },
+                { value: '50', label: t('analytics.topUsers.top50') },
+              ]}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -676,21 +770,72 @@ function TrendsCard() {
   const { formatBytes } = useFormatters()
   const [metric, setMetric] = useState('users')
   const [period, setPeriod] = useState('30d')
+  const [compare, setCompare] = useState(false)
+  const [trendDateFrom, setTrendDateFrom] = useState('')
+  const [trendDateTo, setTrendDateTo] = useState('')
   const chart = useChartTheme()
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['advanced-trends', metric, period],
-    queryFn: () => advancedAnalyticsApi.trends(metric, period),
+  const hasCustomDates = Boolean(trendDateFrom)
+  const apiDateFrom = hasCustomDates ? new Date(trendDateFrom).toISOString() : undefined
+  const apiDateTo = hasCustomDates && trendDateTo ? new Date(trendDateTo + 'T23:59:59').toISOString() : undefined
+
+  // B1 fix: for traffic, use the real timeseries API (daily consumption)
+  const isTraffic = metric === 'traffic'
+  const tsPeriod = period === '90d' ? '30d' : period
+
+  // Previous period for comparison
+  const prevPeriodMap: Record<string, string> = { '7d': '7d', '30d': '30d', '90d': '90d' }
+  const prevPeriod = prevPeriodMap[period] || '30d'
+
+  const { data: trendsData, isLoading: trendsLoading, isError: trendsError, refetch: trendsRefetch } = useQuery({
+    queryKey: ['advanced-trends', metric, period, trendDateFrom, trendDateTo],
+    queryFn: () => advancedAnalyticsApi.trends(metric, period, apiDateFrom, apiDateTo),
     staleTime: 60_000,
+    refetchInterval: 60_000,
+    enabled: !isTraffic,
   })
 
-  const series = data?.series || []
-  const growth = data?.total_growth || 0
+  const { data: tsData, isLoading: tsLoading, isError: tsError, refetch: tsRefetch } = useQuery({
+    queryKey: ['timeseries', tsPeriod, 'traffic'],
+    queryFn: () => advancedAnalyticsApi.timeseries(tsPeriod, 'traffic'),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    enabled: isTraffic,
+  })
 
-  const chartData = series.map((p) => ({
-    date: formatDate(p.date),
-    value: p.value,
-  }))
+  // F5: comparison — fetch previous period
+  const { data: prevTrendsData } = useQuery({
+    queryKey: ['advanced-trends', metric, prevPeriod, 'prev'],
+    queryFn: () => advancedAnalyticsApi.trends(metric, prevPeriod),
+    staleTime: 60_000,
+    enabled: compare && !isTraffic,
+  })
+
+  const isLoading = isTraffic ? tsLoading : trendsLoading
+  const isError = isTraffic ? tsError : trendsError
+  const refetch = isTraffic ? tsRefetch : trendsRefetch
+
+  // Normalize data from both APIs into same chartData format
+  const { chartData, growth } = useMemo(() => {
+    if (isTraffic) {
+      const points = tsData?.points || []
+      const mapped = points.map((p) => ({
+        date: formatDate(p.timestamp.split('T')[0]),
+        value: p.value,
+      }))
+      const totalGrowth = points.reduce((s, p) => s + p.value, 0)
+      return { chartData: mapped, growth: totalGrowth }
+    }
+    const series = trendsData?.series || []
+    const prevSeries = compare ? (prevTrendsData?.series || []) : []
+
+    const mapped = series.map((p, i) => ({
+      date: formatDate(p.date),
+      value: p.value,
+      prevValue: prevSeries[i]?.value ?? undefined,
+    }))
+    return { chartData: mapped, growth: trendsData?.total_growth || 0 }
+  }, [isTraffic, tsData, trendsData, compare, prevTrendsData])
 
   const formatBytesShort = (bytes: number): string => {
     if (bytes <= 0) return '0'
@@ -720,6 +865,17 @@ function TrendsCard() {
             />
           </div>
           <div className="flex items-center gap-2">
+            {!isTraffic && !hasCustomDates && (
+              <Button
+                variant={compare ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setCompare((v) => !v)}
+              >
+                <GitCompare className="w-3 h-3" />
+                {t('analytics.trends.compare', { defaultValue: 'Compare' })}
+              </Button>
+            )}
             <PeriodSwitcher
               value={metric}
               onChange={setMetric}
@@ -729,14 +885,22 @@ function TrendsCard() {
                 { value: 'traffic', label: t('analytics.trends.traffic') },
               ]}
             />
-            <PeriodSwitcher
-              value={period}
-              onChange={setPeriod}
-              options={[
-                { value: '7d', label: t('analytics.periods.7d') },
-                { value: '30d', label: t('analytics.periods.30d') },
-                { value: '90d', label: t('analytics.periods.90d') },
-              ]}
+            {!hasCustomDates && (
+              <PeriodSwitcher
+                value={period}
+                onChange={setPeriod}
+                options={[
+                  { value: '7d', label: t('analytics.periods.7d') },
+                  { value: '30d', label: t('analytics.periods.30d') },
+                  { value: '90d', label: t('analytics.periods.90d') },
+                ]}
+              />
+            )}
+            <DateRangePicker
+              dateFrom={trendDateFrom}
+              dateTo={trendDateTo}
+              onChange={(from, to) => { setTrendDateFrom(from); setTrendDateTo(to) }}
+              onClear={() => { setTrendDateFrom(''); setTrendDateTo('') }}
             />
           </div>
         </div>
@@ -770,8 +934,8 @@ function TrendsCard() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    <stop offset="5%" stopColor={chart.accentColor} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={chart.accentColor} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -796,17 +960,29 @@ function TrendsCard() {
                 />
                 <RechartsTooltip
                   content={<TrendTooltip metric={metric} />}
-                  cursor={{ stroke: 'rgba(6,182,212,0.3)' }}
+                  cursor={{ stroke: `${chart.accentColor}4D` }}
                 />
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#06b6d4"
+                  stroke={chart.accentColor}
                   strokeWidth={2}
                   fill="url(#trendGradient)"
                   dot={false}
-                  activeDot={{ r: 4, fill: '#22d3ee' }}
+                  activeDot={{ r: 4, fill: chart.accentColor }}
                 />
+                {compare && !isTraffic && (
+                  <Area
+                    type="monotone"
+                    dataKey="prevValue"
+                    stroke={chart.accentColor}
+                    strokeWidth={1.5}
+                    strokeDasharray="5 5"
+                    strokeOpacity={0.5}
+                    fill="none"
+                    dot={false}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -831,6 +1007,7 @@ function SharedHwidsCard() {
     queryKey: ['advanced-shared-hwids'],
     queryFn: () => advancedAnalyticsApi.sharedHwids(),
     staleTime: 60_000,
+    refetchInterval: 60_000,
   })
 
   const items: SharedHwidGroup[] = data?.items || []
@@ -889,6 +1066,16 @@ function SharedHwidsCard() {
             )}
           </div>
           <div className="flex items-center gap-1 flex-wrap">
+            <ExportDropdown
+              disabled={filtered.length === 0}
+              onExportCSV={() => exportCSV(filtered.flatMap((g) =>
+                g.users.map((u) => ({
+                  hwid: g.hwid, platform: g.platform ?? '', device: g.device_model ?? '',
+                  username: u.username, status: u.status, is_trial: u.is_trial, is_active: u.is_active,
+                }))
+              ), 'shared-hwids')}
+              onExportJSON={() => exportJSON(filtered, 'shared-hwids')}
+            />
             {(['all', 'has_trial', 'has_active', 'has_expired'] as HwidFilter[]).map((f) => (
               <Button
                 key={f}
@@ -1057,10 +1244,575 @@ function SharedHwidsCard() {
   )
 }
 
+// ── Providers Card (F2) ──────────────────────────────────────────
+
+const PIE_COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1', '#14b8a6']
+
+function ProvidersCard() {
+  const { t } = useTranslation()
+  const chart = useChartTheme()
+  const [period, setPeriod] = useState('7d')
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['advanced-providers', period],
+    queryFn: () => advancedAnalyticsApi.providers(period),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  })
+
+  const connectionTypes = data?.connection_types || []
+  const topAsn = data?.top_asn || []
+  const flags = data?.flags
+
+  return (
+    <Card className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Network className="w-5 h-5 text-primary-400" />
+            <CardTitle className="text-base">{t('analytics.providers.title', { defaultValue: 'Providers & ASN' })}</CardTitle>
+            <InfoTooltip text={t('analytics.providers.tooltip', { defaultValue: 'Connection types, ASN distribution, and security flags' })} side="right" />
+          </div>
+          <div className="flex items-center gap-2">
+            <ExportDropdown
+              disabled={!data}
+              onExportCSV={() => exportCSV([
+                ...connectionTypes.map((ct) => ({ type: 'connection_type', name: ct.type, count: ct.count, percent: ct.percent })),
+                ...topAsn.map((a) => ({ type: 'asn', name: `AS${a.asn} ${a.org}`, count: a.count, percent: a.percent })),
+              ], 'providers')}
+              onExportJSON={() => exportJSON(data, 'providers')}
+            />
+            <PeriodSwitcher
+              value={period}
+              onChange={setPeriod}
+              options={[
+                { value: '24h', label: t('analytics.periods.24h') },
+                { value: '7d', label: t('analytics.periods.7d') },
+                { value: '30d', label: t('analytics.periods.30d') },
+              ]}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : isError ? (
+          <QueryError onRetry={refetch} />
+        ) : (
+          <div className="space-y-6">
+            {/* Flags: VPN / Proxy / Tor / Hosting pills */}
+            {flags && (
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: 'vpn', label: 'VPN', icon: Shield, color: 'text-blue-400 bg-blue-500/20' },
+                  { key: 'proxy', label: 'Proxy', icon: Shield, color: 'text-yellow-400 bg-yellow-500/20' },
+                  { key: 'tor', label: 'Tor', icon: Shield, color: 'text-purple-400 bg-purple-500/20' },
+                  { key: 'hosting', label: 'Hosting', icon: Server, color: 'text-orange-400 bg-orange-500/20' },
+                ] as const).map((f) => {
+                  const d = flags[f.key]
+                  return (
+                    <div key={f.key} className={cn('flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--glass-border)]', f.color)}>
+                      <f.icon className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">{f.label}</span>
+                      <span className="text-sm font-bold">{d.percent}%</span>
+                      <span className="text-xs opacity-60">({d.count})</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Connection Type Donut */}
+              {connectionTypes.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-white mb-3">{t('analytics.providers.connectionTypes', { defaultValue: 'Connection Types' })}</h3>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={connectionTypes}
+                          dataKey="count"
+                          nameKey="type"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={2}
+                        >
+                          {connectionTypes.map((_entry, i) => (
+                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          contentStyle={chart.tooltipStyle}
+                          formatter={(value, name) => [`${Number(value).toLocaleString()} (${connectionTypes.find((c) => c.type === name)?.percent ?? 0}%)`, String(name)]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                    {connectionTypes.map((ct, i) => (
+                      <div key={ct.type} className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        <span className="text-muted-foreground">{ct.type}</span>
+                        <span className="text-white font-medium">{ct.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Top ASN Bar Chart */}
+              {topAsn.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-white mb-3">{t('analytics.providers.topAsn', { defaultValue: 'Top ASN' })}</h3>
+                  <div className="space-y-2">
+                    {topAsn.map((asn, i) => {
+                      const maxCount = topAsn[0]?.count || 1
+                      return (
+                        <div key={asn.asn} className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground w-16 truncate shrink-0" title={`AS${asn.asn}`}>
+                            AS{asn.asn}
+                          </span>
+                          <div className="flex-1 h-5 bg-[var(--glass-bg-hover)] rounded overflow-hidden">
+                            <div
+                              className="h-full rounded transition-all"
+                              style={{
+                                width: `${(asn.count / maxCount) * 100}%`,
+                                backgroundColor: PIE_COLORS[i % PIE_COLORS.length],
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs text-white w-24 truncate text-right" title={asn.org}>
+                            {asn.org}
+                          </span>
+                          <span className="text-xs text-muted-foreground w-10 text-right">{asn.percent}%</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ── Nodes Card (F1) ──────────────────────────────────────────────
+
+type NodeSortField = 'name' | 'cpu' | 'ram' | 'disk' | 'users' | 'traffic' | 'speed'
+
+function NodesCard() {
+  const { t } = useTranslation()
+  const { formatBytes, formatSpeed } = useFormatters()
+  const navigate = useNavigate()
+  const hasPermission = usePermissionStore((s) => s.hasPermission)
+  const canViewFleet = hasPermission('fleet', 'view')
+  const [sortField, setSortField] = useState<NodeSortField>('traffic')
+  const [sortAsc, setSortAsc] = useState(false)
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['node-fleet-analytics'],
+    queryFn: () => advancedAnalyticsApi.nodeFleet(),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    enabled: canViewFleet,
+  })
+
+  const nodes: NodeFleetItem[] = data?.nodes || []
+  const totalNodes = data?.total || 0
+  const onlineNodes = data?.online || 0
+  const offlineNodes = totalNodes - onlineNodes
+
+  const avgCpu = useMemo(() => {
+    const vals = nodes.filter((n) => n.cpu_usage != null && n.is_connected).map((n) => n.cpu_usage!)
+    return vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0
+  }, [nodes])
+
+  const avgRam = useMemo(() => {
+    const vals = nodes.filter((n) => n.memory_usage != null && n.is_connected).map((n) => n.memory_usage!)
+    return vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0
+  }, [nodes])
+
+  const sorted = useMemo(() => {
+    const arr = [...nodes]
+    arr.sort((a, b) => {
+      let cmp = 0
+      switch (sortField) {
+        case 'name': cmp = a.name.localeCompare(b.name); break
+        case 'cpu': cmp = (a.cpu_usage ?? 0) - (b.cpu_usage ?? 0); break
+        case 'ram': cmp = (a.memory_usage ?? 0) - (b.memory_usage ?? 0); break
+        case 'disk': cmp = (a.disk_usage ?? 0) - (b.disk_usage ?? 0); break
+        case 'users': cmp = a.users_online - b.users_online; break
+        case 'traffic': cmp = a.traffic_today_bytes - b.traffic_today_bytes; break
+        case 'speed': cmp = (a.download_speed_bps + a.upload_speed_bps) - (b.download_speed_bps + b.upload_speed_bps); break
+      }
+      return sortAsc ? cmp : -cmp
+    })
+    return arr
+  }, [nodes, sortField, sortAsc])
+
+  const toggleSort = (field: NodeSortField) => {
+    if (sortField === field) setSortAsc((prev) => !prev)
+    else { setSortField(field); setSortAsc(false) }
+  }
+
+  const SortHeader = ({ field, children }: { field: NodeSortField; children: React.ReactNode }) => (
+    <TableHead
+      className="text-xs cursor-pointer select-none hover:text-white transition-colors"
+      onClick={() => toggleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field && (
+          <ChevronDown className={cn('w-3 h-3', sortAsc && 'rotate-180')} />
+        )}
+      </div>
+    </TableHead>
+  )
+
+  const formatUptime = (seconds: number | null): string => {
+    if (!seconds) return '-'
+    const d = Math.floor(seconds / 86400)
+    const h = Math.floor((seconds % 86400) / 3600)
+    if (d > 0) return `${d}d ${h}h`
+    const m = Math.floor((seconds % 3600) / 60)
+    return `${h}h ${m}m`
+  }
+
+  if (!canViewFleet) return null
+
+  return (
+    <Card className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Server className="w-5 h-5 text-primary-400" />
+            <CardTitle className="text-base">{t('analytics.nodes.title', { defaultValue: 'Nodes' })}</CardTitle>
+            <InfoTooltip text={t('analytics.nodes.tooltip', { defaultValue: 'Node fleet health and performance' })} side="right" />
+          </div>
+          <ExportDropdown
+            disabled={nodes.length === 0}
+            onExportCSV={() => exportCSV(nodes.map((n) => ({
+              name: n.name, status: n.is_connected ? 'online' : n.is_disabled ? 'disabled' : 'offline',
+              cpu: n.cpu_usage != null ? `${n.cpu_usage}%` : '', ram: n.memory_usage != null ? `${n.memory_usage}%` : '',
+              users_online: n.users_online, traffic_today: formatBytesForExport(n.traffic_today_bytes),
+              uptime: formatUptime(n.uptime_seconds),
+            })), 'nodes-analytics')}
+            onExportJSON={() => exportJSON(nodes, 'nodes-analytics')}
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Stat pills */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[
+            { label: t('analytics.nodes.total', { defaultValue: 'Total' }), value: totalNodes, icon: Server },
+            { label: t('analytics.nodes.online', { defaultValue: 'Online' }), value: onlineNodes, icon: Wifi, color: 'text-green-400' },
+            { label: t('analytics.nodes.offline', { defaultValue: 'Offline' }), value: offlineNodes, icon: WifiOff, color: 'text-red-400' },
+            { label: t('analytics.nodes.avgCpu', { defaultValue: 'Avg CPU' }), value: `${avgCpu}%`, icon: Cpu, color: avgCpu > 80 ? 'text-red-400' : 'text-primary-400' },
+            { label: t('analytics.nodes.avgRam', { defaultValue: 'Avg RAM' }), value: `${avgRam}%`, icon: Activity, color: avgRam > 80 ? 'text-red-400' : 'text-primary-400' },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]"
+            >
+              <stat.icon className={cn('w-3.5 h-3.5', stat.color || 'text-muted-foreground')} />
+              <span className="text-xs text-muted-foreground">{stat.label}:</span>
+              <span className="text-sm font-medium text-white">{stat.value}</span>
+            </div>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <QueryError onRetry={refetch} />
+        ) : nodes.length === 0 ? (
+          <div className="h-48 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <Server className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p>{t('analytics.nodes.noData', { defaultValue: 'No nodes found' })}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortHeader field="name">{t('analytics.nodes.name', { defaultValue: 'Node' })}</SortHeader>
+                  <TableHead className="text-xs">{t('analytics.topUsers.status')}</TableHead>
+                  <SortHeader field="cpu">CPU</SortHeader>
+                  <SortHeader field="ram">RAM</SortHeader>
+                  <SortHeader field="disk">{t('analytics.nodes.disk', { defaultValue: 'Disk' })}</SortHeader>
+                  <SortHeader field="users">{t('analytics.nodes.users', { defaultValue: 'Users' })}</SortHeader>
+                  <SortHeader field="traffic">{t('analytics.nodes.traffic', { defaultValue: 'Traffic' })}</SortHeader>
+                  <SortHeader field="speed">{t('analytics.nodes.speed', { defaultValue: 'Speed' })}</SortHeader>
+                  <TableHead className="text-xs hidden lg:table-cell">Uptime</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.map((node) => (
+                  <TableRow
+                    key={node.uuid}
+                    className="cursor-pointer hover:bg-[var(--glass-bg-hover)]/30"
+                    onClick={() => navigate(`/nodes/${node.uuid}`)}
+                  >
+                    <TableCell className="font-medium text-white text-sm max-w-[160px] truncate">
+                      {node.name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={cn('text-xs',
+                          node.is_disabled ? 'bg-gray-500/20 text-gray-400' :
+                          node.is_connected ? 'bg-green-500/20 text-green-400' :
+                          'bg-red-500/20 text-red-400'
+                        )}
+                      >
+                        {node.is_disabled ? t('analytics.nodes.disabled', { defaultValue: 'Disabled' }) :
+                         node.is_connected ? t('analytics.nodes.online', { defaultValue: 'Online' }) :
+                         t('analytics.nodes.offline', { defaultValue: 'Offline' })}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {node.cpu_usage != null ? (
+                        <ResourceBar value={node.cpu_usage} />
+                      ) : <span className="text-xs text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell>
+                      {node.memory_usage != null ? (
+                        <ResourceBar value={node.memory_usage} />
+                      ) : <span className="text-xs text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell>
+                      {node.disk_usage != null ? (
+                        <ResourceBar value={node.disk_usage} />
+                      ) : <span className="text-xs text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-center">
+                      {node.users_online}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-right">
+                      {formatBytes(node.traffic_today_bytes)}
+                    </TableCell>
+                    <TableCell className="text-xs text-right">
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-green-400">{formatSpeed(node.download_speed_bps)}</span>
+                        <span className="text-blue-400">{formatSpeed(node.upload_speed_bps)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
+                      {formatUptime(node.uptime_seconds)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+const ResourceBar = memo(function ResourceBar({ value }: { value: number }) {
+  const color = value >= 90 ? 'bg-red-500' : value >= 70 ? 'bg-yellow-500' : 'bg-primary'
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="w-12 h-1.5 bg-[var(--glass-bg-hover)] rounded-full overflow-hidden">
+        <div
+          className={cn('h-full rounded-full transition-all', color)}
+          style={{ width: `${Math.min(100, value)}%` }}
+        />
+      </div>
+      <span className="text-xs text-muted-foreground w-8 text-right">{value}%</span>
+    </div>
+  )
+})
+
+// ── Retention Card (F6) ─────────────────────────────────────────
+
+function retentionColor(pct: number): string {
+  if (pct >= 80) return 'bg-green-500/30 text-green-300'
+  if (pct >= 60) return 'bg-green-500/20 text-green-400'
+  if (pct >= 40) return 'bg-yellow-500/20 text-yellow-400'
+  if (pct >= 20) return 'bg-orange-500/20 text-orange-400'
+  return 'bg-red-500/20 text-red-400'
+}
+
+function RetentionCard() {
+  const { t } = useTranslation()
+  const [weeks, setWeeks] = useState('12')
+  const weeksNum = parseInt(weeks, 10) || 12
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['advanced-retention', weeksNum],
+    queryFn: () => advancedAnalyticsApi.retention(weeksNum),
+    refetchInterval: 60_000,
+  })
+
+  const cohorts: RetentionCohort[] = Array.isArray(data?.cohorts) ? data!.cohorts : []
+  const overallRetention = data?.overall_retention ?? 0
+  const totalRegistered = data?.total_registered ?? 0
+  const totalRetained = data?.total_retained ?? 0
+
+  return (
+    <Card className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-primary-400" />
+            <CardTitle className="text-base">
+              {t('analytics.retention.title', { defaultValue: 'Retention Analysis' })}
+            </CardTitle>
+            <InfoTooltip
+              text={t('analytics.retention.tooltip', { defaultValue: 'Weekly cohort retention: how many users registered each week remain active' })}
+              side="right"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <ExportDropdown
+              disabled={cohorts.length === 0}
+              onExportCSV={() => exportCSV(cohorts.map((c) => ({
+                week: c.week,
+                total_users: c.total_users,
+                active_users: c.active_users,
+                retention_pct: `${c.retention_percent}%`,
+                with_traffic_pct: `${c.with_traffic_percent}%`,
+                with_active_sub_pct: `${c.with_active_sub_percent}%`,
+              })), 'retention-cohorts')}
+              onExportJSON={() => exportJSON(data, 'retention-cohorts')}
+            />
+            <Select value={weeks} onValueChange={setWeeks}>
+              <SelectTrigger className="w-[100px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="12">12 {t('analytics.retention.weeks', { defaultValue: 'weeks' })}</SelectItem>
+                <SelectItem value="24">24 {t('analytics.retention.weeks', { defaultValue: 'weeks' })}</SelectItem>
+                <SelectItem value="52">52 {t('analytics.retention.weeks', { defaultValue: 'weeks' })}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Summary stats */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          {[
+            {
+              label: t('analytics.retention.overallRetention', { defaultValue: 'Overall Retention' }),
+              value: `${overallRetention}%`,
+              color: overallRetention >= 50 ? 'text-green-400' : overallRetention >= 30 ? 'text-yellow-400' : 'text-red-400',
+            },
+            {
+              label: t('analytics.retention.totalRegistered', { defaultValue: 'Registered' }),
+              value: totalRegistered.toLocaleString(),
+              color: 'text-white',
+            },
+            {
+              label: t('analytics.retention.totalRetained', { defaultValue: 'Retained' }),
+              value: totalRetained.toLocaleString(),
+              color: 'text-primary-400',
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]"
+            >
+              <span className="text-xs text-muted-foreground">{stat.label}:</span>
+              <span className={cn('text-sm font-medium', stat.color)}>{stat.value}</span>
+            </div>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <QueryError onRetry={refetch} />
+        ) : cohorts.length === 0 ? (
+          <div className="h-48 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <CalendarDays className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p>{t('analytics.retention.noData', { defaultValue: 'No cohort data available' })}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">{t('analytics.retention.week', { defaultValue: 'Week' })}</TableHead>
+                  <TableHead className="text-xs text-right">{t('analytics.retention.total', { defaultValue: 'Total' })}</TableHead>
+                  <TableHead className="text-xs text-right">{t('analytics.retention.active', { defaultValue: 'Active' })}</TableHead>
+                  <TableHead className="text-xs text-center">{t('analytics.retention.retentionPct', { defaultValue: 'Retention' })}</TableHead>
+                  <TableHead className="text-xs text-center">{t('analytics.retention.trafficPct', { defaultValue: 'With Traffic' })}</TableHead>
+                  <TableHead className="text-xs text-center">{t('analytics.retention.subPct', { defaultValue: 'Active Sub' })}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cohorts.map((cohort) => (
+                  <TableRow key={cohort.week}>
+                    <TableCell className="text-sm font-mono text-white">{cohort.week}</TableCell>
+                    <TableCell className="text-sm text-right">{cohort.total_users}</TableCell>
+                    <TableCell className="text-sm text-right">{cohort.active_users}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn('inline-block px-2 py-0.5 rounded text-xs font-medium', retentionColor(cohort.retention_percent))}>
+                        {cohort.retention_percent}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn('inline-block px-2 py-0.5 rounded text-xs font-medium', retentionColor(cohort.with_traffic_percent))}>
+                        {cohort.with_traffic_percent}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn('inline-block px-2 py-0.5 rounded text-xs font-medium', retentionColor(cohort.with_active_sub_percent))}>
+                        {cohort.with_active_sub_percent}%
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 // ── Main Page ───────────────────────────────────────────────────
+
+const VALID_TABS = ['geography', 'users', 'trends', 'shared-hwids', 'providers', 'nodes', 'retention'] as const
 
 export default function Analytics() {
   const { t } = useTranslation()
+  const hasPermission = usePermissionStore((s) => s.hasPermission)
+  const canViewAnalytics = hasPermission('analytics', 'view')
+  const [tab, setTab] = useTabParam('geography', [...VALID_TABS])
+
+  if (!canViewAnalytics) {
+    return (
+      <div className="p-4 md:p-6 flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">{t('common.noPermission', { defaultValue: 'No permission' })}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6 animate-fade-in">
@@ -1072,7 +1824,7 @@ export default function Analytics() {
         </p>
       </div>
 
-      <Tabs defaultValue="geography" className="w-full">
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList>
           <TabsTrigger value="geography" className="gap-1.5">
             <Globe className="w-4 h-4" />
@@ -1090,6 +1842,18 @@ export default function Analytics() {
             <Fingerprint className="w-4 h-4" />
             {t('analytics.tabs.sharedHwids')}
           </TabsTrigger>
+          <TabsTrigger value="providers" className="gap-1.5">
+            <Network className="w-4 h-4" />
+            {t('analytics.tabs.providers', { defaultValue: 'Providers' })}
+          </TabsTrigger>
+          <TabsTrigger value="nodes" className="gap-1.5">
+            <Server className="w-4 h-4" />
+            {t('analytics.tabs.nodes', { defaultValue: 'Nodes' })}
+          </TabsTrigger>
+          <TabsTrigger value="retention" className="gap-1.5">
+            <CalendarDays className="w-4 h-4" />
+            {t('analytics.tabs.retention', { defaultValue: 'Retention' })}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="geography" className="space-y-6">
@@ -1106,6 +1870,18 @@ export default function Analytics() {
 
         <TabsContent value="shared-hwids">
           <SharedHwidsCard />
+        </TabsContent>
+
+        <TabsContent value="providers">
+          <ProvidersCard />
+        </TabsContent>
+
+        <TabsContent value="nodes">
+          <NodesCard />
+        </TabsContent>
+
+        <TabsContent value="retention">
+          <RetentionCard />
         </TabsContent>
       </Tabs>
     </div>

@@ -86,6 +86,19 @@ export function useRealtimeUpdates() {
   const isMounted = useRef(true)
   const isRefreshing = useRef(false)
 
+  // Debounced invalidation: batch multiple invalidations within 500ms window
+  const pendingInvalidations = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+
+  const debouncedInvalidate = useCallback((queryKey: string[]) => {
+    const key = JSON.stringify(queryKey)
+    const existing = pendingInvalidations.current.get(key)
+    if (existing) clearTimeout(existing)
+    pendingInvalidations.current.set(key, setTimeout(() => {
+      pendingInvalidations.current.delete(key)
+      queryClient.invalidateQueries({ queryKey })
+    }, 500))
+  }, [queryClient])
+
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       if (event.data === 'pong' || event.data === 'ping') return
@@ -95,53 +108,59 @@ export function useRealtimeUpdates() {
 
         switch (msg.type) {
           case 'node_status':
-            queryClient.invalidateQueries({ queryKey: ['nodes'] })
-            queryClient.invalidateQueries({ queryKey: ['fleet'] })
-            queryClient.invalidateQueries({ queryKey: ['systemComponents'] })
+            debouncedInvalidate(['nodes'])
+            debouncedInvalidate(['fleet'])
+            debouncedInvalidate(['systemComponents'])
+            debouncedInvalidate(['node-fleet-analytics'])
             break
           case 'user_update':
-            queryClient.invalidateQueries({ queryKey: ['users'] })
-            queryClient.invalidateQueries({ queryKey: ['overview'] })
+            debouncedInvalidate(['users'])
+            debouncedInvalidate(['overview'])
+            debouncedInvalidate(['advanced-top-users'])
+            debouncedInvalidate(['advanced-shared-hwids'])
+            debouncedInvalidate(['advanced-retention'])
             if (msg.data?.uuid) {
-              queryClient.invalidateQueries({ queryKey: ['user', msg.data.uuid] })
-              queryClient.invalidateQueries({ queryKey: ['user-hwid-devices', msg.data.uuid] })
-              queryClient.invalidateQueries({ queryKey: ['user-traffic-stats', msg.data.uuid] })
+              debouncedInvalidate(['user', msg.data.uuid as string])
+              debouncedInvalidate(['user-hwid-devices', msg.data.uuid as string])
+              debouncedInvalidate(['user-traffic-stats', msg.data.uuid as string])
             }
             break
           case 'hwid_update':
-            queryClient.invalidateQueries({ queryKey: ['users'] })
+            debouncedInvalidate(['users'])
             if (msg.data?.uuid) {
-              queryClient.invalidateQueries({ queryKey: ['user-hwid-devices', msg.data.uuid] })
-              queryClient.invalidateQueries({ queryKey: ['user', msg.data.uuid] })
+              debouncedInvalidate(['user-hwid-devices', msg.data.uuid as string])
+              debouncedInvalidate(['user', msg.data.uuid as string])
             }
             break
           case 'violation':
-            queryClient.invalidateQueries({ queryKey: ['violations'] })
-            queryClient.invalidateQueries({ queryKey: ['violationStats'] })
-            queryClient.invalidateQueries({ queryKey: ['deltas'] })
+            debouncedInvalidate(['violations'])
+            debouncedInvalidate(['violationStats'])
+            debouncedInvalidate(['deltas'])
+            debouncedInvalidate(['advanced-trends'])
             break
           case 'connection':
-            queryClient.invalidateQueries({ queryKey: ['nodes'] })
-            queryClient.invalidateQueries({ queryKey: ['fleet'] })
+            debouncedInvalidate(['nodes'])
+            debouncedInvalidate(['fleet'])
             break
           case 'agent_v2_status':
-            queryClient.invalidateQueries({ queryKey: ['fleet'] })
-            queryClient.invalidateQueries({ queryKey: ['fleet-agents'] })
+            debouncedInvalidate(['fleet'])
+            debouncedInvalidate(['fleet-agents'])
             break
           case 'activity':
-            // Refresh dashboard-related queries
-            queryClient.invalidateQueries({ queryKey: ['analytics'] })
-            queryClient.invalidateQueries({ queryKey: ['overview'] })
-            queryClient.invalidateQueries({ queryKey: ['timeseries'] })
-            queryClient.invalidateQueries({ queryKey: ['deltas'] })
+            debouncedInvalidate(['analytics'])
+            debouncedInvalidate(['overview'])
+            debouncedInvalidate(['timeseries'])
+            debouncedInvalidate(['deltas'])
+            debouncedInvalidate(['advanced-geo'])
+            debouncedInvalidate(['advanced-trends'])
+            debouncedInvalidate(['advanced-providers'])
             break
           case 'notification': {
-            // Refresh notification queries
-            queryClient.invalidateQueries({ queryKey: ['notifications'] })
-            queryClient.invalidateQueries({ queryKey: ['notifications-unread'] })
-            queryClient.invalidateQueries({ queryKey: ['notifications-recent'] })
+            // Notifications: debounce queries, but show toast immediately
+            debouncedInvalidate(['notifications'])
+            debouncedInvalidate(['notifications-unread'])
+            debouncedInvalidate(['notifications-recent'])
 
-            // Show toast for new notifications
             const notifTitle = msg.data?.title as string | undefined
             const notifSeverity = msg.data?.severity as string | undefined
             if (notifTitle) {
@@ -156,12 +175,11 @@ export function useRealtimeUpdates() {
             break
           }
           case 'audit': {
-            // Refresh audit log queries
-            queryClient.invalidateQueries({ queryKey: ['audit-logs'] })
-            queryClient.invalidateQueries({ queryKey: ['audit-stats'] })
-            queryClient.invalidateQueries({ queryKey: ['dashboard-audit-feed'] })
+            // Audit: debounce queries, but show toast immediately
+            debouncedInvalidate(['audit-logs'])
+            debouncedInvalidate(['audit-stats'])
+            debouncedInvalidate(['dashboard-audit-feed'])
 
-            // Show toast for actions by OTHER admins
             const currentUser = useAuthStore.getState().user
             const auditAdmin = msg.data?.admin_username as string | undefined
             if (auditAdmin && currentUser?.username && auditAdmin !== currentUser.username) {
@@ -179,7 +197,7 @@ export function useRealtimeUpdates() {
         // Non-JSON message, ignore
       }
     },
-    [queryClient, t],
+    [debouncedInvalidate, t],
   )
 
   /**

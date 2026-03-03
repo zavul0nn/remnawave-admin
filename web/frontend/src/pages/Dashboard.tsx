@@ -1482,96 +1482,96 @@ export default function Dashboard() {
   const { data: overview, isLoading: overviewLoading, isError: overviewError } = useQuery({
     queryKey: ['overview'],
     queryFn: fetchOverview,
-    refetchInterval: 30000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled: canViewAnalytics,
   })
 
   const { data: violationStats, isLoading: violationsLoading, isError: violationsError } = useQuery({
     queryKey: ['violationStats'],
     queryFn: fetchViolationStats,
-    refetchInterval: 30000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled: canViewViolations,
   })
 
   const { data: trafficStats, isLoading: trafficLoading } = useQuery({
     queryKey: ['trafficStats'],
     queryFn: fetchTrafficStats,
-    refetchInterval: 60000,
-    staleTime: 30_000,
+    refetchInterval: 120_000,
+    staleTime: 60_000,
     enabled: canViewAnalytics,
   })
 
   const { data: timeseries, isLoading: timeseriesLoading } = useQuery({
     queryKey: ['timeseries', trafficPeriod, 'traffic'],
     queryFn: () => fetchTimeseries(trafficPeriod, 'traffic'),
-    refetchInterval: 60000,
-    staleTime: 30_000,
+    refetchInterval: 120_000,
+    staleTime: 60_000,
     enabled: canViewAnalytics,
   })
 
   const { data: connectionsSeries, isLoading: connectionsLoading } = useQuery({
     queryKey: ['timeseries', '24h', 'connections'],
     queryFn: () => fetchTimeseries('24h', 'connections'),
-    refetchInterval: 30000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled: canViewAnalytics,
   })
 
   const { data: systemComponents, isLoading: componentsLoading } = useQuery({
     queryKey: ['systemComponents'],
     queryFn: fetchSystemComponents,
-    refetchInterval: 60000,
-    staleTime: 30_000,
+    refetchInterval: 120_000,
+    staleTime: 60_000,
     enabled: canViewAnalytics,
   })
 
   const { data: topUsers, isLoading: topUsersLoading } = useQuery({
     queryKey: ['topUsers'],
     queryFn: () => fetchTopUsers(5),
-    staleTime: 60_000,
-    refetchInterval: 120000,
+    staleTime: 120_000,
+    refetchInterval: 300_000,
     enabled: canViewAnalytics,
   })
 
   const { data: trends, isLoading: trendsLoading } = useQuery({
     queryKey: ['trends', trendMetric],
     queryFn: () => fetchTrends(trendMetric, '30d'),
-    staleTime: 60_000,
-    refetchInterval: 120000,
+    staleTime: 120_000,
+    refetchInterval: 300_000,
     enabled: canViewAnalytics,
   })
 
   const { data: topViolators, isLoading: topViolatorsLoading } = useQuery({
     queryKey: ['topViolators'],
     queryFn: () => fetchTopViolators(7, 5),
-    staleTime: 30_000,
-    refetchInterval: 60000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
     enabled: canViewViolations,
   })
 
   const { data: auditFeed, isLoading: auditLoading } = useQuery({
     queryKey: ['dashboard-audit-feed'],
     queryFn: () => auditApi.list({ limit: 10 }),
-    refetchInterval: 15000,
-    staleTime: 10_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled: canViewAudit,
   })
 
   const { data: nodeFleet, isLoading: nodeFleetLoading } = useQuery({
     queryKey: ['dashboard-node-fleet'],
     queryFn: fetchNodeFleet,
-    refetchInterval: 30000,
-    staleTime: 15_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled: canViewFleet,
   })
 
   const { data: expiringCounts, isLoading: expiringLoading } = useQuery({
     queryKey: ['dashboard-expiring'],
     queryFn: fetchExpiringCounts,
-    refetchInterval: 300000,
-    staleTime: 120_000,
+    refetchInterval: 600_000,
+    staleTime: 300_000,
     enabled: canViewUsers,
   })
 

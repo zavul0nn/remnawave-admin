@@ -7,6 +7,7 @@ Endpoint: POST /batch
 Заменяет аналогичный endpoint из бота (src/services/collector.py),
 перенося всю логику violation detection в web backend.
 """
+import asyncio
 import logging
 from datetime import datetime
 from typing import Optional
@@ -34,6 +35,9 @@ MAX_COOLDOWN_SIZE = 10000
 
 # Periodic cleanup of old violations
 _last_violation_cleanup: datetime = datetime.min
+
+# Semaphore: limit concurrent background violation detection batches
+_violation_semaphore = asyncio.Semaphore(3)
 
 router = APIRouter()
 
@@ -253,12 +257,12 @@ async def receive_connections(
                         new_connections_by_user[user_uuid] = set()
                     new_connections_by_user[user_uuid].add(str(conn.ip_address))
 
-            # Auto-close old connections (>5 min without activity)
+            # Auto-close old connections (>5 min without activity) — batch UPDATE
+            ids_to_close = []
             for user_uuid in affected_user_uuids:
                 try:
                     active_connections = await db_service.get_user_active_connections(user_uuid, limit=1000, max_age_minutes=5)
                     now = datetime.utcnow()
-                    closed_count = 0
                     new_ips = new_connections_by_user.get(user_uuid, set())
 
                     for active_conn in active_connections:
@@ -281,16 +285,164 @@ async def receive_connections(
                             if conn_ip not in new_ips:
                                 conn_id = active_conn.get("id")
                                 if conn_id:
-                                    await db_service.close_user_connection(conn_id)
-                                    closed_count += 1
-
-                    if closed_count > 0:
-                        logger.debug("Auto-closed %d old connections for user %s", closed_count, user_uuid)
+                                    ids_to_close.append(conn_id)
                 except Exception as e:
-                    logger.warning("Error auto-closing connections for user %s: %s", user_uuid, e, exc_info=True)
+                    logger.warning("Error checking connections for user %s: %s", user_uuid, e, exc_info=True)
 
-            # Violation detection for each affected user
+            if ids_to_close:
+                closed = await db_service.close_user_connections_batch(ids_to_close)
+                logger.info("Auto-closed %d old connections in batch", closed)
+
+            # Fire-and-forget: violation detection runs in background
+            asyncio.create_task(
+                _run_violation_detection(affected_user_uuids)
+            )
+        except Exception as e:
+            logger.warning("Error in post-processing: %s", e)
+
+    return JSONResponse(
+        status_code=200,
+        content={"status": "ok", "processed": processed, "errors": errors, "node_uuid": node_uuid},
+    )
+
+
+async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Semaphore):
+    """Check a single user for violations (with semaphore for concurrency control)."""
+    async with sem:
+        try:
+            # Whitelist check
+            whitelisted, excluded_analyzers = await db_service.is_user_violation_whitelisted(user_uuid)
+            if whitelisted and excluded_analyzers is None:
+                return
+
+            # Per-user cooldown
+            now_check = datetime.utcnow()
+            last_check = _violation_check_cooldown.get(user_uuid)
+            cooldown_minutes = config_service.get("violation_check_cooldown_minutes", VIOLATION_CHECK_COOLDOWN_MINUTES)
+            if last_check and (now_check - last_check).total_seconds() < cooldown_minutes * 60:
+                return
+
+            stats = await connection_monitor.get_user_connection_stats(user_uuid, window_minutes=60)
+            if stats:
+                logger.debug(
+                    "Connection stats for user %s: active=%d, unique_ips=%d, simultaneous=%d",
+                    user_uuid, stats.active_connections_count,
+                    stats.unique_ips_in_window, stats.simultaneous_connections,
+                )
+
+            violation_score = await violation_detector.check_user(
+                user_uuid, window_minutes=60, excluded_analyzers=excluded_analyzers
+            )
+
+            # Evict oldest 20% entries if cooldown dict is too large
+            if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
+                sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
+                for k in sorted_keys[:len(sorted_keys) // 5]:
+                    _violation_check_cooldown.pop(k, None)
+
+            _violation_check_cooldown[user_uuid] = datetime.utcnow()
+
+            if violation_score and violation_score.total >= min_score:
+                logger.warning(
+                    "Violation detected: user=%s score=%.1f action=%s reasons=%s",
+                    user_uuid, violation_score.total,
+                    violation_score.recommended_action.value,
+                    violation_score.reasons[:3],
+                )
+
+                active_conns = await connection_monitor.get_user_active_connections(user_uuid, max_age_minutes=5)
+                user_info = await db_service.get_user_by_uuid(user_uuid)
+
+                ip_metadata = {}
+                if active_conns:
+                    try:
+                        from shared.geoip import get_geoip_service
+                        geoip = get_geoip_service()
+                        unique_ips = list(set(str(c.ip_address) for c in active_conns))
+                        ip_metadata = await geoip.lookup_batch(unique_ips)
+                    except Exception as geo_error:
+                        logger.debug("Failed to get GeoIP data: %s", geo_error)
+
+                try:
+                    from web.backend.core.violation_notifier import send_violation_notification
+                    await send_violation_notification(
+                        user_uuid=user_uuid,
+                        violation_score={
+                            "total": violation_score.total,
+                            "recommended_action": violation_score.recommended_action,
+                            "reasons": violation_score.reasons,
+                            "breakdown": violation_score.breakdown,
+                            "confidence": violation_score.confidence,
+                        },
+                        user_info=user_info,
+                        active_connections=active_conns,
+                        ip_metadata=ip_metadata,
+                    )
+                except Exception as notify_error:
+                    logger.warning("Failed to send violation notification for user %s: %s", user_uuid, notify_error)
+
+                try:
+                    breakdown = violation_score.breakdown
+                    temporal = breakdown.get("temporal")
+                    geo = breakdown.get("geo")
+                    asn = breakdown.get("asn")
+                    profile = breakdown.get("profile")
+                    device = breakdown.get("device")
+                    hwid = breakdown.get("hwid")
+
+                    ip_addresses = list(set(str(c.ip_address) for c in active_conns)) if active_conns else None
+                    username = user_info.get("username") if user_info else None
+                    email = user_info.get("email") if user_info else None
+                    telegram_id = user_info.get("telegram_id") if user_info else None
+                    device_limit = user_info.get("hwidDeviceLimit", 1) if user_info else 1
+
+                    await db_service.save_violation(
+                        user_uuid=user_uuid,
+                        score=violation_score.total,
+                        recommended_action=violation_score.recommended_action.value,
+                        username=username,
+                        email=email,
+                        telegram_id=telegram_id,
+                        confidence=violation_score.confidence,
+                        temporal_score=temporal.score if temporal else None,
+                        geo_score=geo.score if geo else None,
+                        asn_score=asn.score if asn else None,
+                        profile_score=profile.score if profile else None,
+                        device_score=device.score if device else None,
+                        ip_addresses=ip_addresses,
+                        countries=list(geo.countries) if geo and geo.countries else None,
+                        cities=list(geo.cities) if geo and geo.cities else None,
+                        asn_types=list(asn.asn_types) if asn and asn.asn_types else None,
+                        os_list=device.os_list if device else None,
+                        client_list=device.client_list if device else None,
+                        reasons=violation_score.reasons[:10] if violation_score.reasons else None,
+                        simultaneous_connections=temporal.simultaneous_connections_count if temporal else None,
+                        unique_ips_count=len(ip_addresses) if ip_addresses else None,
+                        device_limit=device_limit,
+                        impossible_travel=geo.impossible_travel_detected if geo else False,
+                        is_mobile=asn.is_mobile_carrier if asn else False,
+                        is_datacenter=asn.is_datacenter if asn else False,
+                        is_vpn=asn.is_vpn if asn else False,
+                        hwid_score=hwid.score if hwid else None,
+                    )
+                    logger.info("Violation saved to DB for user %s: score=%.1f", user_uuid, violation_score.total)
+                except Exception as save_error:
+                    logger.warning("Failed to save violation to DB for user %s: %s", user_uuid, save_error)
+            else:
+                if violation_score:
+                    logger.info("User %s: score=%.1f (below threshold %.1f)", user_uuid, violation_score.total, min_score)
+        except Exception as e:
+            logger.warning("Error checking violations for user %s: %s", user_uuid, e)
+
+
+async def _run_violation_detection(affected_user_uuids: set):
+    """Background task: check affected users for violations (parallel with semaphore)."""
+    async with _violation_semaphore:
+        try:
             violations_enabled = config_service.get("violations_enabled", True)
+            if not violations_enabled:
+                return
+
             min_score = config_service.get("violations_min_score", 50.0)
 
             # Cleanup stale cooldown entries (older than 1h)
@@ -300,145 +452,14 @@ async def receive_connections(
             for k in expired_keys:
                 del _violation_check_cooldown[k]
 
-            for user_uuid in affected_user_uuids:
-                if not violations_enabled:
-                    break
+            # Run per-user checks in parallel (max 10 concurrent)
+            user_sem = asyncio.Semaphore(10)
+            await asyncio.gather(
+                *(_check_single_user(uuid, min_score, user_sem) for uuid in affected_user_uuids),
+                return_exceptions=True,
+            )
 
-                # Whitelist check: full or partial exclusion
-                whitelisted, excluded_analyzers = await db_service.is_user_violation_whitelisted(user_uuid)
-                if whitelisted and excluded_analyzers is None:
-                    continue  # Full whitelist — skip all detection
-
-                # Per-user cooldown: skip if already checked recently
-                now_check = datetime.utcnow()
-                last_check = _violation_check_cooldown.get(user_uuid)
-                cooldown_minutes = config_service.get("violation_check_cooldown_minutes", VIOLATION_CHECK_COOLDOWN_MINUTES)
-                if last_check and (now_check - last_check).total_seconds() < cooldown_minutes * 60:
-                    logger.debug("Violation check cooldown active for user %s, skipping", user_uuid)
-                    continue
-
-                try:
-                    # Connection stats (для violations.log)
-                    stats = await connection_monitor.get_user_connection_stats(user_uuid, window_minutes=60)
-                    if stats:
-                        logger.debug(
-                            "Connection stats for user %s: active=%d, unique_ips=%d, simultaneous=%d",
-                            user_uuid, stats.active_connections_count,
-                            stats.unique_ips_in_window, stats.simultaneous_connections,
-                        )
-
-                    violation_score = await violation_detector.check_user(
-                        user_uuid, window_minutes=60, excluded_analyzers=excluded_analyzers
-                    )
-
-                    # Evict oldest 20% entries if cooldown dict is too large
-                    if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
-                        sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
-                        for k in sorted_keys[:len(sorted_keys) // 5]:
-                            _violation_check_cooldown.pop(k, None)
-
-                    # Update cooldown regardless of score
-                    _violation_check_cooldown[user_uuid] = datetime.utcnow()
-
-                    if violation_score and violation_score.total >= min_score:
-                        logger.warning(
-                            "Violation detected: user=%s score=%.1f action=%s reasons=%s",
-                            user_uuid, violation_score.total,
-                            violation_score.recommended_action.value,
-                            violation_score.reasons[:3],
-                        )
-
-                        # Fetch data once for both notification and DB save
-                        active_conns = await connection_monitor.get_user_active_connections(user_uuid, max_age_minutes=5)
-                        user_info = await db_service.get_user_by_uuid(user_uuid)
-
-                        ip_metadata = {}
-                        if active_conns:
-                            try:
-                                from shared.geoip import get_geoip_service
-                                geoip = get_geoip_service()
-                                unique_ips = list(set(str(c.ip_address) for c in active_conns))
-                                ip_metadata = await geoip.lookup_batch(unique_ips)
-                            except Exception as geo_error:
-                                logger.debug("Failed to get GeoIP data: %s", geo_error)
-
-                        # Send notification via web backend notification_service
-                        try:
-                            from web.backend.core.violation_notifier import send_violation_notification
-                            await send_violation_notification(
-                                user_uuid=user_uuid,
-                                violation_score={
-                                    "total": violation_score.total,
-                                    "recommended_action": violation_score.recommended_action,
-                                    "reasons": violation_score.reasons,
-                                    "breakdown": violation_score.breakdown,
-                                    "confidence": violation_score.confidence,
-                                },
-                                user_info=user_info,
-                                active_connections=active_conns,
-                                ip_metadata=ip_metadata,
-                            )
-                        except Exception as notify_error:
-                            logger.warning("Failed to send violation notification for user %s: %s", user_uuid, notify_error)
-
-                        # Save violation to DB
-                        try:
-                            breakdown = violation_score.breakdown
-                            temporal = breakdown.get("temporal")
-                            geo = breakdown.get("geo")
-                            asn = breakdown.get("asn")
-                            profile = breakdown.get("profile")
-                            device = breakdown.get("device")
-                            hwid = breakdown.get("hwid")
-
-                            ip_addresses = list(set(str(c.ip_address) for c in active_conns)) if active_conns else None
-                            username = user_info.get("username") if user_info else None
-                            email = user_info.get("email") if user_info else None
-                            telegram_id = user_info.get("telegram_id") if user_info else None
-                            device_limit = user_info.get("hwidDeviceLimit", 1) if user_info else 1
-
-                            await db_service.save_violation(
-                                user_uuid=user_uuid,
-                                score=violation_score.total,
-                                recommended_action=violation_score.recommended_action.value,
-                                username=username,
-                                email=email,
-                                telegram_id=telegram_id,
-                                confidence=violation_score.confidence,
-                                temporal_score=temporal.score if temporal else None,
-                                geo_score=geo.score if geo else None,
-                                asn_score=asn.score if asn else None,
-                                profile_score=profile.score if profile else None,
-                                device_score=device.score if device else None,
-                                ip_addresses=ip_addresses,
-                                countries=list(geo.countries) if geo and geo.countries else None,
-                                cities=list(geo.cities) if geo and geo.cities else None,
-                                asn_types=list(asn.asn_types) if asn and asn.asn_types else None,
-                                os_list=device.os_list if device else None,
-                                client_list=device.client_list if device else None,
-                                reasons=violation_score.reasons[:10] if violation_score.reasons else None,
-                                simultaneous_connections=temporal.simultaneous_connections_count if temporal else None,
-                                unique_ips_count=len(ip_addresses) if ip_addresses else None,
-                                device_limit=device_limit,
-                                impossible_travel=geo.impossible_travel_detected if geo else False,
-                                is_mobile=asn.is_mobile_carrier if asn else False,
-                                is_datacenter=asn.is_datacenter if asn else False,
-                                is_vpn=asn.is_vpn if asn else False,
-                                hwid_score=hwid.score if hwid else None,
-                            )
-                            logger.info("Violation saved to DB for user %s: score=%.1f", user_uuid, violation_score.total)
-                        except Exception as save_error:
-                            logger.warning("Failed to save violation to DB for user %s: %s", user_uuid, save_error)
-                    else:
-                        if violation_score:
-                            logger.info("User %s: score=%.1f (below threshold %.1f)", user_uuid, violation_score.total, min_score)
-                except Exception as e:
-                    logger.warning("Error checking violations for user %s: %s", user_uuid, e)
-        except Exception as e:
-            logger.warning("Error in post-processing: %s", e)
-
-        # Periodic cleanup of old resolved/annulled violations
-        try:
+            # Periodic cleanup of old violations
             global _last_violation_cleanup
             if (datetime.utcnow() - _last_violation_cleanup).total_seconds() > 3600:
                 retention_days = config_service.get("violation_retention_days", 90)
@@ -446,13 +467,9 @@ async def receive_connections(
                 if cleaned:
                     logger.info("Cleaned up %d old violations (retention: %d days)", cleaned, retention_days)
                 _last_violation_cleanup = datetime.utcnow()
-        except Exception as cleanup_err:
-            logger.debug("Violation cleanup skipped: %s", cleanup_err)
 
-    return JSONResponse(
-        status_code=200,
-        content={"status": "ok", "processed": processed, "errors": errors, "node_uuid": node_uuid},
-    )
+        except Exception as e:
+            logger.error("Background violation detection failed: %s", e)
 
 
 @router.get("/health")

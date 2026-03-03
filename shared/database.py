@@ -215,8 +215,8 @@ class DatabaseService:
             return False
 
         # Get pool size settings
-        min_size = int(os.environ.get('DB_POOL_MIN_SIZE', 2))
-        max_size = int(os.environ.get('DB_POOL_MAX_SIZE', 10))
+        min_size = int(os.environ.get('DB_POOL_MIN_SIZE', 5))
+        max_size = int(os.environ.get('DB_POOL_MAX_SIZE', 25))
         try:
             settings = get_settings()
             min_size = getattr(settings, 'db_pool_min_size', min_size)
@@ -1281,7 +1281,48 @@ class DatabaseService:
                 user_uuid
             )
             return result or 0
-    
+
+    async def get_user_connection_stats_combined(
+        self,
+        user_uuid: str,
+        window_minutes: int = 60,
+        max_age_minutes: int = 5
+    ) -> Optional[Dict[str, Any]]:
+        """Get all connection stats in a single query using subqueries (4 queries → 1)."""
+        if not self.is_connected:
+            return None
+
+        async with self.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM user_connections
+                     WHERE user_uuid = $1 AND disconnected_at IS NULL
+                       AND connected_at > NOW() - make_interval(mins => $3)
+                    ) AS active_count,
+                    (SELECT COUNT(DISTINCT ip_address) FROM user_connections
+                     WHERE user_uuid = $1
+                       AND connected_at > NOW() - make_interval(mins => $2)
+                    ) AS unique_ips,
+                    (SELECT COUNT(*) FROM user_connections
+                     WHERE user_uuid = $1 AND disconnected_at IS NULL
+                       AND connected_at > NOW() - INTERVAL '10 minutes'
+                    ) AS simultaneous,
+                    (SELECT COUNT(*) FROM user_connections
+                     WHERE user_uuid = $1
+                       AND connected_at > NOW() - INTERVAL '1 day'
+                    ) AS history_24h_count,
+                    (SELECT MAX(connected_at) FROM user_connections
+                     WHERE user_uuid = $1 AND disconnected_at IS NULL
+                       AND connected_at > NOW() - make_interval(mins => $3)
+                    ) AS last_connection_at
+                """,
+                user_uuid, window_minutes, max_age_minutes
+            )
+            if not row:
+                return None
+            return dict(row)
+
     async def get_connection_history(
         self,
         user_uuid: str,
@@ -1349,7 +1390,7 @@ class DatabaseService:
         """Mark a connection as disconnected."""
         if not self.is_connected:
             return False
-        
+
         async with self.acquire() as conn:
             result = await conn.execute(
                 """
@@ -1359,6 +1400,21 @@ class DatabaseService:
                 connection_id
             )
             return result == "UPDATE 1"
+
+    async def close_user_connections_batch(self, connection_ids: list) -> int:
+        """Close multiple connections in a single batch UPDATE."""
+        if not self.is_connected or not connection_ids:
+            return 0
+
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE user_connections SET disconnected_at = NOW()
+                WHERE id = ANY($1) AND disconnected_at IS NULL
+                """,
+                connection_ids
+            )
+            return int(result.split()[-1]) if result else 0
 
     # ==================== User Node Traffic Methods ====================
 

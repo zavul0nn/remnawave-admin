@@ -34,7 +34,6 @@ export interface TopUser {
   username: string
   status: string
   used_traffic_bytes: number
-  lifetime_used_traffic_bytes: number
   traffic_limit_bytes: number | null
   usage_percent: number | null
   online_at: string | null
@@ -76,9 +75,108 @@ export interface SharedHwidsData {
   total_shared_hwids: number
 }
 
+export interface TimeseriesPoint {
+  timestamp: string
+  value: number
+}
+
+export interface TimeseriesResponse {
+  points: TimeseriesPoint[]
+  node_points?: { timestamp: string; nodes: Record<string, number> }[]
+  node_names?: Record<string, string>
+}
+
+export interface NodeFleetItem {
+  uuid: string
+  name: string
+  is_connected: boolean
+  is_disabled: boolean
+  cpu_usage: number | null
+  memory_usage: number | null
+  disk_usage: number | null
+  users_online: number
+  traffic_today_bytes: number
+  traffic_total_bytes: number
+  uptime_seconds: number | null
+  download_speed_bps: number
+  upload_speed_bps: number
+}
+
+export interface NodeFleetResponse {
+  nodes: NodeFleetItem[]
+  total: number
+  online: number
+  offline?: number
+  disabled?: number
+}
+
+export interface ProviderTypeItem {
+  type: string
+  count: number
+  percent: number
+}
+
+export interface TopAsnItem {
+  asn: number
+  org: string
+  count: number
+  percent: number
+}
+
+export interface ProviderFlags {
+  vpn: { count: number; percent: number }
+  proxy: { count: number; percent: number }
+  tor: { count: number; percent: number }
+  hosting: { count: number; percent: number }
+}
+
+export interface ProvidersData {
+  connection_types: ProviderTypeItem[]
+  top_asn: TopAsnItem[]
+  flags: ProviderFlags
+  total?: number
+}
+
+export interface RetentionCohort {
+  week: string
+  total_users: number
+  active_users: number
+  retention_percent: number
+  with_traffic_percent: number
+  with_active_sub_percent: number
+}
+
+export interface RetentionData {
+  cohorts: RetentionCohort[]
+  overall_retention: number
+  total_registered: number
+  total_retained: number
+}
+
 export const advancedAnalyticsApi = {
-  geo: async (period = '7d'): Promise<GeoData> => {
-    const { data } = await client.get('/analytics/advanced/geo', { params: { period } })
+  /** Fetch provider/ASN analytics. */
+  providers: async (period = '7d'): Promise<ProvidersData> => {
+    const { data } = await client.get('/analytics/advanced/providers', { params: { period } })
+    return data
+  },
+
+  /** Fetch node fleet analytics. */
+  nodeFleet: async (): Promise<NodeFleetResponse> => {
+    const { data } = await client.get('/analytics/node-fleet')
+    return data
+  },
+
+  /** Fetch real traffic timeseries from /analytics/timeseries (daily consumption). */
+  timeseries: async (period = '30d', metric = 'traffic'): Promise<TimeseriesResponse> => {
+    const { data } = await client.get('/analytics/timeseries', { params: { period, metric } })
+    return data
+  },
+
+  geo: async (period = '7d', dateFrom?: string, dateTo?: string): Promise<GeoData> => {
+    const params: Record<string, string> = { period }
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    const { data } = await client.get('/analytics/advanced/geo', { params })
     return data
   },
 
@@ -87,8 +185,11 @@ export const advancedAnalyticsApi = {
     return data
   },
 
-  trends: async (metric = 'users', period = '30d'): Promise<TrendData> => {
-    const { data } = await client.get('/analytics/advanced/trends', { params: { metric, period } })
+  trends: async (metric = 'users', period = '30d', dateFrom?: string, dateTo?: string): Promise<TrendData> => {
+    const params: Record<string, string> = { metric, period }
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    const { data } = await client.get('/analytics/advanced/trends', { params })
     return data
   },
 
@@ -96,6 +197,11 @@ export const advancedAnalyticsApi = {
     const { data } = await client.get('/analytics/advanced/shared-hwids', {
       params: { min_users: minUsers, limit },
     })
+    return data
+  },
+
+  retention: async (weeks = 12): Promise<RetentionData> => {
+    const { data } = await client.get('/analytics/advanced/retention', { params: { weeks } })
     return data
   },
 }
