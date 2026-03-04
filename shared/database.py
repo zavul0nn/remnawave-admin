@@ -287,6 +287,13 @@ class DatabaseService:
                         # Увеличиваем кэш prepared statements (по умолчанию 100)
                         # чтобы снизить PARSE-запросы при большом количестве разных SQL
                         statement_cache_size=200,
+                        server_settings={
+                            # Автоматически убивать транзакции зависшие в "idle in transaction"
+                            # дольше 30 секунд — главная причина накопления соединений и CPU-спайков
+                            'idle_in_transaction_session_timeout': '30000',
+                            # Убивать запросы выполняющиеся дольше 60 секунд
+                            'statement_timeout': '60000',
+                        },
                     )
 
                     # Initialize schema
