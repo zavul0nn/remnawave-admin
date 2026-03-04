@@ -20,15 +20,18 @@ def _get_logger() -> logging.Logger:
     _logger.propagate = False
 
     log_dir = Path("/app/logs")
-    if not log_dir.exists():
-        log_dir.mkdir(parents=True, exist_ok=True)
-
-    handler = RotatingFileHandler(
-        log_dir / "auth_failures.log",
-        maxBytes=10 * 1024 * 1024,  # 10 MB
-        backupCount=5,
-        encoding="utf-8",
-    )
+    try:
+        if not log_dir.exists():
+            log_dir.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            log_dir / "auth_failures.log",
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5,
+            encoding="utf-8",
+        )
+    except OSError:
+        # Fallback: can't write to /app/logs (e.g. in CI or dev environment)
+        handler = logging.NullHandler()
     handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
     _logger.addHandler(handler)
     return _logger
