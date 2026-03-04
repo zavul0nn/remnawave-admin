@@ -77,6 +77,16 @@ services:
         -c log_min_messages=warning
         -c log_min_duration_statement=1000
         -c "log_line_prefix=%t [%p] "
+        -c shared_buffers=256MB
+        -c work_mem=8MB
+        -c maintenance_work_mem=128MB
+        -c effective_cache_size=1GB
+        -c wal_buffers=16MB
+        -c checkpoint_completion_target=0.9
+        -c autovacuum_vacuum_scale_factor=0.05
+        -c autovacuum_analyze_scale_factor=0.02
+        -c autovacuum_vacuum_cost_delay=2ms
+        -c autovacuum_max_workers=3
     networks:
       - remnawave-network
     healthcheck:

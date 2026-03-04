@@ -234,16 +234,25 @@ class SyncService:
                 if not users:
                     break
 
-                # Upsert users to database
+                # Collect UUIDs for reconciliation
                 for user in users:
                     user_uuid = user.get("uuid")
                     if user_uuid:
                         api_user_uuids.add(user_uuid)
-                    try:
-                        await db_service.upsert_user({"response": user})
-                        total_synced += 1
-                    except Exception as e:
-                        logger.warning("Failed to sync user %s: %s", user.get("uuid"), e)
+
+                # Batch upsert users (single INSERT with UNNEST)
+                try:
+                    batch_data = [{"response": u} for u in users]
+                    count = await db_service.batch_upsert_users_unnest(batch_data)
+                    total_synced += count
+                except Exception as e:
+                    logger.warning("Batch upsert failed, falling back to per-record: %s", e)
+                    for user in users:
+                        try:
+                            await db_service.upsert_user({"response": user})
+                            total_synced += 1
+                        except Exception as e2:
+                            logger.warning("Failed to sync user %s: %s", user.get("uuid"), e2)
 
                 # Check if we've reached the end
                 start += page_size

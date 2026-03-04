@@ -225,6 +225,18 @@ async def main() -> None:
         db_connected = await db_service.connect()
         if db_connected:
             logger.info("✅ Database connected")
+
+            # Start periodic table maintenance (VACUUM ANALYZE heavy tables every 6h)
+            async def _maintenance_loop():
+                while True:
+                    await asyncio.sleep(6 * 3600)
+                    try:
+                        await db_service.run_table_maintenance()
+                        logger.info("Periodic table maintenance completed")
+                    except Exception as exc:
+                        logger.warning("Table maintenance failed: %s", exc)
+
+            _bg_maintenance_task = asyncio.create_task(_maintenance_loop())
         else:
             logger.warning("⚠️ Database connection failed, running without cache")
     else:

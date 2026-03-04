@@ -201,6 +201,13 @@ CREATE INDEX IF NOT EXISTS idx_violations_user_detected ON violations(user_uuid,
 
 -- Индексы для violation_whitelist (таблица создаётся через Alembic)
 CREATE INDEX IF NOT EXISTS idx_violation_whitelist_user ON violation_whitelist(user_uuid);
+
+-- Partial-индексы для cleanup-запросов (ускоряют DELETE старых записей)
+CREATE INDEX IF NOT EXISTS idx_uc_cleanup ON user_connections(connected_at) INCLUDE (id) WHERE disconnected_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_violations_cleanup ON violations(detected_at) INCLUDE (id) WHERE action_taken IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_nms_created_at ON node_metrics_snapshots(created_at);
+
+-- user_baselines table is managed by Alembic migration 0041
 """
 
 
@@ -372,6 +379,160 @@ class DatabaseService:
 
         # Remove stale tokens sync metadata (tokens sync removed)
         await conn.execute("DELETE FROM sync_metadata WHERE key = 'tokens'")
+
+    async def run_table_maintenance(self) -> None:
+        """Run VACUUM ANALYZE on heavy tables to prevent bloat.
+
+        Should be called periodically (e.g., every 6 hours) for tables with
+        high write throughput that may outpace autovacuum.
+        """
+        if not self.is_connected:
+            return
+
+        ALLOWED_TABLES = frozenset({
+            "user_connections", "violations",
+            "node_metrics_snapshots", "torrent_events",
+        })
+
+        for table in ALLOWED_TABLES:
+            try:
+                async with self._pool.acquire(timeout=60) as conn:
+                    await conn.execute(f"VACUUM ANALYZE {table}", timeout=300)
+                logger.debug("VACUUM ANALYZE %s completed", table)
+            except Exception as e:
+                logger.warning("VACUUM ANALYZE %s failed: %s", table, e)
+
+    async def get_table_stats(self) -> List[Dict[str, Any]]:
+        """Get size and dead tuple stats for monitoring."""
+        if not self.is_connected:
+            return []
+        try:
+            async with self.acquire() as conn:
+                rows = await conn.fetch("""
+                    SELECT
+                        relname AS table_name,
+                        n_live_tup AS live_rows,
+                        n_dead_tup AS dead_rows,
+                        last_autovacuum,
+                        last_autoanalyze,
+                        pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+                    FROM pg_stat_user_tables
+                    WHERE relname IN ('user_connections', 'violations',
+                                      'node_metrics_snapshots', 'torrent_events', 'users')
+                    ORDER BY n_live_tup DESC
+                """)
+                return [dict(r) for r in rows]
+        except Exception as e:
+            logger.error("get_table_stats failed: %s", e)
+            return []
+
+    # ==================== User Baselines ====================
+
+    async def get_user_baseline(self, user_uuid: str, max_age_seconds: int = 3600) -> Optional[Dict[str, Any]]:
+        """Get cached baseline if fresh enough (within max_age_seconds)."""
+        if not self.is_connected:
+            return None
+        try:
+            async with self.acquire() as conn:
+                row = await conn.fetchrow(
+                    """
+                    SELECT user_uuid, typical_countries, typical_cities, typical_regions,
+                           typical_asns, known_ips, avg_daily_unique_ips, max_daily_unique_ips,
+                           typical_hours, avg_session_duration_min, data_points
+                    FROM user_baselines
+                    WHERE user_uuid = $1
+                      AND computed_at > NOW() - make_interval(secs => $2)
+                    """,
+                    user_uuid, max_age_seconds,
+                )
+                if row:
+                    return {
+                        'typical_countries': list(row['typical_countries'] or []),
+                        'typical_cities': list(row['typical_cities'] or []),
+                        'typical_regions': list(row['typical_regions'] or []),
+                        'typical_asns': list(row['typical_asns'] or []),
+                        'known_ips': list(row['known_ips'] or [])[:500],
+                        'avg_daily_unique_ips': row['avg_daily_unique_ips'] or 0.0,
+                        'max_daily_unique_ips': row['max_daily_unique_ips'] or 0,
+                        'typical_hours': list(row['typical_hours'] or []),
+                        'avg_session_duration_minutes': row['avg_session_duration_min'] or 0,
+                        'data_points': row['data_points'] or 0,
+                    }
+        except Exception as e:
+            logger.warning("get_user_baseline failed: %s", e)
+        return None
+
+    async def save_user_baseline(self, user_uuid: str, baseline: Dict[str, Any]) -> None:
+        """Save computed baseline to DB for persistence across restarts."""
+        if not self.is_connected:
+            return
+        try:
+            async with self.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO user_baselines (
+                        user_uuid, typical_countries, typical_cities, typical_regions,
+                        typical_asns, known_ips, avg_daily_unique_ips, max_daily_unique_ips,
+                        typical_hours, avg_session_duration_min, data_points, computed_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+                    ON CONFLICT (user_uuid) DO UPDATE SET
+                        typical_countries = EXCLUDED.typical_countries,
+                        typical_cities = EXCLUDED.typical_cities,
+                        typical_regions = EXCLUDED.typical_regions,
+                        typical_asns = EXCLUDED.typical_asns,
+                        known_ips = EXCLUDED.known_ips,
+                        avg_daily_unique_ips = EXCLUDED.avg_daily_unique_ips,
+                        max_daily_unique_ips = EXCLUDED.max_daily_unique_ips,
+                        typical_hours = EXCLUDED.typical_hours,
+                        avg_session_duration_min = EXCLUDED.avg_session_duration_min,
+                        data_points = EXCLUDED.data_points,
+                        computed_at = NOW()
+                    """,
+                    user_uuid,
+                    baseline.get('typical_countries', []),
+                    baseline.get('typical_cities', []),
+                    baseline.get('typical_regions', []),
+                    baseline.get('typical_asns', []),
+                    baseline.get('known_ips', []),
+                    baseline.get('avg_daily_unique_ips', 0.0),
+                    baseline.get('max_daily_unique_ips', 0),
+                    baseline.get('typical_hours', []),
+                    baseline.get('avg_session_duration_minutes', 0),
+                    baseline.get('data_points', 0),
+                )
+        except Exception as e:
+            logger.warning("save_user_baseline failed: %s", e)
+
+    async def get_stale_baseline_users(self, max_age_seconds: int = 3600, limit: int = 100) -> List[str]:
+        """Get user UUIDs that need baseline refresh (stale or missing)."""
+        if not self.is_connected:
+            return []
+        try:
+            async with self.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    (
+                        SELECT u.uuid, NULL::timestamptz AS computed_at
+                        FROM users u
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM user_baselines b WHERE b.user_uuid = u.uuid
+                        )
+                    )
+                    UNION ALL
+                    (
+                        SELECT b.user_uuid AS uuid, b.computed_at
+                        FROM user_baselines b
+                        WHERE b.computed_at < NOW() - make_interval(secs => $1)
+                    )
+                    ORDER BY computed_at ASC NULLS FIRST
+                    LIMIT $2
+                    """,
+                    max_age_seconds, limit,
+                )
+                return [str(r['uuid']) for r in rows]
+        except Exception as e:
+            logger.warning("get_stale_baseline_users failed: %s", e)
+            return []
 
     @asynccontextmanager
     async def acquire(self):
@@ -683,7 +844,96 @@ class DatabaseService:
                         logger.warning("Failed to upsert user: %s", e)
 
         return count
-    
+
+    async def batch_upsert_users_unnest(self, users_data: List[Dict[str, Any]]) -> int:
+        """True batch upsert users using UNNEST arrays (much faster than per-record)."""
+        if not self.is_connected or not users_data:
+            return 0
+
+        uuids = []
+        short_uuids = []
+        usernames = []
+        subscription_uuids = []
+        telegram_ids = []
+        emails = []
+        statuses = []
+        expire_ats = []
+        traffic_limits = []
+        used_traffics = []
+        hwid_limits = []
+        created_ats = []
+        raw_datas = []
+
+        for user_data in users_data:
+            response = user_data.get("response", user_data)
+            uuid_val = response.get("uuid")
+            if not uuid_val:
+                continue
+
+            user_traffic = response.get("userTraffic") or {}
+            used_traffic = user_traffic.get("usedTrafficBytes") or response.get("usedTrafficBytes")
+
+            uuids.append(uuid_val)
+            short_uuids.append(response.get("shortUuid"))
+            usernames.append(response.get("username"))
+            subscription_uuids.append(response.get("subscriptionUuid"))
+            tid = response.get("telegramId")
+            telegram_ids.append(str(tid) if tid is not None else None)
+            emails.append(response.get("email"))
+            statuses.append(response.get("status"))
+            expire_ats.append(_parse_timestamp(response.get("expireAt")))
+            tl = response.get("trafficLimitBytes")
+            traffic_limits.append(str(tl) if tl is not None else None)
+            used_traffics.append(str(used_traffic) if used_traffic is not None else None)
+            hl = response.get("hwidDeviceLimit")
+            hwid_limits.append(str(hl) if hl is not None else None)
+            created_ats.append(_parse_timestamp(response.get("createdAt")))
+            raw_datas.append(json.dumps(response))
+
+        if not uuids:
+            return 0
+
+        try:
+            async with self.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    INSERT INTO users (
+                        uuid, short_uuid, username, subscription_uuid, telegram_id,
+                        email, status, expire_at, traffic_limit_bytes, used_traffic_bytes,
+                        hwid_device_limit, created_at, updated_at, raw_data
+                    )
+                    SELECT
+                        u::uuid, su, un, sub::uuid, tid::bigint,
+                        em, st, ea, tl::bigint, ut::bigint,
+                        hl::integer, ca, NOW(), rd::jsonb
+                    FROM UNNEST(
+                        $1::text[], $2::text[], $3::text[], $4::text[], $5::text[],
+                        $6::text[], $7::text[], $8::timestamptz[], $9::text[], $10::text[],
+                        $11::text[], $12::timestamptz[], $13::text[]
+                    ) AS t(u, su, un, sub, tid, em, st, ea, tl, ut, hl, ca, rd)
+                    ON CONFLICT (uuid) DO UPDATE SET
+                        short_uuid = EXCLUDED.short_uuid,
+                        username = EXCLUDED.username,
+                        subscription_uuid = EXCLUDED.subscription_uuid,
+                        telegram_id = EXCLUDED.telegram_id,
+                        email = EXCLUDED.email,
+                        status = EXCLUDED.status,
+                        expire_at = EXCLUDED.expire_at,
+                        traffic_limit_bytes = EXCLUDED.traffic_limit_bytes,
+                        used_traffic_bytes = EXCLUDED.used_traffic_bytes,
+                        hwid_device_limit = EXCLUDED.hwid_device_limit,
+                        updated_at = NOW(),
+                        raw_data = EXCLUDED.raw_data
+                    """,
+                    uuids, short_uuids, usernames, subscription_uuids, telegram_ids,
+                    emails, statuses, expire_ats, traffic_limits, used_traffics,
+                    hwid_limits, created_ats, raw_datas,
+                )
+                return int(result.split()[-1]) if result else 0
+        except Exception as e:
+            logger.error("batch_upsert_users_unnest failed: %s", e)
+            return 0
+
     async def delete_user(self, uuid: str) -> bool:
         """Delete user by UUID."""
         if not self.is_connected:
@@ -1053,21 +1303,38 @@ class DatabaseService:
             logger.error("get_node_metrics_timeseries failed: %s", e)
             return []
 
-    async def cleanup_old_metrics_snapshots(self, retention_days: int = 30) -> int:
-        """Delete metrics snapshots older than retention_days."""
+    async def cleanup_old_metrics_snapshots(self, retention_days: int = 30, batch_size: int = 5000) -> int:
+        """Delete metrics snapshots older than retention_days in batches."""
         if not self.is_connected:
             return 0
+        total = 0
+        max_batches = 1000
         try:
-            async with self.acquire() as conn:
-                result = await conn.execute(
-                    "DELETE FROM node_metrics_snapshots WHERE created_at < NOW() - make_interval(days => $1)",
-                    retention_days,
-                )
-                count = int(result.split()[-1]) if result else 0
-                return count
+            for _ in range(max_batches):
+                async with self.acquire() as conn:
+                    result = await conn.execute(
+                        """
+                        DELETE FROM node_metrics_snapshots
+                        WHERE id IN (
+                            SELECT id FROM node_metrics_snapshots
+                            WHERE created_at < NOW() - make_interval(days => $1)
+                            ORDER BY created_at
+                            LIMIT $2
+                        )
+                        """,
+                        retention_days, batch_size,
+                    )
+                    deleted = int(result.split()[-1]) if result and result.split() else 0
+                    total += deleted
+                    if deleted < batch_size:
+                        break
+                await asyncio.sleep(0.1)
+            else:
+                logger.warning("cleanup_old_metrics_snapshots hit max_batches limit (%d batches, %d rows)", max_batches, total)
+            return total
         except Exception as e:
             logger.error("cleanup_old_metrics_snapshots failed: %s", e)
-            return 0
+            return total
 
     # ==================== Hosts ====================
 
@@ -1733,24 +2000,39 @@ class DatabaseService:
             )
             return int(result.split()[-1]) if result else 0
 
-    async def cleanup_old_connections(self, retention_days: int = 30) -> int:
-        """Delete closed user_connections older than retention_days."""
+    async def cleanup_old_connections(self, retention_days: int = 30, batch_size: int = 5000) -> int:
+        """Delete closed user_connections older than retention_days in batches."""
         if not self.is_connected:
             return 0
+        total = 0
+        max_batches = 1000
         try:
-            async with self.acquire() as conn:
-                result = await conn.execute(
-                    """
-                    DELETE FROM user_connections
-                    WHERE disconnected_at IS NOT NULL
-                      AND connected_at < NOW() - make_interval(days => $1)
-                    """,
-                    retention_days,
-                )
-                return int(result.split()[-1]) if result else 0
+            for _ in range(max_batches):
+                async with self.acquire() as conn:
+                    result = await conn.execute(
+                        """
+                        DELETE FROM user_connections
+                        WHERE id IN (
+                            SELECT id FROM user_connections
+                            WHERE disconnected_at IS NOT NULL
+                              AND connected_at < NOW() - make_interval(days => $1)
+                            ORDER BY connected_at
+                            LIMIT $2
+                        )
+                        """,
+                        retention_days, batch_size,
+                    )
+                    deleted = int(result.split()[-1]) if result and result.split() else 0
+                    total += deleted
+                    if deleted < batch_size:
+                        break
+                await asyncio.sleep(0.1)
+            else:
+                logger.warning("cleanup_old_connections hit max_batches limit (%d batches, %d rows)", max_batches, total)
+            return total
         except Exception as e:
             logger.error("cleanup_old_connections failed: %s", e)
-            return 0
+            return total
 
     # ==================== Torrent Events ====================
 
@@ -1843,20 +2125,38 @@ class DatabaseService:
             logger.error("get_torrent_stats failed: %s", e)
             return {}
 
-    async def cleanup_old_torrent_events(self, retention_days: int = 90) -> int:
-        """Delete torrent events older than retention_days."""
+    async def cleanup_old_torrent_events(self, retention_days: int = 90, batch_size: int = 5000) -> int:
+        """Delete torrent events older than retention_days in batches."""
         if not self.is_connected:
             return 0
+        total = 0
+        max_batches = 1000
         try:
-            async with self.acquire() as conn:
-                result = await conn.execute(
-                    "DELETE FROM torrent_events WHERE detected_at < NOW() - make_interval(days => $1)",
-                    retention_days,
-                )
-                return int(result.split()[-1]) if result else 0
+            for _ in range(max_batches):
+                async with self.acquire() as conn:
+                    result = await conn.execute(
+                        """
+                        DELETE FROM torrent_events
+                        WHERE id IN (
+                            SELECT id FROM torrent_events
+                            WHERE detected_at < NOW() - make_interval(days => $1)
+                            ORDER BY detected_at
+                            LIMIT $2
+                        )
+                        """,
+                        retention_days, batch_size,
+                    )
+                    deleted = int(result.split()[-1]) if result and result.split() else 0
+                    total += deleted
+                    if deleted < batch_size:
+                        break
+                await asyncio.sleep(0.1)
+            else:
+                logger.warning("cleanup_old_torrent_events hit max_batches limit (%d batches, %d rows)", max_batches, total)
+            return total
         except Exception as e:
             logger.error("cleanup_old_torrent_events failed: %s", e)
-            return 0
+            return total
 
     # ==================== User Node Traffic Methods ====================
 
@@ -3576,8 +3876,8 @@ class DatabaseService:
         except Exception as e:
             logger.error("Error marking violations notified for %s: %s", user_uuid, e, exc_info=True)
 
-    async def cleanup_old_violations(self, retention_days: int = 90) -> int:
-        """Удалить resolved/annulled violations старше N дней.
+    async def cleanup_old_violations(self, retention_days: int = 90, batch_size: int = 5000) -> int:
+        """Удалить resolved/annulled violations старше N дней (батчами).
 
         Returns:
             Количество удалённых записей
@@ -3585,21 +3885,36 @@ class DatabaseService:
         if not self.is_connected:
             return 0
 
+        total = 0
+        max_batches = 1000
         try:
-            async with self.acquire() as conn:
-                result = await conn.execute(
-                    """
-                    DELETE FROM violations
-                    WHERE action_taken IS NOT NULL
-                    AND detected_at < NOW() - make_interval(days => $1)
-                    """,
-                    retention_days
-                )
-                return int(result.split()[-1]) if result else 0
+            for _ in range(max_batches):
+                async with self.acquire() as conn:
+                    result = await conn.execute(
+                        """
+                        DELETE FROM violations
+                        WHERE id IN (
+                            SELECT id FROM violations
+                            WHERE action_taken IS NOT NULL
+                              AND detected_at < NOW() - make_interval(days => $1)
+                            ORDER BY detected_at
+                            LIMIT $2
+                        )
+                        """,
+                        retention_days, batch_size,
+                    )
+                    deleted = int(result.split()[-1]) if result and result.split() else 0
+                    total += deleted
+                    if deleted < batch_size:
+                        break
+                await asyncio.sleep(0.1)
+            else:
+                logger.warning("cleanup_old_violations hit max_batches limit (%d batches, %d rows)", max_batches, total)
+            return total
 
         except Exception as e:
             logger.error("Error cleaning up old violations: %s", e, exc_info=True)
-            return 0
+            return total
 
     # ==================== Violation Whitelist ====================
 

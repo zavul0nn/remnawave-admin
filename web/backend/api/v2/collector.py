@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from shared.database import db_service
 from shared.connection_monitor import ConnectionMonitor
@@ -92,8 +92,8 @@ class BatchReport(BaseModel):
     """Батч подключений от одной ноды."""
     node_uuid: str
     timestamp: datetime
-    connections: list[ConnectionReport] = []
-    torrent_events: list[TorrentEventReport] = []
+    connections: list[ConnectionReport] = Field(default=[], max_length=5000)
+    torrent_events: list[TorrentEventReport] = Field(default=[], max_length=1000)
     system_metrics: Optional[SystemMetricsReport] = None
 
 
@@ -505,7 +505,7 @@ async def _process_torrent_violations(
         logger.error("Background torrent violation processing failed: %s", e)
 
 
-async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Semaphore):
+async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Semaphore, cooldown_override: Optional[int] = None):
     """Check a single user for violations (with semaphore for concurrency control)."""
     async with sem:
         try:
@@ -514,10 +514,10 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
             if whitelisted and excluded_analyzers is None:
                 return
 
-            # Per-user cooldown
+            # Per-user cooldown (adaptive or config-based)
             now_check = datetime.utcnow()
             last_check = _violation_check_cooldown.get(user_uuid)
-            cooldown_minutes = config_service.get("violation_check_cooldown_minutes", VIOLATION_CHECK_COOLDOWN_MINUTES)
+            cooldown_minutes = cooldown_override if cooldown_override is not None else config_service.get("violation_check_cooldown_minutes", VIOLATION_CHECK_COOLDOWN_MINUTES)
             if last_check and (now_check - last_check).total_seconds() < cooldown_minutes * 60:
                 return
 
@@ -651,10 +651,24 @@ async def _run_violation_detection(affected_user_uuids: set):
             for k in expired_keys:
                 del _violation_check_cooldown[k]
 
-            # Run per-user checks in parallel (max 10 concurrent)
-            user_sem = asyncio.Semaphore(10)
+            # Adaptive concurrency and cooldown based on total tracked users
+            total_tracked = len(_violation_check_cooldown) + len(affected_user_uuids)
+            if total_tracked > 10000:
+                max_concurrent = 3
+                adaptive_cooldown = 30
+            elif total_tracked > 5000:
+                max_concurrent = 5
+                adaptive_cooldown = 15
+            elif total_tracked > 1000:
+                max_concurrent = 7
+                adaptive_cooldown = 10
+            else:
+                max_concurrent = 10
+                adaptive_cooldown = None  # use config default
+
+            user_sem = asyncio.Semaphore(max_concurrent)
             await asyncio.gather(
-                *(_check_single_user(uuid, min_score, user_sem) for uuid in affected_user_uuids),
+                *(_check_single_user(uuid, min_score, user_sem, adaptive_cooldown) for uuid in affected_user_uuids),
                 return_exceptions=True,
             )
 

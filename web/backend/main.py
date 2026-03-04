@@ -4,6 +4,7 @@ Remnawave Admin Web Panel - FastAPI Application.
 This is the main entry point for the web panel backend.
 It provides REST API and WebSocket endpoints for the admin dashboard.
 """
+import asyncio
 import gzip
 import logging
 import os
@@ -420,6 +421,39 @@ async def lifespan(app: FastAPI):
                     await mail_service.start()
                 except Exception as e:
                     logger.warning("Mail service start failed: %s", e)
+
+                # Start periodic table maintenance (VACUUM ANALYZE heavy tables)
+                async def _maintenance_loop():
+                    while True:
+                        await asyncio.sleep(6 * 3600)  # every 6 hours
+                        try:
+                            await db_service.run_table_maintenance()
+                            logger.info("Periodic table maintenance completed")
+                        except Exception as exc:
+                            logger.warning("Table maintenance failed: %s", exc)
+
+                # Start periodic baseline refresh (precompute stale baselines)
+                async def _baseline_refresh_loop():
+                    await asyncio.sleep(300)  # initial delay 5 min
+                    while True:
+                        try:
+                            stale_users = await db_service.get_stale_baseline_users(max_age_seconds=3600, limit=50)
+                            if stale_users:
+                                from shared.violation_detector import UserProfileAnalyzer
+                                analyzer = UserProfileAnalyzer(db_service)
+                                for user_uuid in stale_users:
+                                    try:
+                                        # build_baseline already saves to DB internally
+                                        await analyzer.build_baseline(user_uuid, days=30)
+                                    except Exception:
+                                        pass
+                                logger.debug("Refreshed %d user baselines", len(stale_users))
+                        except Exception as exc:
+                            logger.warning("Baseline refresh failed: %s", exc)
+                        await asyncio.sleep(1800)  # every 30 min
+
+                _bg_maintenance = asyncio.create_task(_maintenance_loop())
+                _bg_baseline = asyncio.create_task(_baseline_refresh_loop())
             else:
                 logger.warning("Database connection failed")
         except Exception as e:

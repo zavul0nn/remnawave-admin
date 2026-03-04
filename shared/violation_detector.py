@@ -8,7 +8,9 @@ IntelligentViolationDetector — система многофакторного �
 - Исторического профиля пользователя
 - Fingerprint устройств
 """
+import asyncio
 import json
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone as tz
@@ -1173,27 +1175,37 @@ class UserProfileAnalyzer:
     Строит baseline на основе истории подключений и сравнивает текущее поведение.
     """
     
+    _BASELINE_CACHE_TTL = 3600  # 1 hour
+    _BASELINE_CACHE_MAX_SIZE = 10000
+
     def __init__(self, db_service: DatabaseService):
         """
         Инициализирует UserProfileAnalyzer.
-        
+
         Args:
             db_service: Сервис для работы с БД
         """
         self.db = db_service
+        self._baseline_cache: Dict[str, tuple] = {}  # {user_uuid: (baseline_dict, timestamp)}
+        self._baseline_locks: Dict[str, asyncio.Lock] = {}  # per-user locks to prevent stampede
     
     async def build_baseline(self, user_uuid: str, days: int = 30) -> Dict[str, Any]:
         """
         Строит baseline профиль пользователя на основе истории.
-        
+        Сначала проверяет materialized baseline в БД, затем вычисляет и сохраняет.
+
         Args:
             user_uuid: UUID пользователя
             days: Количество дней истории для анализа
-        
+
         Returns:
             Словарь с baseline данными
         """
         try:
+            # Try materialized baseline from DB first (survives restarts)
+            db_baseline = await self.db.get_user_baseline(user_uuid, max_age_seconds=self._BASELINE_CACHE_TTL)
+            if db_baseline and db_baseline.get('data_points', 0) > 0:
+                return db_baseline
             history = await self.db.get_connection_history(user_uuid, days=days)
             
             if not history:
@@ -1282,19 +1294,34 @@ class UserProfileAnalyzer:
             typical_hours = [hour for hour, _ in hour_counts.most_common(8)]  # Топ-8 часов
             
             avg_session_duration = sum(session_durations) / len(session_durations) if session_durations else 0
-            
-            return {
+
+            result = {
                 'typical_countries': list(countries),
                 'typical_cities': list(cities),
                 'typical_regions': list(regions),
                 'typical_asns': list(asns),
-                'known_ips': list(all_known_ips),  # IP, которые пользователь уже использовал
+                'known_ips': list(all_known_ips),
                 'avg_daily_unique_ips': avg_daily_unique_ips,
                 'max_daily_unique_ips': max_daily_unique_ips,
                 'typical_hours': typical_hours,
                 'avg_session_duration_minutes': avg_session_duration,
                 'data_points': len(daily_ips)
             }
+
+            # Cache the baseline (in-memory + DB)
+            if len(self._baseline_cache) >= self._BASELINE_CACHE_MAX_SIZE:
+                sorted_keys = sorted(self._baseline_cache, key=lambda k: self._baseline_cache[k][1])
+                for k in sorted_keys[:len(sorted_keys) // 5]:
+                    self._baseline_cache.pop(k, None)
+            self._baseline_cache[user_uuid] = (result, time.time())
+
+            # Persist to DB (fire-and-forget, non-blocking)
+            try:
+                await self.db.save_user_baseline(user_uuid, result)
+            except Exception:
+                pass  # DB save is best-effort
+
+            return result
 
         except Exception as e:
             logger.error("Error building baseline for user %s: %s", user_uuid, e, exc_info=True)
@@ -1335,7 +1362,24 @@ class UserProfileAnalyzer:
         deviation = 0.0
         
         if baseline is None:
-            baseline = await self.build_baseline(user_uuid, days=30)
+            # Check cache first
+            cached = self._baseline_cache.get(user_uuid)
+            if cached:
+                cached_baseline, cached_ts = cached
+                if (time.time() - cached_ts) < self._BASELINE_CACHE_TTL:
+                    baseline = cached_baseline
+
+            if baseline is None:
+                # Per-user lock prevents cache stampede
+                if user_uuid not in self._baseline_locks:
+                    self._baseline_locks[user_uuid] = asyncio.Lock()
+                async with self._baseline_locks[user_uuid]:
+                    # Double-check after acquiring lock
+                    cached = self._baseline_cache.get(user_uuid)
+                    if cached and (time.time() - cached[1]) < self._BASELINE_CACHE_TTL:
+                        baseline = cached[0]
+                    else:
+                        baseline = await self.build_baseline(user_uuid, days=30)
         
         # Проверяем, сколько текущих IP уже известны пользователю
         known_ips = set(baseline.get('known_ips', []))
