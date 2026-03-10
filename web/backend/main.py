@@ -587,17 +587,8 @@ def create_app() -> FastAPI:
 
         allowed = get_allowed_ips()
         if allowed:
-            import ipaddress as _ipa
-            forwarded = request.headers.get("x-forwarded-for")
-            client_ip = request.client.host if request.client else "unknown"
-            if forwarded:
-                candidate = forwarded.split(",")[0].strip()
-                # Validate it's a real IP to prevent header spoofing bypass
-                try:
-                    _ipa.ip_address(candidate)
-                    client_ip = candidate
-                except ValueError:
-                    logger.warning("Invalid IP in X-Forwarded-For: %s", candidate)
+            from web.backend.api.deps import get_client_ip
+            client_ip = get_client_ip(request)
             if not is_ip_allowed(client_ip, allowed):
                 logger.warning("IP %s rejected by whitelist (path: %s)", client_ip, request.url.path)
                 # Async notification (fire-and-forget)

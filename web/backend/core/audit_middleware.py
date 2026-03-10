@@ -266,11 +266,9 @@ async def _write_audit_entry(
                     except (ValueError, TypeError):
                         pass
 
-        # Get client IP
-        forwarded = request.headers.get("x-forwarded-for")
-        ip_address = forwarded.split(",")[0].strip() if forwarded else (
-            request.client.host if request.client else "unknown"
-        )
+        # Get client IP (unified logic from deps.get_client_ip)
+        from web.backend.api.deps import get_client_ip
+        ip_address = get_client_ip(request)
 
         # Build details from request body
         details = _build_details(resource, action, resource_id, request_body)

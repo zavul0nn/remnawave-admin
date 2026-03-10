@@ -381,13 +381,17 @@ def require_quota(resource: str):
 def get_client_ip(request: Request) -> str:
     """Extract client IP from trusted proxy headers.
 
-    Priority: X-Real-IP (set by nginx, not client-controllable)
-    > request.client.host (direct connection).
-    X-Forwarded-For is NOT used because clients can spoof it.
+    Priority:
+    1. X-Real-IP (set by nginx, most reliable)
+    2. X-Forwarded-For first entry (set by upstream reverse proxy)
+    3. request.client.host (direct connection fallback)
     """
     real_ip = request.headers.get("x-real-ip")
     if real_ip:
         return real_ip.strip()
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 
