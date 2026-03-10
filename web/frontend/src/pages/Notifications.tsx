@@ -448,15 +448,18 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
     escalation_minutes: rule?.escalation_minutes ?? 0,
     title_template: rule?.title_template || 'Alert: {rule_name}',
     body_template: rule?.body_template || '{metric}: {value} ({operator} {threshold})',
+    topic_type: rule?.topic_type || '',
   })
 
   const [showTemplates, setShowTemplates] = useState(false)
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      isEdit
-        ? notificationsApi.updateAlertRule(rule!.id, form)
-        : notificationsApi.createAlertRule(form),
+    mutationFn: () => {
+      const payload = { ...form, topic_type: form.topic_type || null }
+      return isEdit
+        ? notificationsApi.updateAlertRule(rule!.id, payload)
+        : notificationsApi.createAlertRule(payload)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alert-rules'] })
       toast.success(isEdit ? t('notifications.alerts.ruleUpdated') : t('notifications.alerts.ruleCreated'))
@@ -609,6 +612,25 @@ function AlertRuleDialog({ rule, open, onClose }: { rule: AlertRule | null; open
             </div>
             <p className="text-[10px] text-dark-400 mt-1">{t('notifications.alerts.channelsHint')}</p>
           </div>
+
+          {/* Telegram topic override */}
+          {(form.channels.includes('telegram') || form.channels.includes('all')) && (
+            <div>
+              <Label>{t('notifications.alerts.topicType', 'Telegram topic')}</Label>
+              <Select value={form.topic_type || 'auto'} onValueChange={(v) => setForm({ ...form, topic_type: v === 'auto' ? '' : v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">{t('notifications.alerts.topicAuto', 'Auto (by metric)')}</SelectItem>
+                  <SelectItem value="nodes">{t('notifications.alerts.topicNodes', 'Nodes')}</SelectItem>
+                  <SelectItem value="users">{t('notifications.alerts.topicUsers', 'Users')}</SelectItem>
+                  <SelectItem value="service">{t('notifications.alerts.topicService', 'Service')}</SelectItem>
+                  <SelectItem value="violations">{t('notifications.alerts.topicViolations', 'Violations')}</SelectItem>
+                  <SelectItem value="errors">{t('notifications.alerts.topicErrors', 'Errors')}</SelectItem>
+                  <SelectItem value="hwid">HWID</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Message template editor */}
           <div>

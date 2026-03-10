@@ -61,6 +61,7 @@ export interface AlertRule {
   escalation_minutes: number
   title_template: string
   body_template: string
+  topic_type: string | null
   last_triggered_at: string | null
   last_value: number | null
   trigger_count: number

@@ -23,14 +23,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   automationsApi,
   type AutomationRule,
@@ -130,6 +124,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
   // Action config
   const [notifyChannel, setNotifyChannel] = useState('telegram')
   const [notifyMessage, setNotifyMessage] = useState('')
+  const [notifyTopicType, setNotifyTopicType] = useState('')
   const [webhookUrl, setWebhookUrl] = useState('')
   const [blockReason, setBlockReason] = useState('')
   const [cleanupDays, setCleanupDays] = useState('30')
@@ -201,6 +196,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
         if (editRule.action_type === 'notify') {
           setNotifyChannel(ac.channel || 'telegram')
           setNotifyMessage(ac.message || '')
+          setNotifyTopicType(ac.topic_type || '')
           setWebhookUrl(ac.webhook_url || '')
         } else if (editRule.action_type === 'block_user') {
           setBlockReason(ac.reason || '')
@@ -279,6 +275,7 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
     if (actionType === 'notify') {
       const cfg: Record<string, unknown> = { channel: notifyChannel, message: notifyMessage }
       if (notifyChannel === 'webhook') cfg.webhook_url = webhookUrl
+      if (notifyTopicType) cfg.topic_type = notifyTopicType
       return cfg
     }
     if (actionType === 'block_user') {
@@ -933,6 +930,27 @@ export function RuleConstructor({ open, onOpenChange, editRule }: RuleConstructo
                     </p>
                   </div>
                 </div>
+                {notifyChannel === 'telegram' && (
+                  <div>
+                    <Label className="text-[11px] text-dark-400">
+                      {t('automations.constructor.topicType', 'Telegram topic')}
+                    </Label>
+                    <Select value={notifyTopicType || 'auto'} onValueChange={(v) => setNotifyTopicType(v === 'auto' ? '' : v)}>
+                      <SelectTrigger className="mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)] text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">{t('automations.constructor.topicAuto', 'Auto (by category)')}</SelectItem>
+                        <SelectItem value="nodes">{t('automations.constructor.topicNodes', 'Nodes')}</SelectItem>
+                        <SelectItem value="users">{t('automations.constructor.topicUsers', 'Users')}</SelectItem>
+                        <SelectItem value="service">{t('automations.constructor.topicService', 'Service')}</SelectItem>
+                        <SelectItem value="violations">{t('automations.constructor.topicViolations', 'Violations')}</SelectItem>
+                        <SelectItem value="errors">{t('automations.constructor.topicErrors', 'Errors')}</SelectItem>
+                        <SelectItem value="hwid">HWID</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {notifyChannel === 'webhook' && (
                   <div>
                     <Label className="text-[11px] text-dark-400">

@@ -511,14 +511,17 @@ async def create_alert_rule(
             "INSERT INTO alert_rules "
             "(name, description, is_enabled, rule_type, metric, operator, threshold, "
             "duration_minutes, channels, severity, cooldown_minutes, "
-            "escalation_admin_id, escalation_minutes, created_by, group_key) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15) "
+            "escalation_admin_id, escalation_minutes, created_by, group_key, "
+            "title_template, body_template, topic_type) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15, "
+            "$16, $17, $18) "
             "RETURNING *",
             data.name, data.description, data.is_enabled, data.rule_type,
             data.metric, data.operator, data.threshold,
             data.duration_minutes, channels_json, data.severity,
             data.cooldown_minutes, data.escalation_admin_id, data.escalation_minutes,
             admin.account_id, f"alert_{data.metric}",
+            data.title_template, data.body_template, data.topic_type,
         )
 
     d = dict(row)

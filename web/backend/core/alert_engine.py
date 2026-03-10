@@ -230,16 +230,20 @@ class AlertEngine:
         if isinstance(channels, str):
             channels = json.loads(channels)
 
-        # Map metric → Telegram topic so the alert goes to the right thread
-        METRIC_TOPIC_MAP = {
-            "cpu_usage_percent": "nodes",
-            "ram_usage_percent": "nodes",
-            "disk_usage_percent": "nodes",
-            "node_offline_minutes": "nodes",
-            "traffic_today_gb": "nodes",
-            "users_online": "service",
-        }
-        topic_type = METRIC_TOPIC_MAP.get(metric, "service")
+        # Determine Telegram topic: explicit override from rule, or auto-detect from metric
+        explicit_topic = rule.get("topic_type")
+        if explicit_topic:
+            topic_type = explicit_topic
+        else:
+            METRIC_TOPIC_MAP = {
+                "cpu_usage_percent": "nodes",
+                "ram_usage_percent": "nodes",
+                "disk_usage_percent": "nodes",
+                "node_offline_minutes": "nodes",
+                "traffic_today_gb": "nodes",
+                "users_online": "service",
+            }
+            topic_type = METRIC_TOPIC_MAP.get(metric, "service")
 
         # Operator symbols for display
         OP_SYMBOLS = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "eq": "=", "neq": "!="}

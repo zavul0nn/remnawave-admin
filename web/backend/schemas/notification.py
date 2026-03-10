@@ -117,6 +117,7 @@ class AlertRuleBase(BaseModel):
     escalation_minutes: int = 0
     title_template: str = "Alert: {rule_name}"
     body_template: str = "{metric}: {value} ({operator} {threshold})"
+    topic_type: Optional[str] = None  # Telegram topic override (users, nodes, service, violations, errors, hwid)
 
 
 class AlertRuleCreate(AlertRuleBase):
@@ -139,6 +140,7 @@ class AlertRuleUpdate(BaseModel):
     escalation_minutes: Optional[int] = None
     title_template: Optional[str] = None
     body_template: Optional[str] = None
+    topic_type: Optional[str] = None
 
 
 class AlertRuleItem(AlertRuleBase):
