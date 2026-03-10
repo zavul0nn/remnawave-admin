@@ -307,7 +307,7 @@ class AlertEngine:
                 link="/notifications",
                 source="alert_engine",
                 source_id=str(rule_id),
-                group_key=rule.get("group_key") or f"alert_{rule_id}",
+                group_key=rule.get("group_key") or f"alert_{rule_id}_{int(datetime.now(timezone.utc).timestamp())}",
                 channels=channels,
                 topic_type=topic_type,
             )
