@@ -23,6 +23,7 @@ import {
   HardDrive,
   Key,
   ShieldCheck,
+  UsersRound,
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
@@ -113,6 +114,7 @@ const navigation: NavigationEntry[] = [
   { name: 'nav.nodes', href: '/nodes', icon: Server, permission: { resource: 'nodes', action: 'view' } },
   { name: 'nav.fleet', href: '/fleet', icon: Activity, permission: { resource: 'fleet', action: 'view' } },
   { name: 'nav.hosts', href: '/hosts', icon: Globe, permission: { resource: 'hosts', action: 'view' } },
+  { name: 'nav.squads', href: '/squads', icon: UsersRound, permission: { resource: 'users', action: 'view' } },
   // Security
   { type: 'section', name: 'nav.sections.security' },
   { name: 'nav.violations', href: '/violations', icon: ShieldAlert, permission: { resource: 'violations', action: 'view' } },

@@ -879,6 +879,108 @@ function IpHistoryCard({ userUuid }: { userUuid: string }) {
   )
 }
 
+function SubscriptionInfoDialog({
+  open,
+  onOpenChange,
+  userUuid,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  userUuid: string
+}) {
+  const { t } = useTranslation()
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['subscription-info', userUuid],
+    queryFn: async () => {
+      const { data } = await client.get(`/users/${userUuid}/subscription-info`)
+      return data
+    },
+    enabled: open && !!userUuid,
+    staleTime: 30_000,
+  })
+
+  const user = data?.user
+  const links: string[] = Array.isArray(data?.links) ? data.links : []
+
+  const statusColor = (s: string) => {
+    switch (s) {
+      case 'ACTIVE': return 'bg-green-500/20 text-green-400'
+      case 'DISABLED': return 'bg-red-500/20 text-red-400'
+      case 'LIMITED': return 'bg-yellow-500/20 text-yellow-400'
+      case 'EXPIRED': return 'bg-gray-500/20 text-gray-400'
+      default: return 'bg-gray-500/20 text-gray-400'
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            {t('userDetail.subscription.infoTitle', { defaultValue: 'Subscription Details' })}
+          </DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        ) : isError || !user ? (
+          <p className="text-sm text-muted-foreground">{t('userDetail.subscription.noData', { defaultValue: 'Could not load subscription data' })}</p>
+        ) : (
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t('common.status', { defaultValue: 'Status' })}</span>
+              <Badge className={statusColor(user.userStatus)}>{user.userStatus}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t('userDetail.subscription.daysLeft', { defaultValue: 'Days left' })}</span>
+              <span className="text-white font-medium">{user.daysLeft}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t('userDetail.subscription.trafficUsed', { defaultValue: 'Traffic used' })}</span>
+              <span className="text-white">{user.trafficUsed} / {user.trafficLimit}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t('userDetail.subscription.lifetime', { defaultValue: 'Lifetime' })}</span>
+              <span className="text-white">{user.lifetimeTrafficUsed}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">{t('userDetail.subscription.resetStrategy', { defaultValue: 'Reset' })}</span>
+              <span className="text-white">{user.trafficLimitStrategy}</span>
+            </div>
+            {user.expiresAt && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t('userDetail.subscription.expiresAt', { defaultValue: 'Expires' })}</span>
+                <span className="text-white">{new Date(user.expiresAt).toLocaleDateString()}</span>
+              </div>
+            )}
+            {links.length > 0 && (
+              <div className="pt-2 border-t border-[var(--glass-border)]">
+                <p className="text-xs text-muted-foreground mb-2">{t('userDetail.subscription.links', { defaultValue: 'Connection links' })} ({links.length})</p>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {links.map((link, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 bg-[var(--glass-bg)] rounded px-2 py-1 cursor-pointer hover:bg-[var(--glass-border)]"
+                      onClick={() => { navigator.clipboard.writeText(link); toast.success('Copied') }}
+                    >
+                      <span className="text-[10px] font-mono text-white/70 truncate flex-1">{link}</span>
+                      <Copy className="w-3 h-3 text-muted-foreground shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function UserDetail() {
   const { t } = useTranslation()
   const { formatDate } = useFormatters()
@@ -905,6 +1007,7 @@ export default function UserDetail() {
   const queryClient = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [subInfoOpen, setSubInfoOpen] = useState(false)
   const qrRef = useRef<HTMLDivElement>(null)
   const canEdit = useHasPermission('users', 'edit')
   const canDelete = useHasPermission('users', 'delete')
@@ -1999,6 +2102,15 @@ export default function UserDetail() {
                         <QrCode className="h-3.5 w-3.5 mr-1" />
                         QR
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSubInfoOpen(true)}
+                        className="flex-shrink-0"
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        Info
+                      </Button>
                     </div>
                   </div>
                 ) : user.subscription_uuid ? (
@@ -2247,6 +2359,13 @@ export default function UserDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Subscription Info Dialog */}
+      <SubscriptionInfoDialog
+        open={subInfoOpen}
+        onOpenChange={setSubInfoOpen}
+        userUuid={user?.uuid || ''}
+      />
 
       {/* Analyzer Exclusions Dialog */}
       <Dialog open={exclusionDialogOpen} onOpenChange={setExclusionDialogOpen}>

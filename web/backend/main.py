@@ -54,6 +54,7 @@ from web.backend.api.v2 import collector as collector_api
 from web.backend.api.v2 import backup as backup_api
 from web.backend.api.v2 import api_keys as api_keys_api
 from web.backend.api.v2 import webhooks as webhooks_api
+from web.backend.api.v2 import squads as squads_api
 from web.backend.api.v3 import public as public_api_v3
 
 
@@ -638,6 +639,7 @@ def create_app() -> FastAPI:
     app.include_router(backup_api.router, prefix="/api/v2/backups", tags=["backups"])
     app.include_router(api_keys_api.router, prefix="/api/v2/api-keys", tags=["api-keys"])
     app.include_router(webhooks_api.router, prefix="/api/v2/webhooks", tags=["webhooks"])
+    app.include_router(squads_api.router, prefix="/api/v2/squads", tags=["squads"])
 
     # Public API v3 — enabled via EXTERNAL_API_ENABLED=true
     if settings.external_api_enabled:

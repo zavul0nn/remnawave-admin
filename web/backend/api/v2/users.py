@@ -1142,3 +1142,35 @@ async def bulk_reset_traffic(
     return BulkOperationResult(success=success, failed=failed, errors=errors)
 
 
+# ── Subscription Info ────────────────────────────────────────────
+
+@router.get("/{user_uuid}/subscription-info")
+async def get_subscription_info(
+    user_uuid: str,
+    admin: AdminUser = Depends(require_permission("users", "view")),
+):
+    """Get detailed subscription info for a user via Panel API."""
+    from shared.api_client import api_client
+    from shared.database import db_service
+
+    # Get user's short_uuid from DB
+    if not db_service.is_connected:
+        raise api_error(503, E.DB_UNAVAILABLE)
+
+    user = await db_service.get_user(user_uuid)
+    if not user:
+        raise api_error(404, E.USER_NOT_FOUND)
+
+    short_uuid = user.get("short_uuid")
+    if not short_uuid:
+        raise api_error(404, E.USER_NOT_FOUND)
+
+    try:
+        result = await api_client.get_subscription_info(short_uuid)
+        payload = result.get("response", result) if isinstance(result, dict) else result
+        return payload
+    except Exception as e:
+        logger.error("Failed to get subscription info for %s: %s", user_uuid, e)
+        raise api_error(502, E.API_SERVICE_UNAVAILABLE)
+
+
