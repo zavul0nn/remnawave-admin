@@ -807,6 +807,7 @@ export default function Users() {
         sort_order: sortOrder,
       }),
     retry: 2,
+    refetchInterval: 30_000,
   })
 
   // Mutations
