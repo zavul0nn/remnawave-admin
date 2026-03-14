@@ -388,8 +388,8 @@ function AgentTokenModal({
     copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
   }
 
-  // Auto-detect backend URL from current page origin
-  const backendUrl = window.location.origin
+  // Auto-detect backend URL from current page origin (strip port — behind reverse proxy)
+  const backendUrl = `${window.location.protocol}//${window.location.hostname}`
   const wsUrl = backendUrl.replace(/^http/, 'ws')
 
   const envConfig = generatedToken

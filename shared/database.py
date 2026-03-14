@@ -3284,15 +3284,15 @@ class DatabaseService:
         try:
             async with self.acquire() as conn:
                 async with conn.transaction():
-                    # Deduplication: skip if same user already has a similar violation within last 30 min
+                    # Deduplication: skip if user already has an unresolved violation
                     existing = await conn.fetchval(
                         "SELECT id FROM violations WHERE user_uuid = $1 "
-                        "AND recommended_action = $2 "
-                        "AND detected_at > NOW() - INTERVAL '30 minutes'",
-                        user_uuid, recommended_action,
+                        "AND action_taken IS NULL "
+                        "ORDER BY detected_at DESC LIMIT 1",
+                        user_uuid,
                     )
                     if existing:
-                        logger.debug("Skipping duplicate violation for user %s (existing id=%d)", user_uuid, existing)
+                        logger.debug("Skipping duplicate violation for user %s (pending id=%d)", user_uuid, existing)
                         return existing
 
                     result = await conn.fetchval(

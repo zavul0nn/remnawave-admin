@@ -10,7 +10,7 @@ Endpoint: POST /batch
 import asyncio
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
@@ -561,17 +561,13 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
 
             had_violation = bool(violation_score and violation_score.total >= min_score)
 
-            # Ставим кулдаун только если нарушений нет — при нарушении проверяем каждый раз
-            if not had_violation:
-                # Evict oldest 20% entries if cooldown dict is too large
-                if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
-                    sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
-                    for k in sorted_keys[:len(sorted_keys) // 5]:
-                        _violation_check_cooldown.pop(k, None)
-                _violation_check_cooldown[user_uuid] = datetime.utcnow()
-            else:
-                # Сбрасываем кулдаун чтобы не пропустить продолжение нарушения
-                _violation_check_cooldown.pop(user_uuid, None)
+            # Evict oldest 20% entries if cooldown dict is too large
+            if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
+                sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
+                for k in sorted_keys[:len(sorted_keys) // 5]:
+                    _violation_check_cooldown.pop(k, None)
+            # Кулдаун всегда: полный если нарушений нет, короткий (5 мин) если есть
+            _violation_check_cooldown[user_uuid] = datetime.utcnow() if not had_violation else (datetime.utcnow() - timedelta(minutes=max(0, cooldown_minutes - 5)))
 
             if had_violation:
                 logger.warning(

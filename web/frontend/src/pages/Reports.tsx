@@ -44,7 +44,7 @@ export default function Reports({ embedded }: { embedded?: boolean } = {}) {
 
   const canCreate = useHasPermission('reports', 'create')
 
-  const [activeTab, setActiveTab] = useTabParam('reports', ['reports', 'schedule', 'asn'])
+  const [activeTab, setActiveTab] = useTabParam('reports', ['reports', 'schedule', 'asn'], 'rtab')
   const [reportFilter, setReportFilter] = useState<string>('')
   const [expandedReport, setExpandedReport] = useState<number | null>(null)
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false)

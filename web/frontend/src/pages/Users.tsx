@@ -859,16 +859,14 @@ export default function Users() {
   })
 
   const handleSort = useCallback((field: string) => {
-    setSortBy((prev) => {
-      if (prev === field) {
-        setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-        return prev
-      }
+    if (field === sortBy) {
+      setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(field)
       setSortOrder('desc')
-      return field
-    })
+    }
     setPage(1)
-  }, [])
+  }, [sortBy])
 
   const resetFilters = useCallback(() => {
     setSearch('')

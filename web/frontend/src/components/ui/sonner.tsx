@@ -1,11 +1,14 @@
 import { Toaster as Sonner } from "sonner"
+import { useAppearanceStore } from "@/store/useAppearanceStore"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const colorMode = useAppearanceStore((s) => s.colorMode)
+
   return (
     <Sonner
-      theme="dark"
+      theme={colorMode}
       className="toaster group"
       position="bottom-right"
       closeButton

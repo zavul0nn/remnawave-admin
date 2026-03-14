@@ -524,7 +524,7 @@ function TrafficBlock({ user, trafficPercent }: { user: UserDetailData; trafficP
   )
 }
 
-const DEVICES_PER_PAGE = 3
+const DEVICES_PER_PAGE = 4
 
 function PaginatedDeviceList({
   devices,
