@@ -489,7 +489,19 @@ function GrowthTrendsCard({
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
                 <XAxis dataKey="date" stroke={chart.axis} fontSize={10} tickFormatter={(d) => { const p = d.split('-'); return `${p[2]}.${p[1]}` }} />
                 <YAxis stroke={chart.axis} fontSize={10} tickFormatter={(v) => metric === 'traffic' ? createFormatBytesShort(t)(v) : v} />
-                <RechartsTooltip contentStyle={chart.tooltipStyle} />
+                <RechartsTooltip content={({ active, payload, label }: { active?: boolean; payload?: TooltipPayloadEntry[]; label?: string }) => {
+                  if (!active || !payload?.length) return null
+                  return (
+                    <div style={chart.tooltipStyle} className="px-3 py-2">
+                      <p className={cn("text-xs mb-1", chart.tooltipMutedClass)}>{label}</p>
+                      {payload.map((entry, i) => (
+                        <p key={i} className="text-xs" style={{ color: entry.color }}>
+                          {entry.name}: {formatValue(entry.value)}
+                        </p>
+                      ))}
+                    </div>
+                  )
+                }} />
                 <Area type="monotone" dataKey="value" name={metricOptions.find((o) => o.value === metric)?.label || metric} stroke={chart.accentColor} fill="url(#trendGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
