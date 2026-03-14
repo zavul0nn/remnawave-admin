@@ -26,10 +26,11 @@ class AgentConnectionManager:
             old = self._connections.get(node_uuid)
             if old:
                 # Close stale connection
+                logger.info("Replacing existing agent connection for %s", node_uuid)
                 try:
                     await old.close(code=4000, reason="replaced")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("Failed to close old agent connection for %s: %s", node_uuid, e)
             self._connections[node_uuid] = websocket
         logger.info("Agent registered: %s (total: %d)", node_uuid, len(self._connections))
 
@@ -71,6 +72,7 @@ class AgentConnectionManager:
         """
         ws = self._connections.get(node_uuid)
         if not ws:
+            logger.debug("Command dropped: agent %s not connected (cmd_type=%s)", node_uuid, command.get("type", "?"))
             return False
 
         try:

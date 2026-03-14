@@ -159,7 +159,10 @@ async def verify_admin_password_async(username: str, password: str) -> bool:
             if not account.get("is_active", True):
                 logger.warning("Login denied for disabled admin account: %s", username)
                 return False
-            return verify_password(password, account["password_hash"])
+            result = verify_password(password, account["password_hash"])
+            if not result:
+                logger.warning("Password verification failed for admin: %s", username)
+            return result
     except Exception as e:
         logger.warning("admin_accounts check failed: %s", e)
 

@@ -56,7 +56,7 @@ async def _set_agent_v2_status(node_uuid: str, connected: bool) -> None:
                     node_uuid,
                 )
     except Exception as e:
-        logger.debug("Failed to update agent v2 status: %s", e)
+        logger.warning("Failed to update agent v2 status for %s: %s", node_uuid, e)
 
 
 async def _broadcast_agent_status(node_uuid: str, connected: bool) -> None:
@@ -91,6 +91,7 @@ async def agent_websocket(
     """
     # Auth
     if not await _verify_agent(token, node_uuid):
+        logger.warning("Agent auth failed: node_uuid=%s, ip=%s", node_uuid, websocket.client.host if websocket.client else "unknown")
         await websocket.close(code=4001, reason="auth_failed")
         return
 
@@ -131,8 +132,8 @@ async def agent_websocket(
                                     "UPDATE nodes SET agent_v2_last_ping = NOW() WHERE uuid = $1",
                                     node_uuid,
                                 )
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("Failed to update agent ping timestamp: %s", e)
 
                 elif msg_type == "command_result":
                     # Agent finished executing a command — log it
@@ -193,7 +194,7 @@ async def _handle_command_result(node_uuid: str, msg: dict) -> None:
                 node_uuid,
             )
     except Exception as e:
-        logger.debug("Failed to update command result: %s", e)
+        logger.warning("Failed to update command result for node %s: %s", node_uuid, e)
 
 
 async def _handle_script_output(node_uuid: str, msg: dict) -> None:
@@ -221,7 +222,7 @@ async def _handle_pty_output(node_uuid: str, msg: dict) -> None:
         # Forward base64-encoded output directly to browser
         await session.browser_ws.send_text(data_b64)
     except Exception as e:
-        logger.debug("Failed to forward pty output: %s", e)
+        logger.warning("Failed to forward pty output for session %s: %s", msg.get("session_id"), e)
 
 
 async def _handle_pty_close(node_uuid: str, msg: dict) -> None:
@@ -251,4 +252,4 @@ async def _handle_pty_close(node_uuid: str, msg: dict) -> None:
         await terminal_manager.close_session(session_id, reason=reason)
         logger.info("PTY closed by agent: session=%s, reason=%s", session_id, reason)
     except Exception as e:
-        logger.debug("Failed to handle pty close: %s", e)
+        logger.warning("Failed to handle pty close for node %s: %s", node_uuid, e)

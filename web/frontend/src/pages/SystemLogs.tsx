@@ -58,6 +58,138 @@ const LEVEL_BADGE_COLORS: Record<string, string> = {
   ERROR: 'bg-red-500/20 text-red-400',
 }
 
+// ── Message highlighting ─────────────────────────────────────────
+
+// Message category detection for left border color
+function getMessageCategory(message: string): string {
+  if (/^Batch received:/i.test(message)) return 'batch-in'
+  if (/^Batch upserted:/i.test(message)) return 'batch-out'
+  if (/^User\s+[0-9a-f-]+:/i.test(message)) return 'user-check'
+  if (/^(GET|POST|PUT|DELETE|PATCH)\s/i.test(message)) return 'http'
+  if (/violation|alert|block/i.test(message)) return 'violation'
+  return ''
+}
+
+const CATEGORY_BORDER: Record<string, string> = {
+  'batch-in': 'border-l-2 border-l-emerald-500/40',
+  'batch-out': 'border-l-2 border-l-sky-500/30',
+  'user-check': 'border-l-2 border-l-amber-500/40',
+  'http': 'border-l-2 border-l-violet-500/40',
+  'violation': 'border-l-2 border-l-red-500/50',
+}
+
+function highlightMessage(message: string): React.ReactNode {
+  if (!message) return message
+
+  // First pass: find all key=value pairs and special patterns
+  const tokens: { start: number; end: number; type: string; match: string; groups?: string[] }[] = []
+
+  // key=value (numbers)
+  const kvNumRe = /\b(\w+)=([\d.]+)\b/g
+  let m: RegExpExecArray | null
+  while ((m = kvNumRe.exec(message)) !== null) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, type: 'kv_num', match: m[0], groups: [m[1], m[2]] })
+  }
+
+  // UUIDs
+  const uuidRe = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi
+  while ((m = uuidRe.exec(message)) !== null) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, type: 'uuid', match: m[0] })
+  }
+
+  // HTTP status arrows
+  const statusRe = /→\s*(\d{3})/g
+  while ((m = statusRe.exec(message)) !== null) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, type: 'status', match: m[0], groups: [m[1]] })
+  }
+
+  // Parenthesized notes
+  const noteRe = /\([^)]+\)/g
+  while ((m = noteRe.exec(message)) !== null) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, type: 'note', match: m[0] })
+  }
+
+  // node= keyword (special — highlight node name)
+  const nodeRe = /\bnode=(\S+)/g
+  while ((m = nodeRe.exec(message)) !== null) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, type: 'node', match: m[0], groups: [m[1]] })
+  }
+
+  // Sort by start position, remove overlaps
+  tokens.sort((a, b) => a.start - b.start)
+  const filtered: typeof tokens = []
+  let lastEnd = 0
+  for (const t of tokens) {
+    if (t.start >= lastEnd) {
+      filtered.push(t)
+      lastEnd = t.end
+    }
+  }
+
+  // Build React nodes
+  const result: React.ReactNode[] = []
+  let pos = 0
+  for (const token of filtered) {
+    // Text before this token
+    if (token.start > pos) {
+      result.push(<span key={`t${pos}`}>{message.slice(pos, token.start)}</span>)
+    }
+
+    switch (token.type) {
+      case 'node':
+        result.push(
+          <span key={`n${token.start}`}>
+            <span className="text-dark-300">node=</span>
+            <span className="text-emerald-400 font-medium">{token.groups![0]}</span>
+          </span>
+        )
+        break
+      case 'kv_num':
+        result.push(
+          <span key={`kv${token.start}`}>
+            <span className="text-dark-300">{token.groups![0]}=</span>
+            <span className="text-amber-300">{token.groups![1]}</span>
+          </span>
+        )
+        break
+      case 'uuid':
+        result.push(
+          <span key={`u${token.start}`} className="text-dark-400" title={token.match}>
+            {token.match.slice(0, 8)}…
+          </span>
+        )
+        break
+      case 'status': {
+        const code = token.groups?.[0] || ''
+        const codeNum = parseInt(code)
+        const statusColor = codeNum >= 500 ? 'text-red-400' : codeNum >= 400 ? 'text-yellow-400' : 'text-green-400'
+        result.push(
+          <span key={`s${token.start}`}>
+            <span className="text-dark-300">→ </span>
+            <span className={cn('font-medium', statusColor)}>{code}</span>
+          </span>
+        )
+        break
+      }
+      case 'note':
+        result.push(
+          <span key={`p${token.start}`} className="text-dark-400 italic">{token.match}</span>
+        )
+        break
+      default:
+        result.push(<span key={`d${token.start}`}>{token.match}</span>)
+    }
+    pos = token.end
+  }
+
+  // Remaining text
+  if (pos < message.length) {
+    result.push(<span key={`e${pos}`}>{message.slice(pos)}</span>)
+  }
+
+  return <>{result}</>
+}
+
 // ── Component ───────────────────────────────────────────────────
 
 export default function SystemLogs() {
@@ -453,6 +585,15 @@ export default function SystemLogs() {
                       const isWarning = entry.level === 'WARNING'
                       const hasExtra = entry.extra && Object.keys(entry.extra).length > 0
                       const isExpanded = expandedRows.has(idx)
+                      const category = getMessageCategory(entry.message || '')
+                      const categoryBorder = CATEGORY_BORDER[category] || 'border-l-2 border-l-transparent'
+                      const isEven = idx % 2 === 0
+
+                      // Time-based separator: show thin line when second changes
+                      const prevEntry = idx > 0 ? allLines[idx - 1] : null
+                      const showSeparator = prevEntry?.timestamp && entry.timestamp
+                        && entry.timestamp.slice(0, 19) !== prevEntry.timestamp.slice(0, 19)
+                        && (idx % 5 === 0) // don't show too many separators
 
                       // On mobile, show only time (HH:MM:SS) from timestamp
                       const displayTimestamp = entry.timestamp
@@ -462,12 +603,18 @@ export default function SystemLogs() {
 
                       return (
                         <div key={idx}>
+                          {/* Time separator */}
+                          {showSeparator && (
+                            <div className="border-t border-[var(--glass-border)]/30 my-0.5" />
+                          )}
+
                           {/* Desktop layout: single row */}
                           <div
                             className={cn(
-                              'hidden sm:flex items-start gap-2 px-2 py-0.5 rounded hover:bg-[var(--glass-bg)] transition-colors',
-                              isError && 'bg-red-500/5',
-                              isWarning && 'bg-yellow-500/5',
+                              'hidden sm:flex items-start gap-2 px-2 py-[3px] rounded transition-colors',
+                              categoryBorder,
+                              isError ? 'bg-red-500/5' : isWarning ? 'bg-yellow-500/5' : isEven ? 'bg-transparent' : 'bg-white/[0.015]',
+                              'hover:bg-[var(--glass-bg)]',
                               hasExtra && 'cursor-pointer',
                             )}
                             onClick={hasExtra ? () => toggleExpandRow(idx) : undefined}
@@ -481,7 +628,7 @@ export default function SystemLogs() {
                               <span className="w-3 shrink-0" />
                             )}
                             {entry.timestamp && (
-                              <span className="text-dark-400 whitespace-nowrap shrink-0 select-none text-xs">
+                              <span className="text-dark-500 whitespace-nowrap shrink-0 select-none text-[11px]">
                                 {fullTimestamp}
                               </span>
                             )}
@@ -494,25 +641,25 @@ export default function SystemLogs() {
                               </span>
                             )}
                             {entry.source && (
-                              <span className="text-cyan-400/70 w-[80px] shrink-0 truncate">
+                              <span className="text-primary-400/60 w-[80px] shrink-0 truncate text-[11px]">
                                 {entry.source}
                               </span>
                             )}
                             <span className={cn(
-                              'text-dark-100 whitespace-pre-wrap break-words min-w-0',
-                              isError && 'text-red-300',
-                              isWarning && 'text-yellow-200',
+                              'whitespace-pre-wrap break-words min-w-0',
+                              isError ? 'text-red-300' : isWarning ? 'text-yellow-200' : 'text-dark-100',
                             )}>
-                              {entry.message}
+                              {isError || isWarning ? entry.message : highlightMessage(entry.message || '')}
                             </span>
                           </div>
 
                           {/* Mobile layout: stacked — meta row + message row */}
                           <div
                             className={cn(
-                              'sm:hidden px-1.5 py-1 rounded hover:bg-[var(--glass-bg)] transition-colors',
-                              isError && 'bg-red-500/5',
-                              isWarning && 'bg-yellow-500/5',
+                              'sm:hidden px-1.5 py-1 rounded transition-colors',
+                              categoryBorder,
+                              isError ? 'bg-red-500/5' : isWarning ? 'bg-yellow-500/5' : isEven ? 'bg-transparent' : 'bg-white/[0.015]',
+                              'hover:bg-[var(--glass-bg)]',
                               hasExtra && 'cursor-pointer',
                             )}
                             onClick={hasExtra ? () => toggleExpandRow(idx) : undefined}
@@ -527,7 +674,7 @@ export default function SystemLogs() {
                                 <span className="w-3 shrink-0" />
                               )}
                               {displayTimestamp && (
-                                <span className="text-dark-400 text-[10px] select-none shrink-0">
+                                <span className="text-dark-500 text-[10px] select-none shrink-0">
                                   {displayTimestamp}
                                 </span>
                               )}
@@ -540,18 +687,17 @@ export default function SystemLogs() {
                                 </span>
                               )}
                               {entry.source && (
-                                <span className="text-cyan-400/70 text-[10px] truncate">
+                                <span className="text-primary-400/60 text-[10px] truncate">
                                   {entry.source}
                                 </span>
                               )}
                             </div>
                             {/* Message: full width */}
                             <div className={cn(
-                              'text-dark-100 text-[11px] leading-4 whitespace-pre-wrap break-words pl-[18px]',
-                              isError && 'text-red-300',
-                              isWarning && 'text-yellow-200',
+                              'text-[11px] leading-4 whitespace-pre-wrap break-words pl-[18px]',
+                              isError ? 'text-red-300' : isWarning ? 'text-yellow-200' : 'text-dark-100',
                             )}>
-                              {entry.message}
+                              {isError || isWarning ? entry.message : highlightMessage(entry.message || '')}
                             </div>
                           </div>
 

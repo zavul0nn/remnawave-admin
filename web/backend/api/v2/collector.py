@@ -240,8 +240,8 @@ async def receive_connections(
                     disk_write_speed_bps=report.system_metrics.disk_write_speed_bps,
                     uptime_seconds=report.system_metrics.uptime_seconds,
                 )
-            except Exception:
-                pass  # Non-critical, don't block collector
+            except Exception as e:
+                logger.debug("Failed to save metrics snapshot for node %s: %s", node_uuid, e)
         except Exception as e:
             logger.warning("Failed to update system metrics for node %s: %s", node_uuid, e)
 
@@ -254,20 +254,20 @@ async def receive_connections(
             deleted = await db_service.cleanup_old_metrics_snapshots(METRICS_RETENTION_DAYS)
             if deleted > 0:
                 logger.info("Cleaned up %d old metrics snapshots", deleted)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to cleanup old metrics snapshots: %s", e)
         try:
             deleted = await db_service.cleanup_old_connections(CONNECTIONS_RETENTION_DAYS)
             if deleted > 0:
                 logger.info("Cleaned up %d old connections", deleted)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to cleanup old connections: %s", e)
         try:
             deleted = await db_service.cleanup_old_torrent_events(90)
             if deleted > 0:
                 logger.info("Cleaned up %d old torrent events", deleted)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to cleanup old torrent events: %s", e)
 
     if not report.connections and not report.torrent_events:
         return JSONResponse(
@@ -512,8 +512,8 @@ async def _process_torrent_violations(
                         "destinations": destinations,
                         "reasons": [f"Torrent traffic: {len(user_events)} events"],
                     })
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("WebSocket broadcast failed for torrent violation: %s", e)
 
                 # Auto-block if configured
                 if auto_action == "block_user":
@@ -538,6 +538,7 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
             # Whitelist check
             whitelisted, excluded_analyzers = await db_service.is_user_violation_whitelisted(user_uuid)
             if whitelisted and excluded_analyzers is None:
+                logger.debug("User %s is fully whitelisted, skipping violation check", user_uuid)
                 return
 
             # Per-user cooldown (adaptive or config-based)
@@ -564,8 +565,11 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
             # Evict oldest 20% entries if cooldown dict is too large
             if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
                 sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
-                for k in sorted_keys[:len(sorted_keys) // 5]:
+                evict_count = len(sorted_keys) // 5
+                for k in sorted_keys[:evict_count]:
                     _violation_check_cooldown.pop(k, None)
+                logger.warning("Cooldown cache eviction: removed %d entries (was %d, limit %d)",
+                               evict_count, len(sorted_keys), MAX_COOLDOWN_SIZE)
             # Кулдаун всегда: полный если нарушений нет, короткий (5 мин) если есть
             _violation_check_cooldown[user_uuid] = datetime.utcnow() if not had_violation else (datetime.utcnow() - timedelta(minutes=max(0, cooldown_minutes - 5)))
 
@@ -588,7 +592,7 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
                         unique_ips = list(set(str(c.ip_address) for c in active_conns))
                         ip_metadata = await geoip.lookup_batch(unique_ips)
                     except Exception as geo_error:
-                        logger.debug("Failed to get GeoIP data: %s", geo_error)
+                        logger.warning("GeoIP lookup failed for user %s: %s", user_uuid, geo_error)
 
                 try:
                     from web.backend.core.violation_notifier import send_violation_notification
@@ -674,8 +678,8 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
                             "recommended_action": violation_score.recommended_action.value,
                             "reasons": violation_score.reasons[:5],
                         })
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("WebSocket broadcast failed for violation: %s", e)
 
                 except Exception as save_error:
                     logger.warning("Failed to save violation to DB for user %s: %s", user_uuid, save_error)
@@ -702,6 +706,9 @@ async def _run_violation_detection(affected_user_uuids: set):
                            if (now_cleanup - v).total_seconds() > 3600]
             for k in expired_keys:
                 del _violation_check_cooldown[k]
+            if expired_keys:
+                logger.debug("Cooldown cleanup: removed %d expired entries, %d remaining",
+                             len(expired_keys), len(_violation_check_cooldown))
 
             # Adaptive concurrency and cooldown based on total tracked users
             total_tracked = len(_violation_check_cooldown) + len(affected_user_uuids)

@@ -69,7 +69,7 @@ class TerminalSessionManager:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.debug("Cleanup error: %s", e)
+                logger.warning("Terminal cleanup error: %s", e)
 
     async def _cleanup_idle(self) -> None:
         """Close all idle sessions."""
@@ -157,8 +157,8 @@ class TerminalSessionManager:
         if session.browser_ws:
             try:
                 await session.browser_ws.close(code=1000, reason=reason)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to close browser WebSocket for session %s: %s", session_id, e)
 
         # Log session end
         await self._log_session_end(session, reason)
@@ -198,7 +198,7 @@ class TerminalSessionManager:
                     f"session_id={session.session_id}",
                 )
         except Exception as e:
-            logger.debug("Failed to log terminal session start: %s", e)
+            logger.warning("Failed to log terminal session start: %s", e)
 
     async def _log_session_end(self, session: TerminalSession, reason: str) -> None:
         """Update session record in node_command_log."""
@@ -225,7 +225,7 @@ class TerminalSessionManager:
                     f"session_id={session.session_id}",
                 )
         except Exception as e:
-            logger.debug("Failed to log terminal session end: %s", e)
+            logger.warning("Failed to log terminal session end: %s", e)
 
 
 # Global singleton
