@@ -839,7 +839,10 @@ class GeoAnalyzer:
                 connection_history,
                 key=lambda x: x.get("connected_at") or datetime.min
             )
-            
+
+            # Трекинг уже добавленных пар городов для дедупликации (A→B == B→A)
+            seen_city_pairs: set = set()
+
             for i in range(1, len(sorted_history)):
                 prev_conn = sorted_history[i - 1]
                 curr_conn = sorted_history[i]
@@ -926,6 +929,14 @@ class GeoAnalyzer:
                         # Не добавляем скор и не добавляем причину
                         pass
                     else:
+                        # Дедупликация пар городов: A→B и B→A считаются одной парой
+                        norm_prev = self._normalize_city_name(prev_city)
+                        norm_curr = self._normalize_city_name(curr_city)
+                        city_pair = frozenset((norm_prev, norm_curr))
+                        if city_pair in seen_city_pairs:
+                            continue
+                        seen_city_pairs.add(city_pair)
+
                         # Города в разных регионах - проверяем расстояние
                         # Если есть координаты, проверяем реальное расстояние
                         if prev_lat and prev_lon and curr_lat and curr_lon:
