@@ -2,7 +2,7 @@
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Dict, List, Any
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -12,6 +12,29 @@ from web.backend.core.rate_limit import limiter, RATE_ANALYTICS
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+_city_aliases: Optional[Dict[str, str]] = None
+
+
+def _get_city_aliases() -> Dict[str, str]:
+    """Lazy-load city name aliases from GeoAnalyzer."""
+    global _city_aliases
+    if _city_aliases is None:
+        from shared.violation_detector import GeoAnalyzer
+        _city_aliases = GeoAnalyzer.CITY_NAME_ALIASES
+    return _city_aliases
+
+
+def _normalize_city_name(city: str) -> str:
+    """Normalize city name for deduplication (e.g. 'Москва' -> 'moscow')."""
+    if not city:
+        return ""
+    normalized = city.lower().strip()
+    for suffix in [' city', ' gorod', ' oblast', ' region']:
+        if normalized.endswith(suffix):
+            normalized = normalized[:-len(suffix)].strip()
+    return _get_city_aliases().get(normalized, normalized)
 
 
 @router.get("/geo")
@@ -125,20 +148,54 @@ async def _compute_geo(period: str = "7d", date_from: Optional[str] = None, date
             except Exception as exc:
                 logger.warning("Failed to fetch users by city: %s", exc)
 
+            # Merge city_users_map by normalized city name first
+            merged_users_map: Dict[tuple, list] = {}
+            for (city_name, country), users_list in city_users_map.items():
+                norm_key = (_normalize_city_name(city_name), country)
+                if norm_key not in merged_users_map:
+                    merged_users_map[norm_key] = []
+                # Deduplicate users by uuid
+                existing_uuids = {u["uuid"] for u in merged_users_map[norm_key]}
+                for u in users_list:
+                    if u["uuid"] not in existing_uuids:
+                        merged_users_map[norm_key].append(u)
+                        existing_uuids.add(u["uuid"])
+
+            # Merge city rows by normalized name
+            merged_cities: Dict[tuple, Dict[str, Any]] = {}
             for r in city_rows:
                 if r["latitude"] is None or r["longitude"] is None:
                     continue
-                key = (r["city"], r["country_name"])
-                users = city_users_map.get(key, [])
+                norm_name = _normalize_city_name(r["city"])
+                merge_key = (norm_name, r["country_name"])
+                if merge_key in merged_cities:
+                    entry = merged_cities[merge_key]
+                    old_count = entry["count"]
+                    new_count = r["count"]
+                    total = old_count + new_count
+                    # Weighted average of coordinates
+                    entry["lat"] = (entry["lat"] * old_count + float(r["latitude"]) * new_count) / total
+                    entry["lon"] = (entry["lon"] * old_count + float(r["longitude"]) * new_count) / total
+                    entry["count"] = total
+                else:
+                    merged_cities[merge_key] = {
+                        "city": r["city"],
+                        "country": r["country_name"],
+                        "lat": float(r["latitude"]),
+                        "lon": float(r["longitude"]),
+                        "count": r["count"],
+                    }
+
+            for merge_key, entry in merged_cities.items():
+                users = merged_users_map.get(merge_key, [])
                 cities.append({
-                    "city": r["city"],
-                    "country": r["country_name"],
-                    "lat": float(r["latitude"]),
-                    "lon": float(r["longitude"]),
-                    "count": r["count"],
+                    **entry,
                     "unique_users": len(users),
                     "users": users,
                 })
+
+            # Sort by count descending (merging may have changed order)
+            cities.sort(key=lambda c: c["count"], reverse=True)
 
             return {"countries": countries, "cities": cities}
 
