@@ -253,6 +253,27 @@ class SyncService:
                     if user_uuid:
                         api_user_uuids.add(user_uuid)
 
+                # Detect traffic resets: used_traffic_bytes dropped → reset raw counter
+                try:
+                    batch_uuids = [u["uuid"] for u in users if u.get("uuid")]
+                    if batch_uuids:
+                        old_traffic = await db_service.get_used_traffic_map(batch_uuids)
+                        reset_uuids = []
+                        for u in users:
+                            uid = u.get("uuid")
+                            if not uid:
+                                continue
+                            ut = u.get("userTraffic") or {}
+                            new_used = int(ut.get("usedTrafficBytes") or u.get("usedTrafficBytes") or 0)
+                            old_used = old_traffic.get(uid, 0)
+                            if old_used > 0 and new_used < old_used:
+                                reset_uuids.append(uid)
+                        if reset_uuids:
+                            await db_service.reset_raw_traffic(reset_uuids)
+                            logger.info("Traffic reset detected for %d users, raw counters zeroed", len(reset_uuids))
+                except Exception as e:
+                    logger.debug("Failed to detect traffic resets: %s", e)
+
                 # Batch upsert users (single INSERT with UNNEST)
                 try:
                     batch_data = [{"response": u} for u in users]
@@ -817,7 +838,8 @@ class SyncService:
         """Sync per-user traffic for each active node from Remnawave API.
 
         Calls /api/bandwidth-stats/nodes/{uuid}/users for each connected node,
-        stores results in the local user_node_traffic table.
+        computes deltas from previous snapshot, accumulates raw traffic in users table,
+        and updates the snapshot in user_node_traffic.
         Returns total number of upserted records.
         """
         if not db_service.is_connected:
@@ -832,17 +854,21 @@ class SyncService:
             ]
 
             now = datetime.now(timezone.utc)
-            # Full range to get cumulative raw traffic (API sums nodes_user_usage_history)
-            start_str = "2020-01-01"
+            start_str = now.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d")
             end_str = (now + timedelta(days=1)).strftime("%Y-%m-%d")
 
+            # Get previous snapshot to compute deltas
+            old_snapshot = await db_service.get_user_node_traffic_snapshot()
+
             total_synced = 0
+            # Accumulate deltas: {user_uuid: total_delta_bytes}
+            raw_deltas: dict[str, int] = {}
 
             for node in active_nodes:
                 node_uuid = str(node["uuid"])
                 try:
                     result = await api_client.get_node_users_usage(
-                        node_uuid, start=start_str, end=end_str, top_users_limit=5000
+                        node_uuid, start=start_str, end=end_str, top_users_limit=500
                     )
                     response = result.get("response", result) if isinstance(result, dict) else result
                     top_users = response.get("topUsers", []) if isinstance(response, dict) else []
@@ -858,10 +884,22 @@ class SyncService:
                     for u in top_users:
                         username = u.get("username", "")
                         user_uuid = username_map.get(username.lower(), "")
-                        total_bytes = int(u.get("total", 0) or 0)
-                        if user_uuid and total_bytes > 0:
+                        new_bytes = int(u.get("total", 0) or 0)
+                        if user_uuid and new_bytes > 0:
+                            # Compute delta from previous snapshot
+                            old_bytes = old_snapshot.get(user_uuid, {}).get(node_uuid, 0)
+                            if new_bytes > old_bytes:
+                                # Same day, traffic grew
+                                delta = new_bytes - old_bytes
+                            else:
+                                # New day or first sync — take full value
+                                delta = new_bytes
+
+                            if delta > 0:
+                                raw_deltas[user_uuid] = raw_deltas.get(user_uuid, 0) + delta
+
                             await db_service.upsert_user_node_traffic(
-                                user_uuid, node_uuid, total_bytes
+                                user_uuid, node_uuid, new_bytes
                             )
                             total_synced += 1
                 except Exception as e:
@@ -869,6 +907,11 @@ class SyncService:
                         "Failed to sync traffic for node %s: %s",
                         node.get("name", node_uuid), e,
                     )
+
+            # Accumulate raw traffic deltas into users table
+            if raw_deltas:
+                await db_service.increment_raw_traffic(raw_deltas)
+                logger.debug("Accumulated raw traffic deltas for %d users", len(raw_deltas))
 
             await db_service.update_sync_metadata(
                 key="node_traffic",

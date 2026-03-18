@@ -146,7 +146,7 @@ async def list_users(
         except Exception as e:
             logger.debug("Failed to enrich hwid device counts: %s", e)
 
-        # Enrich with raw traffic (without node multipliers) from user_node_traffic
+        # Enrich with raw traffic (without node multipliers) accumulated in users table
         try:
             from shared.database import db_service
             if db_service.is_connected:

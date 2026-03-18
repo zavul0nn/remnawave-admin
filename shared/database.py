@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS users (
     external_squad_uuid UUID,
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    raw_data JSONB
+    raw_data JSONB,
+    raw_used_traffic_bytes BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -2400,23 +2401,91 @@ class DatabaseService:
             return [dict(r) for r in rows]
 
     async def get_raw_traffic_sums(self) -> Dict[str, int]:
-        """Get sum of raw traffic (without node multipliers) per user.
+        """Get accumulated raw traffic (without node multipliers) per user.
 
-        bandwidth-stats API returns actual bytes transferred (raw, before multiplier).
-        We just sum traffic_bytes across all nodes per user.
-        Returns dict mapping user_uuid -> total raw traffic bytes.
+        Returns dict mapping user_uuid -> raw_used_traffic_bytes from users table.
+        Only returns users with raw_used_traffic_bytes > 0.
         """
         if not self.is_connected:
             return {}
         async with self.acquire() as conn:
             rows = await conn.fetch(
                 """
-                SELECT user_uuid::text, SUM(traffic_bytes)::bigint as total_raw_bytes
-                FROM user_node_traffic
-                GROUP BY user_uuid
+                SELECT uuid::text, raw_used_traffic_bytes
+                FROM users
+                WHERE raw_used_traffic_bytes > 0
                 """
             )
-            return {r["user_uuid"]: int(r["total_raw_bytes"]) for r in rows}
+            return {r["uuid"]: int(r["raw_used_traffic_bytes"]) for r in rows}
+
+    async def increment_raw_traffic(self, deltas: Dict[str, int]) -> None:
+        """Increment raw_used_traffic_bytes for multiple users.
+
+        deltas: dict mapping user_uuid -> bytes to add.
+        """
+        if not self.is_connected or not deltas:
+            return
+        async with self.acquire() as conn:
+            async with conn.transaction():
+                for user_uuid, delta in deltas.items():
+                    if delta > 0:
+                        await conn.execute(
+                            """
+                            UPDATE users
+                            SET raw_used_traffic_bytes = raw_used_traffic_bytes + $2
+                            WHERE uuid = $1::uuid
+                            """,
+                            user_uuid, delta,
+                        )
+
+    async def get_used_traffic_map(self, user_uuids: List[str]) -> Dict[str, int]:
+        """Get current used_traffic_bytes for a list of users."""
+        if not self.is_connected or not user_uuids:
+            return {}
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT uuid::text, COALESCE(used_traffic_bytes, 0) as used
+                FROM users WHERE uuid = ANY($1::uuid[])
+                """,
+                user_uuids,
+            )
+            return {r["uuid"]: int(r["used"]) for r in rows}
+
+    async def reset_raw_traffic(self, user_uuids: List[str]) -> None:
+        """Reset raw_used_traffic_bytes to 0 for specified users (traffic reset detected)."""
+        if not self.is_connected or not user_uuids:
+            return
+        async with self.acquire() as conn:
+            await conn.execute(
+                """
+                UPDATE users SET raw_used_traffic_bytes = 0
+                WHERE uuid = ANY($1::uuid[])
+                """,
+                user_uuids,
+            )
+
+    async def get_user_node_traffic_snapshot(self) -> Dict[str, Dict[str, int]]:
+        """Get current snapshot of user_node_traffic.
+
+        Returns dict: {user_uuid: {node_uuid: traffic_bytes}}.
+        """
+        if not self.is_connected:
+            return {}
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT user_uuid::text, node_uuid::text, traffic_bytes
+                FROM user_node_traffic
+                """
+            )
+        result: Dict[str, Dict[str, int]] = {}
+        for r in rows:
+            uid = r["user_uuid"]
+            if uid not in result:
+                result[uid] = {}
+            result[uid][r["node_uuid"]] = int(r["traffic_bytes"])
+        return result
 
     # ==================== API Tokens Methods ====================
     
