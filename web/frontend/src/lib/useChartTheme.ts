@@ -56,15 +56,19 @@ function hslToHex(h: number, s: number, l: number): string {
 }
 
 /**
- * Generates a palette of N colors based on a base color with varying lightness.
+ * Generates a palette of N distinct colors by rotating hue around the color wheel.
+ * Starts from the base accent color and distributes evenly, with slight
+ * lightness/saturation variation for better contrast.
  */
 function generatePalette(baseHex: string, count: number): string[] {
   const hsl = hexToHSL(baseHex)
   if (!hsl) return Array(count).fill(baseHex)
   const colors: string[] = []
   for (let i = 0; i < count; i++) {
-    const lightness = 0.35 + (i / (count - 1 || 1)) * 0.35
-    colors.push(hslToHex(hsl.h, Math.min(hsl.s * 1.1, 1), lightness))
+    const hue = (hsl.h + (i * 360) / count) % 360
+    const saturation = Math.min(0.65 + (i % 3) * 0.1, 1)
+    const lightness = 0.45 + (i % 2) * 0.1
+    colors.push(hslToHex(hue, saturation, lightness))
   }
   return colors
 }
