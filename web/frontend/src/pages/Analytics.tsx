@@ -45,7 +45,7 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import { advancedAnalyticsApi } from '@/api/advancedAnalytics'
-import type { GeoCity, GeoCityUser, TopUser, SharedHwidGroup, NodeFleetItem, RetentionCohort, NodeMetricsHistoryItem, NodeMetricsTimeseriesPoint } from '@/api/advancedAnalytics'
+import type { GeoCity, GeoCityUser, TopUser, SharedHwidGroup, NodeFleetItem, RetentionCohort, NodeMetricsHistoryItem, NodeMetricsTimeseriesPoint, GeoBalanceNode, GeoBalanceRecommendation } from '@/api/advancedAnalytics'
 import { ExportDropdown } from '@/components/ExportDropdown'
 import { exportCSV, exportJSON, formatBytesForExport } from '@/lib/export'
 
@@ -2185,6 +2185,166 @@ function LtvCard() {
 }
 
 
+// ── Geo-Balance ─────────────────────────────────────────────────
+
+function GeoBalanceCard() {
+  const { t } = useTranslation()
+  const [days, setDays] = useState('7')
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['advanced-geo-balance', days],
+    queryFn: () => advancedAnalyticsApi.geoBalance(Number(days)),
+    staleTime: 60_000,
+  })
+
+  const nodes: GeoBalanceNode[] = Array.isArray(data?.nodes) ? data!.nodes : []
+  const recommendations: GeoBalanceRecommendation[] = Array.isArray(data?.recommendations) ? data!.recommendations : []
+  const regions = Array.isArray(data?.regions) ? data!.regions : []
+  const overloadedCount = data?.overloaded_count ?? 0
+  const medianOnline = data?.median_users_online ?? 0
+
+  return (
+    <Card className="animate-fade-in-up">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary-400" />
+            <CardTitle className="text-base">
+              {t('analytics.geoBalance.title', { defaultValue: 'Geo-Balancing' })}
+            </CardTitle>
+            <InfoTooltip
+              text={t('analytics.geoBalance.tooltip', { defaultValue: 'Node load distribution analysis: detects overloaded nodes (CPU>80%, RAM>85%, Disk>90%) and shows user distribution by country per node. Recommendations help optimize infrastructure.' })}
+              side="right"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={days} onValueChange={setDays}>
+              <SelectTrigger className="w-[90px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">24h</SelectItem>
+                <SelectItem value="7">7d</SelectItem>
+                <SelectItem value="30">30d</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Summary */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
+            <span className="text-xs text-muted-foreground">{t('analytics.geoBalance.totalNodes', { defaultValue: 'Nodes' })}:</span>
+            <span className="text-sm font-medium text-white">{nodes.length}</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
+            <span className="text-xs text-muted-foreground">{t('analytics.geoBalance.overloaded', { defaultValue: 'Overloaded' })}:</span>
+            <span className={cn('text-sm font-medium', overloadedCount > 0 ? 'text-red-400' : 'text-green-400')}>{overloadedCount}</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
+            <span className="text-xs text-muted-foreground">{t('analytics.geoBalance.medianOnline', { defaultValue: 'Median Online' })}:</span>
+            <span className="text-sm font-medium text-white">{medianOnline}</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
+            <span className="text-xs text-muted-foreground">{t('analytics.geoBalance.regions', { defaultValue: 'Countries' })}:</span>
+            <span className="text-sm font-medium text-white">{regions.length}</span>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : isError ? (
+          <QueryError onRetry={refetch} />
+        ) : (
+          <>
+            {/* Recommendations */}
+            {recommendations.length > 0 && (
+              <div className="space-y-2 mb-4">
+                <h4 className="text-sm font-medium text-white">{t('analytics.geoBalance.recommendations', { defaultValue: 'Recommendations' })}</h4>
+                {recommendations.map((rec, i) => (
+                  <div key={i} className={cn(
+                    'px-3 py-2 rounded-lg border text-sm',
+                    rec.severity === 'critical' ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
+                  )}>
+                    {rec.message}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Nodes table */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">{t('analytics.geoBalance.node', { defaultValue: 'Node' })}</TableHead>
+                    <TableHead className="text-xs text-center">CPU</TableHead>
+                    <TableHead className="text-xs text-center">RAM</TableHead>
+                    <TableHead className="text-xs text-center">Disk</TableHead>
+                    <TableHead className="text-xs text-right">{t('analytics.geoBalance.online', { defaultValue: 'Online' })}</TableHead>
+                    <TableHead className="text-xs hidden sm:table-cell">{t('analytics.geoBalance.topCountries', { defaultValue: 'Top Countries' })}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nodes.filter(n => n.is_connected && !n.is_disabled).map((node) => (
+                    <TableRow key={node.uuid} className={node.is_overloaded ? 'bg-red-500/5' : ''}>
+                      <TableCell className="text-sm font-medium text-white">
+                        {node.name}
+                        {node.is_overloaded && <span className="ml-1 text-red-400 text-xs">!</span>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={cn('text-xs font-mono',
+                          node.cpu_usage > 90 ? 'text-red-400' : node.cpu_usage > 70 ? 'text-yellow-400' : 'text-green-400'
+                        )}>{node.cpu_usage}%</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={cn('text-xs font-mono',
+                          node.memory_usage > 90 ? 'text-red-400' : node.memory_usage > 70 ? 'text-yellow-400' : 'text-green-400'
+                        )}>{node.memory_usage}%</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={cn('text-xs font-mono',
+                          node.disk_usage > 90 ? 'text-red-400' : node.disk_usage > 70 ? 'text-yellow-400' : 'text-green-400'
+                        )}>{node.disk_usage}%</span>
+                      </TableCell>
+                      <TableCell className="text-sm text-right">{node.users_online}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {node.top_countries.slice(0, 3).map((c) => (
+                            <span key={c.country_code} className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--glass-bg-hover)]/50 text-muted-foreground">
+                              {c.country_code} ({c.user_count})
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Top regions */}
+            {regions.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-white mb-2">{t('analytics.geoBalance.topRegions', { defaultValue: 'Top Regions by Users' })}</h4>
+                <div className="flex flex-wrap gap-2">
+                  {regions.slice(0, 15).map((r) => (
+                    <span key={r.country_code} className="text-xs px-2 py-1 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
+                      {r.country_name} <span className="font-medium text-white">{r.user_count.toLocaleString()}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+
 // ── Torrent / P2P Analytics ──────────────────────────────────────
 
 function TorrentAnalyticsCard() {
@@ -2318,7 +2478,7 @@ function TorrentAnalyticsCard() {
 
 // ── Main Page ───────────────────────────────────────────────────
 
-const VALID_TABS = ['geography', 'users', 'trends', 'shared-hwids', 'providers', 'nodes', 'torrent', 'retention'] as const
+const VALID_TABS = ['geography', 'users', 'trends', 'shared-hwids', 'providers', 'nodes', 'geo-balance', 'torrent', 'retention'] as const
 
 export default function Analytics() {
   const { t } = useTranslation()
@@ -2370,6 +2530,10 @@ export default function Analytics() {
             <Server className="w-4 h-4" />
             {t('analytics.tabs.nodes', { defaultValue: 'Nodes' })}
           </TabsTrigger>
+          <TabsTrigger value="geo-balance" className="gap-1.5">
+            <Activity className="w-4 h-4" />
+            {t('analytics.tabs.geoBalance', { defaultValue: 'Geo-Balance' })}
+          </TabsTrigger>
           <TabsTrigger value="torrent" className="gap-1.5">
             <Shield className="w-4 h-4" />
             {t('analytics.tabs.torrent', { defaultValue: 'P2P / Torrent' })}
@@ -2405,6 +2569,10 @@ export default function Analytics() {
             <NodesCard />
             <NodeMetricsHistoryCard />
           </div>
+        </TabsContent>
+
+        <TabsContent value="geo-balance">
+          <GeoBalanceCard />
         </TabsContent>
 
         <TabsContent value="torrent">
