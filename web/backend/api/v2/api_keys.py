@@ -15,7 +15,11 @@ router = APIRouter()
 AVAILABLE_SCOPES = [
     "users:read",
     "users:write",
+    "users:delete",
     "nodes:read",
+    "nodes:write",
+    "hosts:read",
+    "bulk:write",
     "stats:read",
 ]
 

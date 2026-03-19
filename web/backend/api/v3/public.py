@@ -1,13 +1,13 @@
-"""Public API v3 — users, nodes, stats.
+"""Public API v3 — users, nodes, hosts, stats, bulk operations.
 
 Authenticated via X-API-Key header. Scopes control access.
 """
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from web.backend.api.v3.deps import ApiKeyUser, require_scope
 
@@ -27,6 +27,19 @@ class UserPublic(BaseModel):
     online: Optional[bool] = None
 
 
+class UserCreate(BaseModel):
+    username: str
+    expire_at: str
+    traffic_limit_bytes: Optional[int] = None
+    traffic_limit_strategy: str = "MONTH"
+    hwid_device_limit: Optional[int] = None
+    description: Optional[str] = None
+    telegram_id: Optional[int] = None
+    email: Optional[str] = None
+    tag: Optional[str] = None
+    status: Optional[str] = None
+
+
 class NodePublic(BaseModel):
     uuid: str
     name: str
@@ -34,6 +47,14 @@ class NodePublic(BaseModel):
     is_connected: Optional[bool] = None
     is_disabled: Optional[bool] = None
     users_online: Optional[int] = None
+
+
+class HostPublic(BaseModel):
+    uuid: str
+    remark: Optional[str] = None
+    address: Optional[str] = None
+    port: Optional[int] = None
+    is_disabled: Optional[bool] = None
 
 
 class StatsPublic(BaseModel):
@@ -45,35 +66,83 @@ class StatsPublic(BaseModel):
     total_traffic_bytes: int
 
 
-# ── Users ────────────────────────────────────────────────────────
+class BulkUuidsRequest(BaseModel):
+    uuids: List[str] = Field(..., min_length=1, max_length=500)
+
+
+class BulkResult(BaseModel):
+    success: int
+    failed: int
+    errors: List[dict] = []
+
+
+class SuccessResult(BaseModel):
+    success: bool
+    message: str = ""
+
+
+# ── Helpers ──────────────────────────────────────────────────────
+
+def _service_unavailable():
+    return HTTPException(status_code=503, detail="Service unavailable")
+
+
+def _not_found(entity: str = "Resource"):
+    return HTTPException(status_code=404, detail=f"{entity} not found")
+
+
+def _get_api_client():
+    from shared.api_client import api_client
+    return api_client
+
+
+# ══════════════════════════════════════════════════════════════════
+# Users — Read
+# ══════════════════════════════════════════════════════════════════
 
 @router.get("/users", response_model=List[UserPublic])
 async def list_users(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     api_key: ApiKeyUser = Depends(require_scope("users:read")),
 ):
-    """List users with pagination."""
+    """List users with pagination and optional filtering."""
     from shared.database import db_service
     if not db_service.is_connected:
         return []
 
+    conditions = []
+    args = []
+    idx = 0
+
+    if status:
+        idx += 1
+        conditions.append(f"LOWER(status) = LOWER(${idx})")
+        args.append(status)
+
+    if search:
+        idx += 1
+        conditions.append(
+            f"(LOWER(username) LIKE LOWER(${idx}) OR LOWER(email) LIKE LOWER(${idx}) "
+            f"OR uuid::text LIKE ${idx})"
+        )
+        args.append(f"%{search}%")
+
+    where = " AND ".join(conditions) if conditions else "TRUE"
+    idx += 1
+    args.append(limit)
+    idx += 1
+    args.append(offset)
+
     async with db_service.acquire() as conn:
-        if status:
-            rows = await conn.fetch(
-                "SELECT uuid, username, status, traffic_limit_bytes, "
-                "used_traffic_bytes, expire_at, online "
-                "FROM users WHERE status = $1 ORDER BY username LIMIT $2 OFFSET $3",
-                status, limit, offset,
-            )
-        else:
-            rows = await conn.fetch(
-                "SELECT uuid, username, status, traffic_limit_bytes, "
-                "used_traffic_bytes, expire_at, online "
-                "FROM users ORDER BY username LIMIT $1 OFFSET $2",
-                limit, offset,
-            )
+        rows = await conn.fetch(
+            f"SELECT uuid, username, status, traffic_limit_bytes, "
+            f"used_traffic_bytes, expire_at "
+            f"FROM users WHERE {where} ORDER BY username LIMIT ${idx - 1} OFFSET ${idx}",
+            *args,
+        )
 
     result = []
     for r in rows:
@@ -97,13 +166,12 @@ async def get_user(
     async with db_service.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT uuid, username, status, traffic_limit_bytes, "
-            "used_traffic_bytes, expire_at, online "
+            "used_traffic_bytes, expire_at "
             "FROM users WHERE uuid = $1",
             uuid,
         )
     if not row:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="User not found")
+        raise _not_found("User")
 
     d = dict(row)
     if d.get("expire_at"):
@@ -111,7 +179,95 @@ async def get_user(
     return UserPublic(**d)
 
 
-# ── Nodes ────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════
+# Users — Write
+# ══════════════════════════════════════════════════════════════════
+
+@router.post("/users", response_model=SuccessResult, status_code=201)
+async def create_user(
+    body: UserCreate,
+    api_key: ApiKeyUser = Depends(require_scope("users:write")),
+):
+    """Create a new user via Remnawave Panel API."""
+    try:
+        api = _get_api_client()
+        await api.create_user(
+            username=body.username,
+            expire_at=body.expire_at,
+            traffic_limit_bytes=body.traffic_limit_bytes,
+            traffic_limit_strategy=body.traffic_limit_strategy,
+            hwid_device_limit=body.hwid_device_limit,
+            description=body.description,
+            telegram_id=body.telegram_id,
+            email=body.email,
+            tag=body.tag,
+            status=body.status,
+        )
+        return SuccessResult(success=True, message=f"User {body.username} created")
+    except Exception as e:
+        logger.error("v3 create_user failed: %s", e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/users/{uuid}/enable", response_model=SuccessResult)
+async def enable_user(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("users:write")),
+):
+    """Enable a user."""
+    try:
+        api = _get_api_client()
+        await api.enable_user(uuid)
+        return SuccessResult(success=True, message="User enabled")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/users/{uuid}/disable", response_model=SuccessResult)
+async def disable_user(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("users:write")),
+):
+    """Disable a user."""
+    try:
+        api = _get_api_client()
+        await api.disable_user(uuid)
+        return SuccessResult(success=True, message="User disabled")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/users/{uuid}/reset-traffic", response_model=SuccessResult)
+async def reset_user_traffic(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("users:write")),
+):
+    """Reset user traffic counter."""
+    try:
+        api = _get_api_client()
+        await api.reset_user_traffic(uuid)
+        return SuccessResult(success=True, message="Traffic reset")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/users/{uuid}", response_model=SuccessResult)
+async def delete_user(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("users:delete")),
+):
+    """Delete a user."""
+    try:
+        api = _get_api_client()
+        await api.delete_user(uuid)
+        return SuccessResult(success=True, message="User deleted")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════════
+# Nodes — Read
+# ══════════════════════════════════════════════════════════════════
 
 @router.get("/nodes", response_model=List[NodePublic])
 async def list_nodes(
@@ -148,13 +304,104 @@ async def get_node(
             uuid,
         )
     if not row:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Node not found")
+        raise _not_found("Node")
 
     return NodePublic(**dict(row))
 
 
-# ── Stats ────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════
+# Nodes — Write
+# ══════════════════════════════════════════════════════════════════
+
+@router.post("/nodes/{uuid}/enable", response_model=SuccessResult)
+async def enable_node(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("nodes:write")),
+):
+    """Enable a node."""
+    try:
+        api = _get_api_client()
+        await api.enable_node(uuid)
+        return SuccessResult(success=True, message="Node enabled")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/nodes/{uuid}/disable", response_model=SuccessResult)
+async def disable_node(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("nodes:write")),
+):
+    """Disable a node."""
+    try:
+        api = _get_api_client()
+        await api.disable_node(uuid)
+        return SuccessResult(success=True, message="Node disabled")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/nodes/{uuid}/restart", response_model=SuccessResult)
+async def restart_node(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("nodes:write")),
+):
+    """Restart a node."""
+    try:
+        api = _get_api_client()
+        await api.restart_node(uuid)
+        return SuccessResult(success=True, message="Node restarted")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════════
+# Hosts — Read
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/hosts", response_model=List[HostPublic])
+async def list_hosts(
+    api_key: ApiKeyUser = Depends(require_scope("hosts:read")),
+):
+    """List all hosts."""
+    from shared.database import db_service
+    if not db_service.is_connected:
+        return []
+
+    async with db_service.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT uuid, remark, address, port, is_disabled "
+            "FROM hosts ORDER BY remark"
+        )
+
+    return [HostPublic(**dict(r)) for r in rows]
+
+
+@router.get("/hosts/{uuid}", response_model=HostPublic)
+async def get_host(
+    uuid: str,
+    api_key: ApiKeyUser = Depends(require_scope("hosts:read")),
+):
+    """Get host details by UUID."""
+    from shared.database import db_service
+    if not db_service.is_connected:
+        raise _service_unavailable()
+
+    async with db_service.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT uuid, remark, address, port, is_disabled "
+            "FROM hosts WHERE uuid = $1",
+            uuid,
+        )
+    if not row:
+        raise _not_found("Host")
+
+    return HostPublic(**dict(row))
+
+
+# ══════════════════════════════════════════════════════════════════
+# Stats
+# ══════════════════════════════════════════════════════════════════
 
 @router.get("/stats", response_model=StatsPublic)
 async def get_stats(
@@ -169,7 +416,7 @@ async def get_stats(
         user_stats = await conn.fetchrow(
             "SELECT "
             "  COUNT(*) AS total_users, "
-            "  COUNT(*) FILTER (WHERE status = 'active') AS active_users, "
+            "  COUNT(*) FILTER (WHERE LOWER(status) = 'active') AS active_users, "
             "  COUNT(*) FILTER (WHERE online = true) AS online_users, "
             "  COALESCE(SUM(used_traffic_bytes), 0) AS total_traffic_bytes "
             "FROM users"
@@ -177,7 +424,7 @@ async def get_stats(
         node_stats = await conn.fetchrow(
             "SELECT "
             "  COUNT(*) AS total_nodes, "
-            "  COUNT(*) FILTER (WHERE is_connected = true) AS connected_nodes "
+            "  COUNT(*) FILTER (WHERE is_connected = true AND NOT is_disabled) AS connected_nodes "
             "FROM nodes"
         )
 
@@ -191,19 +438,91 @@ async def get_stats(
     )
 
 
-def _service_unavailable():
-    from fastapi import HTTPException
-    return HTTPException(status_code=503, detail="Service unavailable")
+# ══════════════════════════════════════════════════════════════════
+# Bulk Operations
+# ══════════════════════════════════════════════════════════════════
+
+@router.post("/users/bulk/enable", response_model=BulkResult)
+async def bulk_enable_users(
+    body: BulkUuidsRequest,
+    api_key: ApiKeyUser = Depends(require_scope("bulk:write")),
+):
+    """Enable multiple users at once."""
+    api = _get_api_client()
+    success, failed, errors = 0, 0, []
+    for uuid in body.uuids:
+        try:
+            await api.enable_user(uuid)
+            success += 1
+        except Exception as e:
+            failed += 1
+            errors.append({"uuid": uuid, "error": str(e)})
+    return BulkResult(success=success, failed=failed, errors=errors)
 
 
-# ── API docs (disabled by default, enable via EXTERNAL_API_DOCS=true) ──
+@router.post("/users/bulk/disable", response_model=BulkResult)
+async def bulk_disable_users(
+    body: BulkUuidsRequest,
+    api_key: ApiKeyUser = Depends(require_scope("bulk:write")),
+):
+    """Disable multiple users at once."""
+    api = _get_api_client()
+    success, failed, errors = 0, 0, []
+    for uuid in body.uuids:
+        try:
+            await api.disable_user(uuid)
+            success += 1
+        except Exception as e:
+            failed += 1
+            errors.append({"uuid": uuid, "error": str(e)})
+    return BulkResult(success=success, failed=failed, errors=errors)
+
+
+@router.post("/users/bulk/delete", response_model=BulkResult)
+async def bulk_delete_users(
+    body: BulkUuidsRequest,
+    api_key: ApiKeyUser = Depends(require_scope("bulk:write")),
+):
+    """Delete multiple users at once. Requires both bulk:write scope."""
+    api = _get_api_client()
+    success, failed, errors = 0, 0, []
+    for uuid in body.uuids:
+        try:
+            await api.delete_user(uuid)
+            success += 1
+        except Exception as e:
+            failed += 1
+            errors.append({"uuid": uuid, "error": str(e)})
+    return BulkResult(success=success, failed=failed, errors=errors)
+
+
+@router.post("/users/bulk/reset-traffic", response_model=BulkResult)
+async def bulk_reset_traffic(
+    body: BulkUuidsRequest,
+    api_key: ApiKeyUser = Depends(require_scope("bulk:write")),
+):
+    """Reset traffic for multiple users at once."""
+    api = _get_api_client()
+    success, failed, errors = 0, 0, []
+    for uuid in body.uuids:
+        try:
+            await api.reset_user_traffic(uuid)
+            success += 1
+        except Exception as e:
+            failed += 1
+            errors.append({"uuid": uuid, "error": str(e)})
+    return BulkResult(success=success, failed=failed, errors=errors)
+
+
+# ══════════════════════════════════════════════════════════════════
+# API docs
+# ══════════════════════════════════════════════════════════════════
 
 @router.get("/docs", response_class=HTMLResponse, include_in_schema=False)
 async def api_v3_docs():
     """Swagger UI for public API v3."""
     from web.backend.core.config import get_web_settings
     if not get_web_settings().external_api_docs:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404)
 
     return """<!DOCTYPE html>
@@ -227,7 +546,6 @@ async def api_v3_openapi():
     """OpenAPI schema for public API v3 endpoints only."""
     from web.backend.core.config import get_web_settings
     if not get_web_settings().external_api_docs:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404)
 
     from fastapi.openapi.utils import get_openapi
@@ -239,6 +557,8 @@ async def api_v3_openapi():
     return get_openapi(
         title="Remnawave Public API",
         version="3.0.0",
-        description="Public API authenticated via X-API-Key header.",
+        description="Public API authenticated via X-API-Key header. "
+        "Scopes: users:read, users:write, users:delete, nodes:read, nodes:write, "
+        "hosts:read, bulk:write, stats:read",
         routes=temp.routes,
     )
