@@ -218,4 +218,30 @@ export const notificationsApi = {
   acknowledgeAlerts: async (ids?: number[]): Promise<void> => {
     await client.post('/alert-logs/acknowledge', { ids: ids || [] })
   },
+
+  // Alert Templates
+  listAlertTemplates: async (): Promise<AlertTemplate[]> => {
+    const { data } = await client.get('/alert-templates')
+    return Array.isArray(data) ? data : []
+  },
+  activateAlertTemplate: async (templateId: string) => {
+    const { data } = await client.post(`/alert-templates/${templateId}/activate`)
+    return data
+  },
+}
+
+export interface AlertTemplate {
+  id: string
+  name: string
+  description: string
+  metric: string
+  operator: string
+  threshold: number
+  duration_minutes: number
+  cooldown_minutes: number
+  severity: string
+  channels: string[]
+  title_template: string
+  body_template: string
+  is_activated: boolean
 }

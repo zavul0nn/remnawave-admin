@@ -77,4 +77,14 @@ export const backupApi = {
     const { data } = await client.post('/backups/import-users', { filename })
     return data
   },
+
+  // Full config export/import
+  exportFullConfig: async () => {
+    const { data } = await client.post('/backups/export-full-config')
+    return data
+  },
+  importFullConfig: async (config: Record<string, unknown>, strategy = 'skip', sections?: string[]) => {
+    const { data } = await client.post('/backups/import-full-config', { config, strategy, sections })
+    return data
+  },
 }

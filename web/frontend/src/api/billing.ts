@@ -90,4 +90,14 @@ export const billingApi = {
   deleteNode: async (uuid: string) => {
     await client.delete(`/billing/nodes/${uuid}`)
   },
+
+  // Financial Analytics
+  getAnalyticsOverview: async () => {
+    const { data } = await client.get('/billing/analytics/overview')
+    return data
+  },
+  getAnalyticsPerNode: async () => {
+    const { data } = await client.get('/billing/analytics/per-node')
+    return data
+  },
 }

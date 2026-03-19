@@ -217,6 +217,11 @@ export const advancedAnalyticsApi = {
     return data
   },
 
+  geoBalance: async (days = 7): Promise<GeoBalanceData> => {
+    const { data } = await client.get('/analytics/advanced/geo-balance', { params: { days } })
+    return data
+  },
+
   cohortMatrix: async (granularity = 'week', months = 3): Promise<CohortMatrixData> => {
     const { data } = await client.get('/analytics/advanced/cohort-matrix', { params: { granularity, months } })
     return data
@@ -282,6 +287,41 @@ export interface LtvData {
   avg_lifetime_days: number
   sample_size: number
   estimated_ltv: number
+}
+
+export interface GeoBalanceNode {
+  uuid: string
+  name: string
+  is_connected: boolean
+  is_disabled: boolean
+  cpu_usage: number
+  memory_usage: number
+  disk_usage: number
+  users_online: number
+  is_overloaded: boolean
+  top_countries: { country_code: string; country_name: string; user_count: number; connection_count: number }[]
+}
+
+export interface GeoBalanceRecommendation {
+  type: string
+  severity: string
+  node: string
+  node_uuid: string
+  message: string
+}
+
+export interface GeoBalanceRegion {
+  country_code: string
+  country_name: string
+  user_count: number
+}
+
+export interface GeoBalanceData {
+  nodes: GeoBalanceNode[]
+  recommendations: GeoBalanceRecommendation[]
+  regions: GeoBalanceRegion[]
+  median_users_online: number
+  overloaded_count: number
 }
 
 export interface TorrentStatsResponse {

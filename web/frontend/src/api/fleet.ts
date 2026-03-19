@@ -212,3 +212,73 @@ export async function bulkImportScripts(files: ImportUrlRequest[]): Promise<Bulk
   const { data } = await client.post('/fleet/scripts/bulk-import', { files })
   return data
 }
+
+// ── Scheduled Tasks API ──────────────────────────────────────────
+
+export interface ScheduledTask {
+  id: number
+  script_id: number
+  node_uuid: string
+  cron_expression: string
+  is_enabled: boolean
+  env_vars: Record<string, string> | null
+  last_run_at: string | null
+  last_status: string | null
+  next_run_at: string | null
+  run_count: number
+  created_by: number | null
+  created_at: string | null
+  script_name?: string | null
+  node_name?: string | null
+}
+
+export async function listScheduledTasks(): Promise<{ items: ScheduledTask[]; total: number }> {
+  const { data } = await client.get('/fleet/scripts/scheduled-tasks')
+  return data
+}
+
+export async function createScheduledTask(body: {
+  script_id: number
+  node_uuid: string
+  cron_expression: string
+  is_enabled?: boolean
+  env_vars?: Record<string, string>
+}): Promise<ScheduledTask> {
+  const { data } = await client.post('/fleet/scripts/scheduled-tasks', body)
+  return data
+}
+
+export async function updateScheduledTask(id: number, body: {
+  cron_expression?: string
+  is_enabled?: boolean
+  env_vars?: Record<string, string>
+}): Promise<ScheduledTask> {
+  const { data } = await client.patch(`/fleet/scripts/scheduled-tasks/${id}`, body)
+  return data
+}
+
+export async function deleteScheduledTask(id: number): Promise<void> {
+  await client.delete(`/fleet/scripts/scheduled-tasks/${id}`)
+}
+
+export async function toggleScheduledTask(id: number): Promise<ScheduledTask> {
+  const { data } = await client.post(`/fleet/scripts/scheduled-tasks/${id}/toggle`)
+  return data
+}
+
+// ── Node Bulk Operations ─────────────────────────────────────────
+
+export async function bulkGenerateTokens(uuids?: string[]) {
+  const { data } = await client.post('/nodes/bulk/generate-tokens', uuids?.length ? { uuids } : {})
+  return data
+}
+
+export async function bulkInstallCommands(uuids?: string[]) {
+  const { data } = await client.post('/nodes/bulk/install-commands', uuids?.length ? { uuids } : {})
+  return data
+}
+
+export async function bulkRevokeTokens(uuids?: string[]) {
+  const { data } = await client.post('/nodes/bulk/revoke-tokens', uuids?.length ? { uuids } : {})
+  return data
+}
