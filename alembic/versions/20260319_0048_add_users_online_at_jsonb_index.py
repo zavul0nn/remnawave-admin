@@ -16,7 +16,7 @@ def upgrade() -> None:
     # Functional index for online_at filtering (stored in JSONB)
     # Partial index: only rows where onlineAt is not null
     op.execute(
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_online_at "
+        "CREATE INDEX IF NOT EXISTS idx_users_online_at "
         "ON users (((raw_data->'userTraffic'->>'onlineAt')::timestamptz)) "
         "WHERE raw_data->'userTraffic'->>'onlineAt' IS NOT NULL"
     )
