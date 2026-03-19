@@ -1836,7 +1836,7 @@ function RetentionCard() {
               {t('analytics.retention.title', { defaultValue: 'Retention Analysis' })}
             </CardTitle>
             <InfoTooltip
-              text={t('analytics.retention.tooltip', { defaultValue: 'Когортный анализ удержания: показывает какой % пользователей, зарегистрированных в каждую неделю, до сих пор активен. Retention — текущий статус ACTIVE. With Traffic — хотя бы раз использовали трафик. Active Sub — подписка ещё не истекла.' })}
+              text={t('analytics.retention.tooltip')}
               side="right"
             />
           </div>
@@ -1918,27 +1918,27 @@ function RetentionCard() {
                 <TableRow>
                   <TableHead className="text-xs">
                     {t('analytics.retention.week', { defaultValue: 'Week' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">Неделя регистрации</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.weekSub')}</span>
                   </TableHead>
                   <TableHead className="text-xs text-right">
                     {t('analytics.retention.total', { defaultValue: 'Total' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">Зарегистрировано</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.totalSub')}</span>
                   </TableHead>
                   <TableHead className="text-xs text-right">
                     {t('analytics.retention.active', { defaultValue: 'Active' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">Сейчас активны</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.activeSub')}</span>
                   </TableHead>
                   <TableHead className="text-xs text-center">
                     {t('analytics.retention.retentionPct', { defaultValue: 'Retention' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">% со статусом ACTIVE</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.retentionPctSub')}</span>
                   </TableHead>
                   <TableHead className="text-xs text-center">
                     {t('analytics.retention.trafficPct', { defaultValue: 'With Traffic' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">% использовали трафик</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.trafficPctSub')}</span>
                   </TableHead>
                   <TableHead className="text-xs text-center">
                     {t('analytics.retention.subPct', { defaultValue: 'Active Sub' })}
-                    <span className="block text-[10px] text-muted-foreground font-normal">% с активной подпиской</span>
+                    <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.retention.subPctSub')}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -2001,7 +2001,7 @@ function ChurnCard() {
               {t('analytics.churn.title', { defaultValue: 'Churn Rate' })}
             </CardTitle>
             <InfoTooltip
-              text={t('analytics.churn.tooltip', { defaultValue: 'Отток пользователей: показывает сколько активных пользователей перестали подключаться в каждом периоде. Churn = (предыдущие активные + новые - текущие активные) / предыдущие активные. Чем ниже — тем лучше.' })}
+              text={t('analytics.churn.tooltip')}
               side="right"
             />
           </div>
@@ -2077,19 +2077,19 @@ function ChurnCard() {
                     </TableHead>
                     <TableHead className="text-xs text-right">
                       Active
-                      <span className="block text-[10px] text-muted-foreground font-normal">Подключались в период</span>
+                      <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.churn.activeSub')}</span>
                     </TableHead>
                     <TableHead className="text-xs text-right">
                       New
-                      <span className="block text-[10px] text-muted-foreground font-normal">Зарегистрировались</span>
+                      <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.churn.newSub')}</span>
                     </TableHead>
                     <TableHead className="text-xs text-right">
                       Churned
-                      <span className="block text-[10px] text-muted-foreground font-normal">Перестали подключаться</span>
+                      <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.churn.churnedSub')}</span>
                     </TableHead>
                     <TableHead className="text-xs text-center">
                       Churn %
-                      <span className="block text-[10px] text-muted-foreground font-normal">% оттока</span>
+                      <span className="block text-[10px] text-muted-foreground font-normal">{t('analytics.churn.churnPctSub')}</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -2146,7 +2146,7 @@ function LtvCard() {
             {t('analytics.ltv.title', { defaultValue: 'User Lifetime Value' })}
           </CardTitle>
           <InfoTooltip
-            text={t('analytics.ltv.tooltip', { defaultValue: 'Оценка времени жизни пользователя: среднее количество дней между регистрацией и последней активностью. LTV = средний срок жизни × стоимость содержания на пользователя в месяц. Данные за последние 6 месяцев.' })}
+            text={t('analytics.ltv.tooltip')}
             side="right"
           />
         </div>
@@ -2161,21 +2161,21 @@ function LtvCard() {
               <span className="text-xs text-muted-foreground text-center">
                 {t('analytics.ltv.avgLifetime', { defaultValue: 'Avg Lifetime (days)' })}
               </span>
-              <span className="text-[10px] text-muted-foreground">Среднее время от регистрации до последнего подключения</span>
+              <span className="text-[10px] text-muted-foreground">{t('analytics.ltv.avgLifetimeSub')}</span>
             </div>
             <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
               <span className="text-2xl font-bold text-primary-400">${ltv.toFixed(2)}</span>
               <span className="text-xs text-muted-foreground text-center">
                 {t('analytics.ltv.estimatedLtv', { defaultValue: 'Estimated LTV' })}
               </span>
-              <span className="text-[10px] text-muted-foreground">Затраты на пользователя за всё время</span>
+              <span className="text-[10px] text-muted-foreground">{t('analytics.ltv.estimatedLtvSub')}</span>
             </div>
             <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-[var(--glass-bg-hover)]/30 border border-[var(--glass-border)]">
               <span className="text-2xl font-bold text-white">{sampleSize.toLocaleString()}</span>
               <span className="text-xs text-muted-foreground text-center">
                 {t('analytics.ltv.sampleSize', { defaultValue: 'Sample Size' })}
               </span>
-              <span className="text-[10px] text-muted-foreground">Пользователей с активностью за 6 мес</span>
+              <span className="text-[10px] text-muted-foreground">{t('analytics.ltv.sampleSizeSub')}</span>
             </div>
           </div>
         )}

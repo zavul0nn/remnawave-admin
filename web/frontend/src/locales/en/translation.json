@@ -1782,7 +1782,7 @@
     },
     "retention": {
       "title": "Retention Analysis",
-      "tooltip": "Weekly cohort retention: how many users registered each week remain active",
+      "tooltip": "Cohort retention analysis: shows what % of users registered each week are still active. Retention — current ACTIVE status. With Traffic — used traffic at least once. Active Sub — subscription not yet expired.",
       "weeks": "weeks",
       "overallRetention": "Overall Retention",
       "totalRegistered": "Registered",
@@ -1793,7 +1793,38 @@
       "active": "Active",
       "retentionPct": "Retention",
       "trafficPct": "With Traffic",
-      "subPct": "Active Sub"
+      "subPct": "Active Sub",
+      "weekSub": "Registration week",
+      "totalSub": "Registered count",
+      "activeSub": "Currently active",
+      "retentionPctSub": "% with ACTIVE status",
+      "trafficPctSub": "% who used traffic",
+      "subPctSub": "% with active subscription"
+    },
+    "churn": {
+      "title": "User Churn Rate",
+      "tooltip": "User churn: shows how many active users stopped connecting each period. Churn = (prev active + new - current active) / prev active. Lower is better.",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "months": "mo",
+      "avgChurn": "Avg Churn",
+      "periods": "Periods",
+      "noData": "No churn data available",
+      "period": "Period",
+      "activeSub": "Connected during period",
+      "newSub": "Registered",
+      "churnedSub": "Stopped connecting",
+      "churnPctSub": "% churned"
+    },
+    "ltv": {
+      "title": "User Lifetime Value",
+      "tooltip": "User lifetime estimate: average days between registration and last activity. LTV = avg lifetime × cost per user per month. Based on last 6 months data.",
+      "avgLifetime": "Avg Lifetime (days)",
+      "avgLifetimeSub": "Average time from registration to last connection",
+      "estimatedLtv": "Estimated LTV",
+      "estimatedLtvSub": "Cost per user over entire lifetime",
+      "sampleSize": "Sample Size",
+      "sampleSizeSub": "Users with activity in last 6 months"
     }
   },
   "automations": {
