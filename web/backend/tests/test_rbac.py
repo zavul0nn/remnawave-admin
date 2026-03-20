@@ -87,6 +87,7 @@ class TestRBACMatrix:
         ("mailserver", "view"), ("mailserver", "create"), ("mailserver", "edit"), ("mailserver", "delete"),
         ("backups", "view"), ("backups", "create"), ("backups", "delete"),
         ("api_keys", "view"), ("api_keys", "create"), ("api_keys", "edit"), ("api_keys", "delete"),
+        ("bedolaga", "view"),
     ]
 
     @pytest.mark.parametrize("resource,action", RESOURCES_ACTIONS)

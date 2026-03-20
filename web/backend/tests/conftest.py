@@ -57,6 +57,7 @@ SUPERADMIN_PERMISSIONS: Set[Tuple[str, str]] = {
     ("mailserver", "view"), ("mailserver", "create"), ("mailserver", "edit"), ("mailserver", "delete"),
     ("backups", "view"), ("backups", "create"), ("backups", "delete"),
     ("api_keys", "view"), ("api_keys", "create"), ("api_keys", "edit"), ("api_keys", "delete"),
+    ("bedolaga", "view"),
 }
 
 VIEWER_PERMISSIONS: Set[Tuple[str, str]] = {

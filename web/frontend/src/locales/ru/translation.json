@@ -119,6 +119,7 @@
     "backups": "Бэкапы",
     "apiKeys": "API и Вебхуки",
     "squads": "Сквады",
+    "bedolaga": "Bedolaga",
     "sections": {
       "core": "Основное",
       "security": "Безопасность",
@@ -3220,6 +3221,28 @@
     "drop": "Сбросить все",
     "dropped": "Соединения сброшены",
     "noIps": "Активных соединений не найдено"
+  },
+  "bedolaga": {
+    "title": "Bedolaga Bot",
+    "subtitle": "Статистика и мониторинг Bedolaga Bot",
+    "tooltip": "Данные загружаются из API Bedolaga Bot в реальном времени",
+    "notConfigured": "Bedolaga API не настроен",
+    "notConfiguredDesc": "Добавьте переменные окружения BEDOLAGA_API_URL и BEDOLAGA_API_TOKEN для подключения к Bedolaga Bot API.",
+    "online": "Online",
+    "offline": "Offline",
+    "maintenance": "Обслуживание",
+    "stats": {
+      "totalUsers": "Пользователи",
+      "active": "Активных",
+      "blockedUsers": "Заблокированы",
+      "activeSubs": "Подписки",
+      "expired": "Истекших",
+      "depositsToday": "Депозиты сегодня",
+      "totalBalance": "Общий баланс",
+      "openTickets": "Открытые тикеты",
+      "botStatus": "Статус бота",
+      "services": "Сервисы"
+    }
   },
   "notFound": {
     "title": "Страница не найдена",

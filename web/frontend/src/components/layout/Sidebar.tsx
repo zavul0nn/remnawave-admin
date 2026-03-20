@@ -22,6 +22,7 @@ import {
   Mail,
   HardDrive,
   Key,
+  Bot,
   ShieldCheck,
   UsersRound,
   ChevronDown,
@@ -126,6 +127,7 @@ const navigation: NavigationEntry[] = [
   { name: 'nav.analytics', href: '/analytics', icon: BarChart3, permission: { resource: 'analytics', action: 'view' } },
   { name: 'nav.backups', href: '/backups', icon: HardDrive, permission: { resource: 'backups', action: 'view' } },
   { name: 'nav.apiKeys', href: '/api-keys', icon: Key, permission: { resource: 'api_keys', action: 'view' } },
+  { name: 'nav.bedolaga', href: '/bedolaga', icon: Bot, permission: { resource: 'bedolaga', action: 'view' } },
   // Administration
   { type: 'section', name: 'nav.sections.admin' },
   {

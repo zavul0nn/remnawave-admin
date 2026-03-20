@@ -119,6 +119,7 @@
     "backups": "Backups",
     "apiKeys": "API & Webhooks",
     "squads": "Squads",
+    "bedolaga": "Bedolaga",
     "sections": {
       "core": "Core",
       "security": "Security",
@@ -3220,6 +3221,28 @@
     "drop": "Drop All",
     "dropped": "Connections dropped",
     "noIps": "No active connections found"
+  },
+  "bedolaga": {
+    "title": "Bedolaga Bot",
+    "subtitle": "Bedolaga Bot statistics and monitoring",
+    "tooltip": "Data is fetched from Bedolaga Bot API in real time",
+    "notConfigured": "Bedolaga API is not configured",
+    "notConfiguredDesc": "Add BEDOLAGA_API_URL and BEDOLAGA_API_TOKEN environment variables to connect to the Bedolaga Bot API.",
+    "online": "Online",
+    "offline": "Offline",
+    "maintenance": "Maintenance",
+    "stats": {
+      "totalUsers": "Users",
+      "active": "Active",
+      "blockedUsers": "Blocked",
+      "activeSubs": "Subscriptions",
+      "expired": "Expired",
+      "depositsToday": "Deposits today",
+      "totalBalance": "Total balance",
+      "openTickets": "Open tickets",
+      "botStatus": "Bot status",
+      "services": "Services"
+    }
   },
   "notFound": {
     "title": "Page Not Found",
