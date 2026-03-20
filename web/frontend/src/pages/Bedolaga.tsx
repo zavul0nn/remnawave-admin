@@ -23,16 +23,19 @@ interface OverviewData {
   users?: { total?: number; active?: number; blocked?: number; balance_rubles?: number }
   subscriptions?: { active?: number; expired?: number }
   support?: { open_tickets?: number }
-  payments?: { deposits_today_rubles?: number }
+  payments?: { today_rubles?: number; today_kopeks?: number }
 }
 
 interface HealthData {
   status?: string
   api_version?: string
   bot_version?: string
-  monitoring?: boolean
-  maintenance?: boolean
-  webhooks?: boolean
+  features?: {
+    monitoring?: boolean
+    maintenance?: boolean
+    reporting?: boolean
+    webhooks?: boolean
+  }
 }
 
 function StatCard({
@@ -135,7 +138,7 @@ export default function Bedolaga() {
   const support = overview?.support
 
   const healthOk = health?.status === 'ok'
-  const inMaintenance = health?.maintenance
+  const inMaintenance = health?.features?.maintenance
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -212,7 +215,7 @@ export default function Bedolaga() {
           <StatCard
             icon={CreditCard}
             label={t('bedolaga.stats.depositsToday')}
-            value={payments?.deposits_today_rubles != null ? `${payments.deposits_today_rubles.toLocaleString()} ₽` : '—'}
+            value={payments?.today_rubles != null ? `${payments.today_rubles.toLocaleString()} ₽` : '—'}
             color="text-amber-400"
           />
           <StatCard
@@ -244,7 +247,7 @@ export default function Bedolaga() {
             icon={Bot}
             label={t('bedolaga.stats.services')}
             value={
-              [health?.monitoring && 'Mon', health?.webhooks && 'WH']
+              [health?.features?.monitoring && 'Mon', health?.features?.webhooks && 'WH', health?.features?.reporting && 'Rep']
                 .filter(Boolean)
                 .join(' / ') || '—'
             }
