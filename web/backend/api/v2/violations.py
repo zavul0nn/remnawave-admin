@@ -480,6 +480,33 @@ async def remove_from_whitelist(
     return {"status": "ok", "user_uuid": user_uuid}
 
 
+@router.post("/annul-all")
+async def annul_all_violations(
+    request: Request,
+    data: AnnulAllViolationsRequest = None,
+    admin: AdminUser = Depends(require_permission("violations", "resolve")),
+    db: DatabaseService = Depends(get_db),
+):
+    """Аннулировать все нерассмотренные нарушения (глобально)."""
+    comment = data.comment if data else None
+    count = await db.annul_all_pending_violations(
+        admin_telegram_id=admin.telegram_id,
+        admin_comment=comment,
+    )
+
+    await write_audit_log(
+        admin_id=admin.account_id,
+        admin_username=admin.username,
+        action="violation.annul_global",
+        resource="violations",
+        resource_id="all",
+        details=json.dumps({"action": "annulled", "count": count, "comment": comment}),
+        ip_address=get_client_ip(request),
+    )
+
+    return {"status": "ok", "action": "annulled", "count": count}
+
+
 @router.post("/user/{user_uuid}/annul-all")
 async def annul_user_violations(
     request: Request,

@@ -4318,6 +4318,47 @@ class DatabaseService:
             logger.error("Error annulling violations for user %s: %s", user_uuid, e, exc_info=True)
             return 0
 
+    async def annul_all_pending_violations(
+        self,
+        admin_telegram_id: int,
+        admin_comment: Optional[str] = None,
+    ) -> int:
+        """
+        Аннулировать все нерассмотренные нарушения (глобально).
+
+        Returns:
+            Количество аннулированных записей
+        """
+        if not self.is_connected:
+            return 0
+
+        try:
+            async with self.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    UPDATE violations
+                    SET action_taken = 'annulled',
+                        action_taken_at = NOW(),
+                        action_taken_by = $1,
+                        admin_comment = $2,
+                        score = 0,
+                        temporal_score = 0,
+                        geo_score = 0,
+                        asn_score = 0,
+                        profile_score = 0,
+                        device_score = 0,
+                        hwid_score = 0
+                    WHERE action_taken IS NULL
+                    """,
+                    admin_telegram_id, admin_comment,
+                )
+                count = int(result.split()[-1]) if result else 0
+                return count
+
+        except Exception as e:
+            logger.error("Error annulling all violations: %s", e, exc_info=True)
+            return 0
+
     async def mark_violation_notified(self, violation_id: int) -> bool:
         """Отметить нарушение как отправленное в уведомлении."""
         if not self.is_connected:

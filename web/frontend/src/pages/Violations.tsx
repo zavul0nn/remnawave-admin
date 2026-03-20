@@ -1942,7 +1942,7 @@ export default function Violations() {
   const [commentDialog, setCommentDialog] = useState<{
     open: boolean
     violationId: number
-    action: 'block' | 'ignore' | 'annulled' | 'annul-all'
+    action: 'block' | 'ignore' | 'annulled' | 'annul-all' | 'annul-all-global'
     userUuid?: string
   } | null>(null)
   const [commentText, setCommentText] = useState('')
@@ -1985,10 +1985,29 @@ export default function Violations() {
   const { mutate: annulAllMutate } = annulAllViolations
   const handleAnnulAll = (userUuid: string) => setCommentDialog({ open: true, violationId: 0, action: 'annul-all', userUuid })
 
+  const annulAllGlobal = useMutation({
+    mutationFn: ({ comment }: { comment?: string }) => client.post('/violations/annul-all', { comment }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['violations'] })
+      queryClient.invalidateQueries({ queryKey: ['violationStats'] })
+      queryClient.invalidateQueries({ queryKey: ['topViolators'] })
+      queryClient.invalidateQueries({ queryKey: ['violationDetail'] })
+      setSelectedViolationId(null)
+      toast.success(t('violations.toast.annulledAllGlobal', { count: res.data?.count ?? 0 }))
+    },
+    onError: (err: Error & { response?: { data?: { detail?: string } } }) => {
+      toast.error(err.response?.data?.detail || err.message || t('common.error'))
+    },
+  })
+  const { mutate: annulAllGlobalMutate } = annulAllGlobal
+  const handleAnnulAllGlobal = () => setCommentDialog({ open: true, violationId: 0, action: 'annul-all-global' })
+
   const handleConfirmAction = () => {
     if (!commentDialog) return
     const comment = commentText.trim() || undefined
-    if (commentDialog.action === 'annul-all' && commentDialog.userUuid) {
+    if (commentDialog.action === 'annul-all-global') {
+      annulAllGlobalMutate({ comment })
+    } else if (commentDialog.action === 'annul-all' && commentDialog.userUuid) {
       annulAllMutate({ userUuid: commentDialog.userUuid, comment })
     } else if (commentDialog.action === 'annulled') {
       annulMutate({ id: commentDialog.violationId, comment })
@@ -2109,6 +2128,14 @@ export default function Violations() {
           </p>
         </div>
         <div className="page-header-actions">
+          <Button
+            variant="secondary"
+            onClick={handleAnnulAllGlobal}
+            className="gap-2 text-amber-400 hover:text-amber-300"
+          >
+            <XCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('violations.actions.annulAllGlobal')}</span>
+          </Button>
           <Button
             variant="secondary"
             onClick={() => setShowFilters(!showFilters)}

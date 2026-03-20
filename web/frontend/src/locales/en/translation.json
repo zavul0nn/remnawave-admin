@@ -1138,6 +1138,7 @@
       "annul": "Annul",
       "annulTooltip": "Annul as false positive. Score will be reset to zero.",
       "annulAll": "Annul all",
+      "annulAllGlobal": "Annul all violations",
       "whitelistTooltip": "Add to whitelist — violations for this user will not be recorded.",
       "resolve": "Take action",
       "commentPlaceholder": "Comment (optional)",
@@ -1255,6 +1256,7 @@
       "resolved": "Violation processed",
       "annulled": "Violation annulled",
       "annulledAll": "All user violations annulled",
+      "annulledAllGlobal": "All violations annulled ({{count}})",
       "whitelistAdded": "User added to whitelist",
       "whitelistRemoved": "User removed from whitelist"
     },
