@@ -48,17 +48,49 @@ CONNECTIONS_RETENTION_DAYS = 30
 # Semaphore: limit concurrent background violation detection batches
 _violation_semaphore = asyncio.Semaphore(3)
 
-# Track background tasks to prevent unbounded accumulation
+# ── Violation detection queue ──────────────────────────────
+# Instead of spawning a task per batch, accumulate user UUIDs in a set
+# and drain them in a single background worker. No data is ever dropped.
+_pending_violation_users: set = set()
+_violation_worker_task: Optional[asyncio.Task] = None
+_VIOLATION_DRAIN_INTERVAL = 5.0  # seconds between drain cycles
+
+async def _violation_worker():
+    """Single long-lived worker that drains _pending_violation_users."""
+    while True:
+        try:
+            await asyncio.sleep(_VIOLATION_DRAIN_INTERVAL)
+            if not _pending_violation_users:
+                continue
+
+            # Atomically grab all pending UUIDs
+            batch = set(_pending_violation_users)
+            _pending_violation_users.clear()
+
+            await _run_violation_detection(batch)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error("Violation worker error: %s", e, exc_info=True)
+
+def _enqueue_violation_users(user_uuids: set):
+    """Add users to the pending violation check queue and ensure the worker is running."""
+    global _violation_worker_task
+    _pending_violation_users.update(user_uuids)
+
+    # Start worker if not running
+    if _violation_worker_task is None or _violation_worker_task.done():
+        _violation_worker_task = asyncio.create_task(_violation_worker())
+
+# ── Generic background task helper (for torrent etc.) ──────
 _background_tasks: set = set()
 _MAX_BACKGROUND_TASKS = 20
 
 def _schedule_background_task(coro):
     """Schedule a background task with tracking and bounded concurrency."""
-    # Clean up completed tasks
     done = {t for t in _background_tasks if t.done()}
     _background_tasks.difference_update(done)
 
-    # Drop task if too many are queued (backpressure)
     if len(_background_tasks) >= _MAX_BACKGROUND_TASKS:
         logger.warning(
             "Background task dropped: %d tasks already queued (limit %d)",
@@ -408,9 +440,7 @@ async def receive_connections(
                 for conn in report.connections
                 if user_uuid_cache.get(conn.user_email)
             )
-            _schedule_background_task(
-                _run_violation_detection(affected_user_uuids)
-            )
+            _enqueue_violation_users(affected_user_uuids)
         except Exception as e:
             logger.warning("Error in post-processing: %s", e)
 
