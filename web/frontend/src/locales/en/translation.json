@@ -3242,6 +3242,28 @@
       "openTickets": "Open tickets",
       "botStatus": "Bot status",
       "services": "Services"
+    },
+    "sections": {
+      "newUsers": "New users",
+      "income": "Income & Expenses",
+      "paymentMethods": "Payment methods",
+      "referrals": "Referral program",
+      "plans": "Subscription plans"
+    },
+    "periods": {
+      "today": "Today",
+      "week": "Week",
+      "month": "Month"
+    },
+    "income": {
+      "revenue": "Revenue",
+      "expenses": "Expenses"
+    },
+    "trial": "Trial",
+    "conversions": "Conversions",
+    "referrals": {
+      "totalReferrers": "Referrers",
+      "top": "Top referrers"
     }
   },
   "notFound": {

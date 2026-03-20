@@ -3242,6 +3242,28 @@
       "openTickets": "Открытые тикеты",
       "botStatus": "Статус бота",
       "services": "Сервисы"
+    },
+    "sections": {
+      "newUsers": "Новые пользователи",
+      "income": "Доходы и расходы",
+      "paymentMethods": "Методы оплаты",
+      "referrals": "Реферальная программа",
+      "plans": "Тарифные планы"
+    },
+    "periods": {
+      "today": "Сегодня",
+      "week": "Неделя",
+      "month": "Месяц"
+    },
+    "income": {
+      "revenue": "Доход",
+      "expenses": "Расход"
+    },
+    "trial": "Пробных",
+    "conversions": "Конверсий",
+    "referrals": {
+      "totalReferrers": "Рефереров",
+      "top": "Топ рефереры"
     }
   },
   "notFound": {
