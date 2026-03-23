@@ -11,6 +11,7 @@ TriggerType = Literal["event", "schedule", "threshold"]
 ActionType = Literal[
     "disable_user", "block_user", "notify", "restart_node",
     "cleanup_expired", "reset_traffic", "force_sync",
+    "enable_node", "disable_node",
 ]
 LogResult = Literal["success", "error", "skipped"]
 
