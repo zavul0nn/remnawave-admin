@@ -59,15 +59,6 @@ async def list_users(
     ))
 
 
-@router.get("/{user_id}")
-async def get_user(
-    user_id: int = Path(...),
-    admin: AdminUser = Depends(require_permission("bedolaga_customers", "view")),
-):
-    """Детальная информация о клиенте."""
-    return await proxy_request(lambda: bedolaga_client.get_user(user_id))
-
-
 @router.get("/by-telegram/{telegram_id}")
 async def get_user_by_telegram(
     telegram_id: int = Path(...),
@@ -75,6 +66,15 @@ async def get_user_by_telegram(
 ):
     """Найти клиента по Telegram ID."""
     return await proxy_request(lambda: bedolaga_client.get_user_by_telegram(telegram_id))
+
+
+@router.get("/{user_id}")
+async def get_user(
+    user_id: int = Path(...),
+    admin: AdminUser = Depends(require_permission("bedolaga_customers", "view")),
+):
+    """Детальная информация о клиенте."""
+    return await proxy_request(lambda: bedolaga_client.get_user(user_id))
 
 
 @router.patch("/{user_id}")

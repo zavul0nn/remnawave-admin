@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -11,7 +11,6 @@ import {
   Calendar,
   Wallet,
   Plus,
-  Minus,
   Clock,
   HardDrive,
   Smartphone,
@@ -23,8 +22,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export default function BedolagaCustomerDetail() {
   const { id } = useParams<{ id: string }>()
@@ -54,6 +59,17 @@ export default function BedolagaCustomerDetail() {
     staleTime: 30_000,
   })
 
+  // Find linked Remnawave user by telegram_id
+  const { data: remnawaveUser } = useQuery({
+    queryKey: ['remnawave-user-by-tg', user?.telegram_id],
+    queryFn: () => client.get(`/users?search=${user.telegram_id}&limit=1`).then((r) => {
+      const items = r.data?.items || r.data?.users || []
+      return Array.isArray(items) && items.length > 0 ? items[0] : null
+    }),
+    enabled: !!user?.telegram_id,
+    staleTime: 60_000,
+  })
+
   // Mutations
   const balanceMutation = useMutation({
     mutationFn: (data: { amount_kopeks: number; reason?: string }) =>
@@ -80,6 +96,18 @@ export default function BedolagaCustomerDetail() {
     onError: () => toast.error(t('common.error')),
   })
 
+  const handleBalanceSubmit = () => {
+    const kopeks = Math.round(parseFloat(balanceAmount) * 100)
+    if (isNaN(kopeks)) return
+    balanceMutation.mutate({ amount_kopeks: kopeks, reason: balanceReason || undefined })
+  }
+
+  const handleExtendSubmit = () => {
+    const days = parseInt(extendDays)
+    if (!days || days < 1) return
+    extendMutation.mutate({ days })
+  }
+
   const formatDate = (d?: string) => {
     if (!d) return '—'
     return new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -101,7 +129,7 @@ export default function BedolagaCustomerDetail() {
   }
 
   const sub = user.subscription
-  const transactions = txData?.items || []
+  const transactions = Array.isArray(txData?.items) ? txData.items : []
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -129,6 +157,15 @@ export default function BedolagaCustomerDetail() {
           </div>
         </div>
         <div className="page-header-actions">
+          {/* Cross-link to Remnawave user */}
+          {remnawaveUser?.uuid && (
+            <Link to={`/users/${remnawaveUser.uuid}`}>
+              <Button variant="secondary" className="gap-2 text-xs">
+                <ExternalLink className="w-4 h-4" />
+                <span className="hidden sm:inline">Remnawave</span>
+              </Button>
+            </Link>
+          )}
           <Button variant="secondary" size="icon" onClick={() => queryClient.invalidateQueries({ queryKey: ['bedolaga-customer', id] })}>
             <RefreshCw className="w-5 h-5" />
           </Button>
@@ -241,69 +278,69 @@ export default function BedolagaCustomerDetail() {
       </div>
 
       {/* Balance dialog */}
-      <ConfirmDialog
-        open={balanceDialog}
-        onOpenChange={setBalanceDialog}
-        title={t('bedolaga.customerDetail.changeBalance')}
-        description={t('bedolaga.customerDetail.changeBalanceDesc')}
-        onConfirm={() => {
-          const kopeks = Math.round(parseFloat(balanceAmount) * 100)
-          if (!kopeks || isNaN(kopeks)) return
-          balanceMutation.mutate({ amount_kopeks: kopeks, reason: balanceReason || undefined })
-        }}
-        confirmText={t('common.confirm')}
-        variant="default"
-      >
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.amountRubles')}</label>
-            <input
-              type="number"
-              step="0.01"
-              value={balanceAmount}
-              onChange={(e) => setBalanceAmount(e.target.value)}
-              placeholder="+100 или -50"
-              className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-            />
+      <Dialog open={balanceDialog} onOpenChange={setBalanceDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('bedolaga.customerDetail.changeBalance')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-dark-200">{t('bedolaga.customerDetail.changeBalanceDesc')}</p>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.amountRubles')}</label>
+              <input
+                type="number"
+                step="0.01"
+                value={balanceAmount}
+                onChange={(e) => setBalanceAmount(e.target.value)}
+                placeholder="+100 или -50"
+                className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.reason')}</label>
+              <input
+                type="text"
+                value={balanceReason}
+                onChange={(e) => setBalanceReason(e.target.value)}
+                placeholder={t('bedolaga.customerDetail.reasonPlaceholder')}
+                className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              />
+            </div>
           </div>
-          <div>
-            <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.reason')}</label>
-            <input
-              type="text"
-              value={balanceReason}
-              onChange={(e) => setBalanceReason(e.target.value)}
-              placeholder={t('bedolaga.customerDetail.reasonPlaceholder')}
-              className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-            />
-          </div>
-        </div>
-      </ConfirmDialog>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setBalanceDialog(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleBalanceSubmit} disabled={!balanceAmount || balanceMutation.isPending}>
+              {balanceMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('common.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Extend dialog */}
-      <ConfirmDialog
-        open={extendDialog}
-        onOpenChange={setExtendDialog}
-        title={t('bedolaga.customerDetail.extendSubscription')}
-        description={t('bedolaga.customerDetail.extendDesc')}
-        onConfirm={() => {
-          const days = parseInt(extendDays)
-          if (!days || days < 1) return
-          extendMutation.mutate({ days })
-        }}
-        confirmText={t('bedolaga.customerDetail.extend')}
-        variant="default"
-      >
-        <div>
-          <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.days')}</label>
-          <input
-            type="number"
-            min="1"
-            value={extendDays}
-            onChange={(e) => setExtendDays(e.target.value)}
-            className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-          />
-        </div>
-      </ConfirmDialog>
+      <Dialog open={extendDialog} onOpenChange={setExtendDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('bedolaga.customerDetail.extendSubscription')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-dark-200">{t('bedolaga.customerDetail.extendDesc')}</p>
+          <div className="py-2">
+            <label className="text-xs text-dark-200 mb-1 block">{t('bedolaga.customerDetail.days')}</label>
+            <input
+              type="number"
+              min="1"
+              value={extendDays}
+              onChange={(e) => setExtendDays(e.target.value)}
+              className="w-full h-10 px-3 rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setExtendDialog(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleExtendSubmit} disabled={!extendDays || extendMutation.isPending}>
+              {extendMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('bedolaga.customerDetail.extend')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

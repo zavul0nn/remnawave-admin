@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useFormatters } from '@/lib/useFormatters'
@@ -33,6 +33,7 @@ import {
   ShieldOff,
   Settings,
   KeyRound,
+  Bot,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import client from '../api/client'
@@ -2003,11 +2004,25 @@ export default function UserDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-dark-200">{t('userDetail.fields.email')}</p>
-                      <p className="text-white truncate">{user.email || '\u2014'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white truncate">{user.email || '\u2014'}</p>
+                        {user.email && (
+                          <Link to={`/bedolaga/customers?search=${encodeURIComponent(user.email)}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 transition-colors flex-shrink-0">
+                            <Bot className="w-3 h-3" />Bedolaga
+                          </Link>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-dark-200">{t('userDetail.fields.telegramId')}</p>
-                      <p className="text-white">{user.telegram_id || '\u2014'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white">{user.telegram_id || '\u2014'}</p>
+                        {user.telegram_id && (
+                          <Link to={`/bedolaga/customers?search=${user.telegram_id}`} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 transition-colors">
+                            <Bot className="w-3 h-3" />Bedolaga
+                          </Link>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-dark-200">Short UUID</p>

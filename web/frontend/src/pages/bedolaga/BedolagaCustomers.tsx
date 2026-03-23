@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -50,9 +50,11 @@ const statusColors: Record<string, string> = {
 export default function BedolagaCustomers() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') || ''
 
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [search, setSearch] = useState(initialSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
@@ -68,7 +70,7 @@ export default function BedolagaCustomers() {
     return () => clearTimeout(timeout)
   }, [])
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery<{ items?: BedolagaUser[]; total?: number }>({
     queryKey: ['bedolaga-customers', page, perPage, debouncedSearch, status],
     queryFn: () => {
       const params = new URLSearchParams()
@@ -79,10 +81,10 @@ export default function BedolagaCustomers() {
       return client.get(`/bedolaga/customers?${params}`).then((r) => r.data)
     },
     staleTime: 30_000,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   })
 
-  const users: BedolagaUser[] = data?.items || []
+  const users: BedolagaUser[] = Array.isArray(data?.items) ? data.items : []
   const total = data?.total || 0
   const totalPages = Math.max(1, Math.ceil(total / perPage))
 
