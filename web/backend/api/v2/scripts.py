@@ -376,6 +376,31 @@ async def get_exec_status(
         raise api_error(404, E.EXECUTION_NOT_FOUND)
 
     r = dict(row)
+
+    # Auto-timeout: if script is "running" for too long, mark as timed out
+    if r.get("status") == "running" and r.get("started_at"):
+        from datetime import datetime, timezone
+        started = r["started_at"]
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+        elapsed = (datetime.now(timezone.utc) - started).total_seconds()
+        # Default timeout 180s + 30s grace
+        if elapsed > 210:
+            async with db_service.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE node_command_log
+                    SET status = 'error', output = 'Timed out: agent did not respond',
+                        finished_at = NOW(),
+                        duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at))::INTEGER * 1000
+                    WHERE id = $1 AND status = 'running'
+                    """,
+                    exec_id,
+                )
+            r["status"] = "error"
+            r["output"] = "Timed out: agent did not respond"
+            r["duration_ms"] = int(elapsed * 1000)
+
     for dt_field in ('started_at', 'finished_at'):
         if r.get(dt_field):
             r[dt_field] = r[dt_field].isoformat()
