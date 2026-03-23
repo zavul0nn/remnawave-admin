@@ -61,7 +61,7 @@ jobs:
       - name: Determine platforms
         run: |
           if [ "${{ github.ref_name }}" = "dev" ]; then
-            echo "PLATFORMS=linux/arm64" >> $GITHUB_ENV
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
           else
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
           fi
