@@ -3459,7 +3459,8 @@
       "directReferrals": "Direct referrals",
       "branchUsers": "In branch",
       "branchRevenue": "Branch revenue",
-      "personalRevenue": "Personal revenue"
+      "personalRevenue": "Personal revenue",
+      "referredBy": "Referred by"
     }
   },
   "notFound": {

@@ -27,15 +27,17 @@ interface NetworkUserNode {
   tg_id?: number | null
   username?: string | null
   display_name: string
+  status?: string
   is_partner?: boolean
   referrer_id?: number | null
   campaign_id?: number | null
   direct_referrals: number
-  total_branch_users?: number
-  branch_revenue_kopeks?: number
-  personal_revenue_kopeks?: number
+  balance_rubles?: number
+  referral_code?: string | null
+  subscription_status?: string | null
   subscription_name?: string | null
   subscription_end?: string | null
+  is_trial?: boolean
 }
 
 interface NetworkCampaignNode {
@@ -496,52 +498,94 @@ export default function BedolagaReferrals() {
       </div>
 
       {/* User detail panel */}
-      {selectedUser && (
-        <Card className="glass-card animate-fade-in">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-400" />
-                {selectedUser.display_name || selectedUser.username || `#${selectedUser.id}`}
-              </h3>
-              <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" className="text-xs" onClick={() => navigate(`/bedolaga/customers/${selectedUser.id}`)}>
-                  {t('bedolaga.referrals.openProfile')}
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedUser(null)}>
-                  <X className="w-4 h-4" />
-                </Button>
+      {selectedUser && (() => {
+        // Find this user's referrals from the data
+        const userReferrals = (data?.users || []).filter((u) => u.referrer_id === selectedUser.id)
+        const referredBy = selectedUser.referrer_id ? (data?.users || []).find((u) => u.id === selectedUser.referrer_id) : null
+
+        return (
+          <Card className="glass-card animate-fade-in">
+            <CardContent className="p-4">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-400" />
+                  {selectedUser.display_name || selectedUser.username || `#${selectedUser.id}`}
+                  {selectedUser.referral_code && (
+                    <span className="text-[10px] font-mono text-dark-400 bg-[var(--glass-bg)] px-1.5 py-0.5 rounded">{selectedUser.referral_code}</span>
+                  )}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" className="text-xs" onClick={() => navigate(`/bedolaga/customers/${selectedUser.id}`)}>
+                    {t('bedolaga.referrals.openProfile')}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedUser(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div>
-                <p className="text-dark-400">{t('bedolaga.referrals.directReferrals')}</p>
-                <p className="font-bold text-lg">{selectedUser.direct_referrals}</p>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <p className="text-dark-400">{t('bedolaga.referrals.directReferrals')}</p>
+                  <p className="font-bold text-lg">{selectedUser.direct_referrals}</p>
+                </div>
+                <div>
+                  <p className="text-dark-400">{t('bedolaga.customers.balance')}</p>
+                  <p className="font-bold text-lg">{(selectedUser.balance_rubles ?? 0).toLocaleString()} ₽</p>
+                </div>
+                <div>
+                  <p className="text-dark-400">{t('bedolaga.customers.status')}</p>
+                  <Badge className={cn('text-[10px] mt-1',
+                    selectedUser.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-dark-500/20 text-dark-300'
+                  )}>{selectedUser.status || '—'}</Badge>
+                </div>
+                <div>
+                  <p className="text-dark-400">{t('bedolaga.customers.subscription')}</p>
+                  <Badge className={cn('text-[10px] mt-1',
+                    selectedUser.subscription_status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
+                    selectedUser.subscription_status === 'expired' ? 'bg-amber-500/20 text-amber-400' : 'bg-dark-500/20 text-dark-300'
+                  )}>{selectedUser.subscription_status || '—'}</Badge>
+                </div>
               </div>
-              <div>
-                <p className="text-dark-400">{t('bedolaga.referrals.branchUsers')}</p>
-                <p className="font-bold text-lg">{selectedUser.total_branch_users ?? 0}</p>
-              </div>
-              <div>
-                <p className="text-dark-400">{t('bedolaga.referrals.branchRevenue')}</p>
-                <p className="font-bold text-lg text-emerald-400">{formatRubles(selectedUser.branch_revenue_kopeks)}</p>
-              </div>
-              <div>
-                <p className="text-dark-400">{t('bedolaga.referrals.personalRevenue')}</p>
-                <p className="font-bold text-lg">{formatRubles(selectedUser.personal_revenue_kopeks)}</p>
-              </div>
-            </div>
-            {selectedUser.subscription_name && (
-              <div className="mt-2 pt-2 border-t border-[var(--glass-border)]">
-                <Badge className="text-[10px] bg-[var(--glass-bg-hover)]">
-                  {selectedUser.subscription_name}
-                  {selectedUser.subscription_end && ` → ${new Date(selectedUser.subscription_end).toLocaleDateString('ru-RU')}`}
-                </Badge>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
+              {/* Referred by */}
+              {referredBy && (
+                <div className="mt-2 pt-2 border-t border-[var(--glass-border)] text-xs">
+                  <span className="text-dark-400">{t('bedolaga.referrals.referredBy')}: </span>
+                  <button className="text-primary-400 hover:underline" onClick={() => setSelectedUser(referredBy)}>
+                    {referredBy.display_name || referredBy.username || `#${referredBy.id}`}
+                  </button>
+                </div>
+              )}
+
+              {/* Referrals list */}
+              {userReferrals.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-[var(--glass-border)]">
+                  <p className="text-xs text-dark-400 mb-2">{t('bedolaga.customerDetail.refList')} ({userReferrals.length})</p>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    {userReferrals.map((ref) => (
+                      <div
+                        key={ref.id}
+                        className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--glass-bg-hover)] cursor-pointer transition-colors text-xs"
+                        onClick={() => setSelectedUser(ref)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getNodeColor(ref).fill }} />
+                          <span className="font-medium">{ref.display_name || ref.username || `#${ref.id}`}</span>
+                          {ref.direct_referrals > 0 && <span className="text-dark-400">| {ref.direct_referrals}</span>}
+                        </div>
+                        <span className="text-dark-300">{(ref.balance_rubles ?? 0).toLocaleString()} ₽</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })()}
     </div>
   )
 }

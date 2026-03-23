@@ -3459,7 +3459,8 @@
       "directReferrals": "Прямых рефералов",
       "branchUsers": "В ветке",
       "branchRevenue": "Доход ветки",
-      "personalRevenue": "Личный доход"
+      "personalRevenue": "Личный доход",
+      "referredBy": "Приглашён"
     }
   },
   "notFound": {
