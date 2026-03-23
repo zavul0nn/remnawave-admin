@@ -67,7 +67,7 @@ async def get_referral_network(
             "display_name": u.get("username") or u.get("first_name") or f"#{uid}",
             "status": u.get("status"),
             "referral_code": u.get("referral_code"),
-            "referred_by_id": u.get("referred_by_id"),
+            "referrer_id": u.get("referred_by_id"),
             "direct_referrals": referral_counts.get(uid, 0),
             "balance_rubles": u.get("balance_rubles", 0),
             "subscription_status": sub.get("status") if sub else None,
