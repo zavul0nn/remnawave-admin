@@ -1754,7 +1754,7 @@ function ViolationSkeleton() {
 
 // ── Main page component ──────────────────────────────────────────
 
-type Tab = 'all' | 'pending' | 'top' | 'reports' | 'whitelist'
+type Tab = 'all' | 'pending' | 'top' | 'reports' | 'whitelist' | 'hwid_blacklist'
 
 export default function Violations() {
   const { t } = useTranslation()
@@ -1766,7 +1766,7 @@ export default function Violations() {
   const getP = (k: string, d: string) => searchParams.get(k) ?? d
   const getN = (k: string, d: number) => { const v = searchParams.get(k); return v !== null ? (Number(v) || d) : d }
 
-  const validTabs: Tab[] = ['all', 'pending', 'top', 'reports', 'whitelist']
+  const validTabs: Tab[] = ['all', 'pending', 'top', 'reports', 'whitelist', 'hwid_blacklist']
   const rawTab = getP('tab', 'all') as Tab
   const tab = validTabs.includes(rawTab) ? rawTab : 'all'
   const page = getN('page', 1)

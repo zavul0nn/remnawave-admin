@@ -668,6 +668,27 @@ async def _check_single_user(user_uuid: str, min_score: float, sem: asyncio.Sema
 
             had_violation = bool(violation_score and violation_score.total >= min_score)
 
+            # ── HWID Blacklist check ──
+            try:
+                user_devices = await db_service.get_user_hwid_devices(user_uuid)
+                if user_devices:
+                    user_hwids = [d["hwid"] for d in user_devices if d.get("hwid")]
+                    if user_hwids:
+                        bl_matches = await db_service.check_hwids_against_blacklist(user_hwids)
+                        if bl_matches:
+                            from web.backend.api.v2.violations import _handle_blacklisted_hwid_users
+                            affected = await db_service.find_users_by_hwid(bl_matches[0]["hwid"])
+                            user_entry = [u for u in affected if str(u.get("user_uuid")) == user_uuid]
+                            if user_entry:
+                                await _handle_blacklisted_hwid_users(
+                                    bl_matches[0]["hwid"],
+                                    bl_matches[0]["action"],
+                                    bl_matches[0].get("reason"),
+                                    user_entry,
+                                )
+            except Exception as e:
+                logger.debug("HWID blacklist check failed for %s: %s", user_uuid, e)
+
             # Evict oldest 20% entries if cooldown dict is too large
             if len(_violation_check_cooldown) > MAX_COOLDOWN_SIZE:
                 sorted_keys = sorted(_violation_check_cooldown, key=_violation_check_cooldown.get)
