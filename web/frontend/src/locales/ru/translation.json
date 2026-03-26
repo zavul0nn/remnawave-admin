@@ -2316,7 +2316,8 @@
     "subtitle": "Конфигурация бота и панели. Приоритет: БД > .env > по умолчанию",
     "tabs": {
       "general": "Общие",
-      "resources": "Ресурсы Remnawave"
+      "resources": "Ресурсы Remnawave",
+      "faq": "FAQ"
     },
     "searchPlaceholder": "Поиск настроек...",
     "foundSettings": "Найдено: {{count}} настроек",
@@ -2333,7 +2334,8 @@
       "limits": "Лимиты",
       "appearance": "Внешний вид",
       "mailserver": "Почтовый сервер",
-      "security": "Безопасность"
+      "security": "Безопасность",
+      "performance": "Производительность"
     },
     "subcategories": {
       "topics": "Топики уведомлений",
@@ -2342,7 +2344,56 @@
       "hard_block": "Жёсткая блокировка",
       "trial": "Определение триальных пользователей",
       "auth_methods": "Методы авторизации",
-      "brute_force": "Защита от перебора"
+      "brute_force": "Защита от перебора",
+      "database": "База данных",
+      "intervals": "Интервалы",
+      "rate_limits": "Лимиты запросов",
+      "cache": "Кэш"
+    },
+    "faq": {
+      "description": "Частые вопросы и решения типичных проблем",
+      "items": {
+        "panelPort": {
+          "q": "Панель открывается только с указанием порта :3000",
+          "a": "Проблема с обратным прокси (Nginx/Caddy). После перезагрузки сервера прокси стартует раньше контейнеров и не может зарезолвить DNS-имена.\n\nДля Caddy — добавьте lb_try_duration 30s в каждый reverse_proxy блок:\nreverse_proxy web-frontend:80 {\n    lb_try_duration 30s\n}\n\nДля Nginx — добавьте resolver 127.0.0.11 valid=10s в upstream-блок.\n\nТакже поможет: docker restart caddy (или nginx) после ребута."
+        },
+        "passwordLogin": {
+          "q": "Не могу войти с паролем после регистрации",
+          "a": "Возможные причины:\n1. Пароль содержит кириллические символы-двойники (С вместо C, А вместо A). Переключите раскладку на EN и введите пароль заново.\n2. Браузер автозаполнил пароль с ошибкой. Попробуйте ввести вручную.\n3. Если ничего не помогает — сбросьте пароль через CLI:\ndocker exec -it <container> python3 scripts/admin_cli.py reset-password --username admin"
+        },
+        "highCpu": {
+          "q": "PostgreSQL грузит CPU на 99%",
+          "a": "Проверьте наличие индексов на часто используемых таблицах. Основные:\n- users: idx_users_username_lower, idx_users_email_lower\n- user_connections: idx_user_connections_user_active\n\nТакже настройте в разделе Производительность:\n- DB Pool max size (по умолчанию 50)\n- Statement timeout (по умолчанию 60с)\n\nМониторьте через: SELECT * FROM pg_stat_user_tables ORDER BY seq_scan DESC;"
+        },
+        "nodeOffline": {
+          "q": "Нода показывается офлайн, хотя работает",
+          "a": "Проверьте:\n1. Агент на ноде запущен и AGENT_COLLECTOR_URL указывает на web-backend (порт 8081)\n2. Токен агента совпадает с токеном в панели\n3. Нет файрвола между нодой и бэкендом\n4. Время на сервере синхронизировано (NTP)"
+        },
+        "alertSpam": {
+          "q": "Алерты спамят о давно отключённых нодах",
+          "a": "В настройках правила алерта используйте поле «Игнорировать ноды офлайн дольше (мин)». Например, установите 1440 (24 часа) — ноды, отключённые более суток, не будут вызывать повторные алерты."
+        },
+        "dockerRestart": {
+          "q": "После docker compose up сервисы не видят друг друга",
+          "a": "Убедитесь что сеть remnawave-network создана:\ndocker network create remnawave-network\n\nЗатем:\ndocker compose down && docker compose up -d\n\nЕсли используете несколько docker-compose файлов — все должны использовать одну external сеть."
+        },
+        "dbPool": {
+          "q": "Ошибки 'too many connections' в логах",
+          "a": "PostgreSQL имеет лимит соединений (по умолчанию 100). Каждый сервис (бот, бэкенд) использует пул.\n\nРешения:\n1. Уменьшите DB Pool max size в Настройки → Производительность\n2. Увеличьте max_connections в PostgreSQL:\n   ALTER SYSTEM SET max_connections = 200;\n3. Перезапустите PostgreSQL"
+        },
+        "passwordReset": {
+          "q": "Как сбросить пароль администратора?",
+          "a": "Способ 1 — через email (если SMTP настроен):\nНа странице входа нажмите «Забыли пароль?» и введите email.\n\nСпособ 2 — через CLI:\ndocker exec -it <container> python3 scripts/admin_cli.py reset-password --username admin\n\nСпособ 3 — создать нового суперадмина:\ndocker exec -it <container> python3 scripts/admin_cli.py create-superadmin --username newadmin"
+        },
+        "smtp": {
+          "q": "Как настроить отправку email?",
+          "a": "Два варианта:\n\n1. Встроенный почтовый сервер — перейдите в раздел «Почтовый сервер», добавьте домен, настройте DNS-записи (MX, SPF, DKIM, DMARC).\n\n2. Внешний SMTP-релей — перейдите в Уведомления → SMTP Config и укажите данные вашего SMTP-сервера (Gmail, Mailgun, и т.д.)."
+        },
+        "resourceLimits": {
+          "q": "Как ограничить потребление ресурсов (CPU/RAM)?",
+          "a": "Ограничение ресурсов настраивается на уровне Docker, а не приложения.\n\nВ docker-compose.yml добавьте:\nservices:\n  web-backend:\n    deploy:\n      resources:\n        limits:\n          cpus: '2.0'\n          memory: 1G\n        reservations:\n          cpus: '0.5'\n          memory: 256M\n\nНа уровне приложения настраивайте: пул БД, интервалы синхронизации, размер кэша — см. раздел «Производительность»."
+        }
+      }
     },
     "sync": {
       "title": "Синхронизация",

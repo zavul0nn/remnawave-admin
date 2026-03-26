@@ -2316,7 +2316,8 @@
     "subtitle": "Bot and panel configuration. Priority: DB > .env > default",
     "tabs": {
       "general": "General",
-      "resources": "Remnawave Resources"
+      "resources": "Remnawave Resources",
+      "faq": "FAQ"
     },
     "searchPlaceholder": "Search settings...",
     "foundSettings": "Found: {{count}} settings",
@@ -2333,7 +2334,8 @@
       "limits": "Limits",
       "appearance": "Appearance",
       "mailserver": "Mail Server",
-      "security": "Security"
+      "security": "Security",
+      "performance": "Performance"
     },
     "subcategories": {
       "topics": "Notification topics",
@@ -2342,7 +2344,56 @@
       "hard_block": "Hard block",
       "trial": "Trial user detection",
       "auth_methods": "Auth Methods",
-      "brute_force": "Brute-Force Protection"
+      "brute_force": "Brute-Force Protection",
+      "database": "Database",
+      "intervals": "Intervals",
+      "rate_limits": "Rate Limits",
+      "cache": "Cache"
+    },
+    "faq": {
+      "description": "Frequently asked questions and solutions to common problems",
+      "items": {
+        "panelPort": {
+          "q": "Panel only opens with port :3000",
+          "a": "Reverse proxy issue (Nginx/Caddy). After server reboot, the proxy starts before containers are ready and can't resolve DNS names.\n\nFor Caddy — add lb_try_duration 30s to each reverse_proxy block:\nreverse_proxy web-frontend:80 {\n    lb_try_duration 30s\n}\n\nFor Nginx — add resolver 127.0.0.11 valid=10s to the upstream block.\n\nQuick fix: docker restart caddy (or nginx) after reboot."
+        },
+        "passwordLogin": {
+          "q": "Can't log in with password after registration",
+          "a": "Possible causes:\n1. Password contains Cyrillic look-alike characters (С instead of C, А instead of A). Switch keyboard to EN and re-enter.\n2. Browser autofilled incorrectly. Try entering manually.\n3. If nothing helps — reset via CLI:\ndocker exec -it <container> python3 scripts/admin_cli.py reset-password --username admin"
+        },
+        "highCpu": {
+          "q": "PostgreSQL using 99% CPU",
+          "a": "Check that indexes exist on frequently queried tables. Key indexes:\n- users: idx_users_username_lower, idx_users_email_lower\n- user_connections: idx_user_connections_user_active\n\nAlso configure in Performance settings:\n- DB Pool max size (default 50)\n- Statement timeout (default 60s)\n\nMonitor via: SELECT * FROM pg_stat_user_tables ORDER BY seq_scan DESC;"
+        },
+        "nodeOffline": {
+          "q": "Node shows as offline but is actually running",
+          "a": "Check:\n1. Agent is running and AGENT_COLLECTOR_URL points to web-backend (port 8081)\n2. Agent token matches the token in the panel\n3. No firewall between node and backend\n4. Server time is synchronized (NTP)"
+        },
+        "alertSpam": {
+          "q": "Alerts keep spamming about long-disconnected nodes",
+          "a": "In the alert rule settings, use the 'Ignore nodes offline longer than (min)' field. For example, set 1440 (24 hours) — nodes disconnected for more than a day won't trigger repeat alerts."
+        },
+        "dockerRestart": {
+          "q": "After docker compose up, services can't see each other",
+          "a": "Make sure the network exists:\ndocker network create remnawave-network\n\nThen:\ndocker compose down && docker compose up -d\n\nIf using multiple docker-compose files — all must use the same external network."
+        },
+        "dbPool": {
+          "q": "'Too many connections' errors in logs",
+          "a": "PostgreSQL has a connection limit (default 100). Each service (bot, backend) uses a pool.\n\nSolutions:\n1. Reduce DB Pool max size in Settings → Performance\n2. Increase max_connections in PostgreSQL:\n   ALTER SYSTEM SET max_connections = 200;\n3. Restart PostgreSQL"
+        },
+        "passwordReset": {
+          "q": "How to reset admin password?",
+          "a": "Method 1 — via email (if SMTP configured):\nOn the login page, click 'Forgot password?' and enter your email.\n\nMethod 2 — via CLI:\ndocker exec -it <container> python3 scripts/admin_cli.py reset-password --username admin\n\nMethod 3 — create new superadmin:\ndocker exec -it <container> python3 scripts/admin_cli.py create-superadmin --username newadmin"
+        },
+        "smtp": {
+          "q": "How to set up email sending?",
+          "a": "Two options:\n\n1. Built-in mail server — go to Mail Server section, add a domain, configure DNS records (MX, SPF, DKIM, DMARC).\n\n2. External SMTP relay — go to Notifications → SMTP Config and enter your SMTP server details (Gmail, Mailgun, etc.)."
+        },
+        "resourceLimits": {
+          "q": "How to limit resource consumption (CPU/RAM)?",
+          "a": "Resource limits are configured at the Docker level, not the application level.\n\nIn docker-compose.yml add:\nservices:\n  web-backend:\n    deploy:\n      resources:\n        limits:\n          cpus: '2.0'\n          memory: 1G\n        reservations:\n          cpus: '0.5'\n          memory: 256M\n\nAt the application level, configure: DB pool, sync intervals, cache size — see Performance settings."
+        }
+      }
     },
     "sync": {
       "title": "Sync",
