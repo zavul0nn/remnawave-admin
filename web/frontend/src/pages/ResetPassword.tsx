@@ -299,7 +299,7 @@ function ResetPasswordForm({ token }: { token: string }) {
 
               {/* Requirement checks */}
               {password && (
-                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
                   {[
                     { ok: strength.checks.length, text: t('login.passwordChecks.length') },
                     { ok: strength.checks.lower, text: t('login.passwordChecks.lower') },

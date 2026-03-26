@@ -2378,7 +2378,7 @@ export default function UserDetail() {
                   </div>
                 )}
                 {canEdit && (
-                  <div className="pt-3 border-t border-[var(--glass-border)] grid grid-cols-2 gap-2">
+                  <div className="pt-3 border-t border-[var(--glass-border)] grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -2440,7 +2440,7 @@ export default function UserDetail() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-[var(--glass-bg-hover)] rounded-lg p-3 text-center">
                     <div className="flex justify-center mb-1">
                       <AlertTriangle className="h-4 w-4 text-dark-300" />
