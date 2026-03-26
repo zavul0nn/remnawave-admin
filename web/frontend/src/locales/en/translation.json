@@ -1300,6 +1300,27 @@
       "addTitle": "Add to whitelist",
       "expired": "Expired"
     },
+    "hwidBlacklist": {
+      "tab": "HWID Blacklist",
+      "title": "HWID Blacklist",
+      "description": "When a blacklisted HWID is detected on a user — auto-ban or alert",
+      "add": "Add HWID",
+      "addTitle": "Add HWID to blacklist",
+      "addDescription": "Enter the device HWID and the action to take when detected",
+      "addButton": "Add to blacklist",
+      "action": "Action",
+      "actionAlert": "Alert",
+      "actionBlock": "Block",
+      "actionAlertHint": "Send notification to admin without blocking the user",
+      "actionBlockHint": "Automatically block the user via Panel API and send notification",
+      "reason": "Reason",
+      "reasonPlaceholder": "Fraud, account theft, etc.",
+      "empty": "HWID blacklist is empty",
+      "added": "HWID added to blacklist. Affected users: {{count}}",
+      "removed": "HWID removed from blacklist",
+      "affectedUsers": "Users with this HWID ({{count}})",
+      "noUsers": "No users found with this HWID"
+    },
     "analyzers": {
       "temporal": "Temporal (simultaneous connections)",
       "geo": "Geographic (impossible travel)",

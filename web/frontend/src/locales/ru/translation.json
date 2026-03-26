@@ -1300,6 +1300,27 @@
       "addTitle": "Добавить в whitelist",
       "expired": "Истёк"
     },
+    "hwidBlacklist": {
+      "tab": "HWID Blacklist",
+      "title": "Чёрный список HWID",
+      "description": "При обнаружении HWID из списка у пользователя — автоматический бан или алерт",
+      "add": "Добавить HWID",
+      "addTitle": "Добавить HWID в чёрный список",
+      "addDescription": "Укажите HWID устройства и действие при обнаружении",
+      "addButton": "Добавить в blacklist",
+      "action": "Действие",
+      "actionAlert": "Алерт",
+      "actionBlock": "Заблокировать",
+      "actionAlertHint": "Отправить уведомление администратору, но не блокировать пользователя",
+      "actionBlockHint": "Автоматически заблокировать пользователя через Panel API и отправить уведомление",
+      "reason": "Причина",
+      "reasonPlaceholder": "Мошенничество, кража аккаунта и т.д.",
+      "empty": "Чёрный список HWID пуст",
+      "added": "HWID добавлен в blacklist. Затронуто пользователей: {{count}}",
+      "removed": "HWID удалён из blacklist",
+      "affectedUsers": "Пользователи с этим HWID ({{count}})",
+      "noUsers": "Пользователей с этим HWID не найдено"
+    },
     "analyzers": {
       "temporal": "Временной (одновременные подключения)",
       "geo": "Географический (невозможное перемещение)",
