@@ -851,6 +851,36 @@ DEFAULT_CONFIG_DEFINITIONS: List[Dict[str, Any]] = [
         "default_value": "300",
         "sort_order": 31,
     },
+    {
+        "key": "violation_drain_interval",
+        "value_type": "float",
+        "category": "performance",
+        "subcategory": "violation_pipeline",
+        "display_name": "Очередь нарушений: интервал обработки (сек)",
+        "description": "Как часто worker забирает порцию пользователей из очереди. Меньше = быстрее реакция, но выше нагрузка.",
+        "default_value": "3.0",
+        "sort_order": 40,
+    },
+    {
+        "key": "violation_chunk_size",
+        "value_type": "int",
+        "category": "performance",
+        "subcategory": "violation_pipeline",
+        "display_name": "Очередь нарушений: размер порции",
+        "description": "Сколько пользователей обрабатывать за один цикл. Больше = быстрее разгребается очередь, но пиковая нагрузка выше.",
+        "default_value": "200",
+        "sort_order": 41,
+    },
+    {
+        "key": "violation_max_background_tasks",
+        "value_type": "int",
+        "category": "performance",
+        "subcategory": "violation_pipeline",
+        "display_name": "Макс. фоновых задач (торренты и пр.)",
+        "description": "Максимальное количество одновременных фоновых задач. При превышении новые задачи отбрасываются.",
+        "default_value": "20",
+        "sort_order": 42,
+    },
 ]
 
 

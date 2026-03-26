@@ -901,6 +901,10 @@ function FaqSection() {
       a: t('settings.faq.items.smtp.a'),
     },
     {
+      q: t('settings.faq.items.violationQueue.q'),
+      a: t('settings.faq.items.violationQueue.a'),
+    },
+    {
       q: t('settings.faq.items.resourceLimits.q'),
       a: t('settings.faq.items.resourceLimits.a'),
     },

@@ -2348,7 +2348,8 @@
       "database": "Database",
       "intervals": "Intervals",
       "rate_limits": "Rate Limits",
-      "cache": "Cache"
+      "cache": "Cache",
+      "violation_pipeline": "Violation Detection Pipeline"
     },
     "faq": {
       "description": "Frequently asked questions and solutions to common problems",
@@ -2388,6 +2389,10 @@
         "smtp": {
           "q": "How to set up email sending?",
           "a": "Two options:\n\n1. Built-in mail server — go to Mail Server section, add a domain, configure DNS records (MX, SPF, DKIM, DMARC).\n\n2. External SMTP relay — go to Notifications → SMTP Config and enter your SMTP server details (Gmail, Mailgun, etc.)."
+        },
+        "violationQueue": {
+          "q": "How to tell if the violation detection pipeline is keeping up?",
+          "a": "Open /api/v2/collector/stats — it shows:\n- pending_users: users waiting for check\n- health: idle/ok/busy/overloaded\n- backlog: difference between enqueued and processed\n- last_drain_duration_ms: last processing time\n\nIf health = 'overloaded' (>2000 in queue):\n1. Increase 'Chunk size' in Settings → Performance → Pipeline\n2. Decrease 'Drain interval' (e.g. from 3 to 1 sec)\n3. Increase check cooldown (Violation Detection → Cooldown)\n\nIf resources are underutilized but queue grows — increase chunk_size. If CPU is maxed — increase interval and cooldown."
         },
         "resourceLimits": {
           "q": "How to limit resource consumption (CPU/RAM)?",
