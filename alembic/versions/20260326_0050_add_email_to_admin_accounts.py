@@ -1,4 +1,4 @@
-"""Add email column to admin_accounts for password reset.
+"""Add email to admin_accounts, max_offline_minutes to alert_rules.
 
 Revision ID: 0050
 Revises: 0049
@@ -22,8 +22,14 @@ def upgrade() -> None:
         ON admin_accounts (LOWER(email))
         WHERE email IS NOT NULL
     """)
+    # Max offline minutes — ignore nodes offline longer than this (0 = no limit)
+    op.execute("""
+        ALTER TABLE alert_rules
+        ADD COLUMN IF NOT EXISTS max_offline_minutes INTEGER DEFAULT 0
+    """)
 
 
 def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS ix_admin_accounts_email")
     op.execute("ALTER TABLE admin_accounts DROP COLUMN IF EXISTS email")
+    op.execute("ALTER TABLE alert_rules DROP COLUMN IF EXISTS max_offline_minutes")
