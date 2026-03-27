@@ -1891,6 +1891,34 @@ export default function UserDetail() {
                   {/* Expire date */}
                   <div className="space-y-2">
                     <Label>{t('userDetail.fields.expireDate')}</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { label: '7d', days: 7 },
+                        { label: '30d', days: 30 },
+                        { label: '90d', days: 90 },
+                        { label: '365d', days: 365 },
+                        { label: '2099', days: 0 },
+                      ].map(({ label, days }) => (
+                        <Button
+                          key={label}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => {
+                            const now = new Date()
+                            const d = days > 0
+                              ? new Date(now.getTime() + days * 86400000)
+                              : new Date(now.setFullYear(2099))
+                            const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                              .toISOString().slice(0, 16)
+                            setEditForm({ ...editForm, expire_at: local })
+                          }}
+                        >
+                          {label === '2099' ? '♾️ 2099' : `+${label}`}
+                        </Button>
+                      ))}
+                    </div>
                     <Input
                       type="datetime-local"
                       value={editForm.expire_at}

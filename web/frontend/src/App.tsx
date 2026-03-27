@@ -26,6 +26,7 @@ const Nodes = lazy(() => import('./pages/Nodes'))
 const Fleet = lazy(() => import('./pages/Fleet'))
 const Hosts = lazy(() => import('./pages/Hosts'))
 const Violations = lazy(() => import('./pages/Violations'))
+const BlockedIPs = lazy(() => import('./pages/BlockedIPs'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Admins = lazy(() => import('./pages/Admins'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
@@ -129,6 +130,7 @@ export default function App() {
                         <Route path="/fleet" element={<Fleet />} />
                         <Route path="/hosts" element={<Hosts />} />
                         <Route path="/violations" element={<Violations />} />
+                        <Route path="/blocked-ips" element={<BlockedIPs />} />
                         <Route path="/automations" element={<Automations />} />
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/mailserver" element={<MailServer />} />
