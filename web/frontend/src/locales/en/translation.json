@@ -1154,6 +1154,13 @@
       "expires": "Expires",
       "actions": "Actions"
     },
+    "durations": {
+      "forever": "Forever",
+      "1h": "1 hour",
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
     "addDialog": {
       "title": "Add IP to blocklist",
       "description": "Enter an IP address or CIDR subnet to block",
